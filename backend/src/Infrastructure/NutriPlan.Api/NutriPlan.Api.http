@@ -1,0 +1,6 @@
+@NutriPlan.Api_HostAddress = http://localhost:5128
+
+GET {{NutriPlan.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
