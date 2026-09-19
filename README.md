@@ -1,4 +1,5 @@
-# 🥗 NutriPlan - Academic & Personal Nutrition Management System
+# 🥗 NutriPlan - ระบบจัดการโภชนาการและวางแผนมื้ออาหาร
+### (Academic & Personal Nutrition Management System)
 
 <div align="center">
 
@@ -11,66 +12,72 @@
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 ![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)
 
-**A full-stack, enterprise-grade Nutrition & Meal Planning Platform built with Clean Architecture, Domain-Driven Design (DDD), and Object-Oriented Design (OOD) Principles.**
+**ระบบเว็บแอปพลิเคชันจัดการโภชนาการและวางแผนมื้ออาหาร พัฒนาด้วย Clean Architecture, Domain-Driven Design (DDD) และหลักการเขียนโปรแกรมเชิงวัตถุ (OOP)**
 
-[🌐 Live Frontend Demo](https://nutri-plan-chi-two.vercel.app) • [⚙️ Live Backend API (Render)](https://nutriplan-b3i6.onrender.com/api/v1/food-items)
+[🌐 เข้าใช้งานเว็บไซต์จริง (Frontend บน Vercel)](https://nutri-plan-chi-two.vercel.app) • [⚙️ Backend API (Render)](https://nutriplan-b3i6.onrender.com/api/v1/food-items)
+
+---
+
+**[ 🇹🇭 ภาษาไทย (หลัก) ]** | **[ 🇬🇧 English Summary ]**
 
 </div>
 
 ---
 
-## 📌 Executive Summary
+# 🇹🇭 ส่วนที่ 1: ข้อมูลภาษาไทย (หลัก)
 
-**NutriPlan** is an end-to-end web application engineered to solve real-world personal nutrition tracking and professional dietetics management challenges. It enables **Clients** to track daily meal logs, calculate precise caloric/macronutrient requirements (BMR/TDEE), monitor weight progress, and receive customized meal plans assigned by professional **Nutritionists**.
+## 📌 ภาพรวมโปรเจกต์ (Project Overview)
 
-The platform is architected with modern **Clean Architecture**, adhering strictly to **SOLID Principles** and implementing design patterns such as **Repository & Unit of Work**, **Factory Method**, and **Dependency Injection**.
+**NutriPlan** เป็นเว็บแอปพลิเคชันระดับองค์กรที่ออกแบบและพัฒนาขึ้นเพื่อแก้ปัญหาการติดตามโภชนาการส่วนบุคคลและการวางแผนอาหารโดยนักโภชนาการมืออาชีพ ระบบช่วยให้ผู้ใช้งานทั่วไปและผู้รับบริการ (**Clients**) สามารถบันทึกมื้ออาหาร คำนวณพลังงานที่ร่างกายต้องการต่อวัน (BMR / TDEE) ติดตามน้ำหนัก และรับแผนการกินอาหารที่จัดทำโดยนักโภชนาการ (**Nutritionist**)
+
+โปรเจกต์นี้ถูกออกแบบโดยใช้ **Clean Architecture** ร่วมกับหลักการ **SOLID Principles** และเลือกใช้ Design Patterns ที่เหมาะสม เช่น **Repository & Unit of Work Pattern**, **Factory Method Pattern**, และ **Dependency Inversion Principle**
 
 ---
 
-## 🚀 Live Demo & Access Credentials
+## 🚀 ลิงก์ระบบออนไลน์ & บัญชีผู้ใช้สำหรับทดสอบ
 
-### 🔗 Public Live URLs
-- **Frontend App (Vercel):** [https://nutri-plan-chi-two.vercel.app](https://nutri-plan-chi-two.vercel.app)
+### 🔗 ลิงก์ระบบจริง (Live Demo)
+- **Frontend (Vercel):** [https://nutri-plan-chi-two.vercel.app](https://nutri-plan-chi-two.vercel.app)
 - **Backend API (Render):** `https://nutriplan-b3i6.onrender.com/api/v1`
 - **Database (Neon Cloud):** Serverless PostgreSQL (Singapore Region)
 
-### 🔑 Demo Test Accounts
+### 🔑 บัญชีทดสอบระบบ (Test Accounts)
 
-| Role | Email | Password | Features & Permissions |
+| บทบาท (Role) | อีเมล (Email) | รหัสผ่าน (Password) | สิทธิ์และการใช้งาน |
 | :--- | :--- | :--- | :--- |
-| **Client / User** | `client@test.com` | `Password123!` | Body metrics calculation, Daily meal logging, Progress tracking |
-| **Nutritionist** | `nutritionist@test.com` | `Password123!` | Client assignment, Custom meal plan creation, Shopping list export |
-| **General User** | `user@test.com` | `Password123!` | Standard user profile & food catalog exploration |
+| **ลูกค้า (Client)** | `client@test.com` | `Password123!` | คำนวณ BMR/TDEE, บันทึกมื้ออาหารประจําวัน, ดูรายงานความต่อเนื่อง |
+| **นักโภชนาการ (Nutritionist)** | `nutritionist@test.com` | `Password123!` | จัดการลูกค้า, สร้างแผนจัดมื้ออาหาร, ส่งออกรายการซื้อของ (Shopping List) |
+| **ผู้ใช้ทั่วไป (General User)** | `user@test.com` | `Password123!` | จัดการโปรไฟล์ส่วนตัว และค้นหาข้อมูลคุณค่าทางโภชนาการของวัตถุดิบ |
 
 ---
 
-## ✨ Key Features
+## ✨ ฟีเจอร์หลักของระบบ (Key Features)
 
-### 👤 User Role Hierarchy & Authentication
-- **Role-Based Access Control (RBAC):** JWT-authenticated authorization for `Admin`, `Nutritionist`, and `Client`.
-- **Client-Nutritionist Mapping:** Nutritionists can manage assigned client lists and design specialized diets.
+### 👤 1. ระบบจัดการสิทธิ์ผู้ใช้งาน (User Roles & Authentication)
+- **Role-Based Access Control (RBAC):** กำหนดสิทธิ์ผู้ใช้งานด้วย JWT Token สำหรับ `Admin`, `Nutritionist`, และ `Client`
+- **Client Assignment:** นักโภชนาการสามารถดึงลูกค้าเข้าดูแล และจัดแผนอาหารเฉพาะบุคคลได้
 
-### 📊 Caloric & Macronutrient Engines (BMR / TDEE)
-- **Scientific Calculations:** Implements Mifflin-St Jeor / Harris-Benedict formulas based on Age, Gender, Height, Weight, and Activity Level.
-- **Goal Target Monitoring:** Dynamic calculation of caloric surplus/deficit for Weight Loss, Maintenance, or Muscle Gain goals.
+### 📊 2. เครื่องมือคำนวณพลังงานและสารอาหาร (BMR & TDEE Engines)
+- **หลักการทางวิทยาศาสตร์:** ใช้สูตร Mifflin-St Jeor / Harris-Benedict ในการคำนวณ BMR และ TDEE ตามอายุ น้ำหนัก ส่วนสูง เพศ และระดับกิจกรรม
+- **เป้าหมายสุขภาพ:** คำนวณเป้าหมายพลังงาน (ลดน้ำหนัก / คงน้ำหนัก / เพิ่มกล้ามเนื้อ)
 
-### 🍽️ Meal Plan & Daily Menu Generator
-- **Multi-Day Meal Plan Construction:** Create custom meal plans with daily calorie targets and macronutrient distributions (Protein, Carbs, Fat, Fiber).
-- **Allergen Alert System:** Automated warnings for food items containing registered client allergens.
+### 🍽️ 3. ระบบสร้างแผนมื้ออาหาร (Meal Plan Generator)
+- **การจัดเมนูอาหารหลายวัน:** กำหนดเป้าหมายแคลอรีและสัดส่วนสารอาหารหลัก (โปรตีน, คาร์โบไฮเดรต, ไขมัน, ไฟเบอร์)
+- **ระบบแจ้งเตือนการแพ้อาหาร (Allergen Warning):** แจ้งเตือนอัตโนมัติหากวัตถุดิบมีส่วนผสมที่ลูกค้าแพ้
 
-### 🛒 Shopping List Exporter (Factory Pattern)
-- Multi-format exporter (PDF / Text) that consolidates ingredient quantities across active meal plans, scaling portions automatically.
+### 🛒 4. ระบบส่งออกรายการซื้อของ (Shopping List Exporter)
+- รวมปริมาณวัตถุดิบที่ต้องใช้ตามแผนมื้ออาหาร และส่งออกเป็นรูปแบบ **PDF** หรือ **ข้อความ (Text)** โดยใช้ **Factory Method Pattern**
 
-### 📈 Adherence Reporting & Progress Tracking
-- Compare planned vs. actual food portion intake with automatic compliance scoring (% adherence).
+### 📈 5. ระบบติดตามและรายงานผล (Adherence Tracking)
+- เปรียบเทียบอาหารที่วางแผนไว้กับอาหารที่รับประทานจริง คำนวณคะแนนความต่อเนื่อง (% Adherence) อัตโนมัติ
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ สถาปัตยกรรมระบบ (System Architecture)
 
 ```mermaid
 graph TD
-    User([📱 User / Client / Nutritionist])
+    User([📱 ผู้ใช้งาน / Client / Nutritionist])
     
     subgraph "Vercel Edge Network (Frontend)"
         NextJS["⚡ Next.js 16 App Router<br/>(React 19 + TypeScript + TailwindCSS v4)"]
@@ -99,52 +106,36 @@ graph TD
 
 ---
 
-## 📐 Object-Oriented Design & Architectural Patterns
+## 📐 การออกแบบเชิงวัตถุ & Clean Architecture (OOP & Design Patterns)
 
-### 1. Clean Architecture (Onion Architecture)
-The backend project is segregated into distinct layers to enforce separation of concerns:
-- `NutriPlan.Domain`: Pure business entities (`User`, `Client`, `Nutritionist`, `MealPlan`, `DailyMenu`, `FoodItem`), Value Objects (`NutrientProfile`), and Enums. No external dependencies.
-- `NutriPlan.Application`: Use cases, DTOs, Service Interfaces (`IMealPlanService`, `IAuthService`).
-- `NutriPlan.Infrastructure`: Entity Framework Core DbContext, Migrations, Repository Implementations, Security & Database Seeding.
-- `NutriPlan.Api`: ASP.NET Core Web API Controllers, Middleware, Dependency Injection Setup.
+### 1. การแบ่ง Layer ตาม Clean Architecture (Onion Architecture)
+- **`NutriPlan.Domain` (Core Layer):** เก็บ Business Entities (`User`, `Client`, `Nutritionist`, `MealPlan`, `DailyMenu`, `FoodItem`), Value Objects (`NutrientProfile`) และ Enums โดยไม่มี Dependency ภายนอก
+- **`NutriPlan.Application`:** รวม Use Cases, DTOs และ Interfaces ของบริการ (`IMealPlanService`, `IAuthService`)
+- **`NutriPlan.Infrastructure`:** ส่วนติดต่อฐานข้อมูลผ่าน EF Core 8, Repository Implementations, Migrations และการต่อสู้กับ Security
+- **`NutriPlan.Api`:** Controllers รับส่ง REST API Request/Response และ DI Container Setup
 
-### 2. Design Patterns Applied
-- **Repository & Unit of Work Pattern:** Decouples data access from business logic (`IUserRepository`, `IMealPlanRepository`, `IUnitOfWork`).
-- **Factory Method Pattern:** Encapsulates shopping list export logic (`ShoppingListFactory` creating PDF or Text formatted output).
-- **Value Object Pattern:** Implemented immutable `NutrientProfile` for encapsulating calories, protein, carbs, fat, and fiber logic.
-- **Dependency Inversion Principle (DIP):** All services communicate exclusively through interfaces, registered via standard ASP.NET Core IoC container.
-
----
-
-## 🛠️ Technology Stack
-
-### **Frontend**
-- **Framework:** Next.js 16 (App Router) & React 19
-- **Language:** TypeScript 5
-- **Styling:** Tailwind CSS v4 & Vanilla CSS
-- **HTTP Client:** Axios with dynamic JWT interceptors
-- **Hosting:** Vercel Edge Network
-
-### **Backend**
-- **Framework:** .NET 8 (ASP.NET Core Web API)
-- **ORM:** Entity Framework Core 8 (EF Core)
-- **Database Driver:** Npgsql PostgreSQL Provider
-- **Authentication:** JSON Web Tokens (JWT Bearer)
-- **Containerization:** Docker (Multi-stage build)
-- **Hosting:** Render.com Cloud Platform
-
-### **Database**
-- **Engine:** Serverless PostgreSQL 16
-- **Hosting:** Neon.tech (AWS Singapore Region)
+### 2. Design Patterns ที่นำมาประยุกต์ใช้
+- **Repository & Unit of Work Pattern:** แยก Logic การเข้าถึงฐานข้อมูลออกจาก Business Logic (`IUserRepository`, `IMealPlanRepository`, `IUnitOfWork`)
+- **Factory Method Pattern:** สรุปรายการวัตถุดิบและสร้างรูปแบบเอกสาร Shopping List (`ShoppingListFactory` สำหรับ PDF และ Text)
+- **Value Object Pattern:** สร้าง Class `NutrientProfile` ที่แก้ไขค่าไม่ได้ (Immutable) เพื่อคำนวณแคลอรีรวมและสารอาหาร
+- **Dependency Inversion Principle (DIP):** ทุก Module สื่อสารกันผ่าน Interface และฉีด Dependency ผ่าน IoC Container ของ .NET 8
 
 ---
 
-## 💻 Local Development Setup
+## 🛠️ เทคโนโลยีที่ใช้ (Tech Stack)
 
-### Prerequisites
+* **Frontend:** Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS v4, Axios
+* **Backend:** .NET 8 (ASP.NET Core Web API), Entity Framework Core 8, Npgsql, JWT Authentication, Docker
+* **Database:** Serverless PostgreSQL 16 บน Neon Cloud (AWS Singapore)
+* **Hosting:** Vercel (Frontend), Render (Backend)
+
+---
+
+## 💻 คู่มือการติดตั้งและรันโปรเจกต์ในเครื่อง (Local Setup)
+
+### สิ่งที่ต้องเตรียมไว้ก่อน (Prerequisites)
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Node.js 20+ & npm](https://nodejs.org/)
-- [PostgreSQL Database](https://www.postgresql.org/) (or use Neon Cloud connection string)
+- [Node.js 20+ และ npm](https://nodejs.org/)
 
 ### 1. Clone Repository
 ```bash
@@ -152,41 +143,65 @@ git clone https://github.com/6731470008-web/NutriPlan.git
 cd NutriPlan
 ```
 
-### 2. Backend Setup (.NET API)
+### 2. การตั้งค่า Backend (.NET API)
 ```bash
 cd backend
 
-# Restore dependencies
+# สั่ง Restore Package
 dotnet restore
 
-# Apply EF Core migrations to database
+# รัน Migration เพื่อสร้างโครงสร้างฐานข้อมูล
 dotnet ef database update --project src/Infrastructure/NutriPlan.Infrastructure --startup-project src/Infrastructure/NutriPlan.Api
 
-# Start backend server
+# รัน Backend Server
 dotnet run --project src/Infrastructure/NutriPlan.Api
 ```
-The API will run locally at `http://localhost:5128`.
+*Backend จะรันที่ `http://localhost:5128`*
 
-### 3. Frontend Setup (Next.js)
+### 3. การตั้งค่า Frontend (Next.js)
 ```bash
 cd ../frontend
 
-# Install node dependencies
+# ติดตั้ง Node Modules
 npm install
 
-# Run Next.js dev server
+# รัน Development Server
 npm run dev
 ```
-Open [http://localhost:3001](http://localhost:3001) in your browser.
+*เปิดเว็บเบราว์เซอร์เข้าที่ `http://localhost:3001`*
 
 ---
 
-## 📄 License
+<br/>
 
-Distributed under the **MIT License**. See `LICENSE` for more information.
+---
+
+# 🇬🇧 Section 2: English Summary
+
+## 📌 Executive Summary
+
+**NutriPlan** is an enterprise-grade nutrition management platform built with **Clean Architecture**, **Domain-Driven Design (DDD)**, and **Object-Oriented Design (OOD)** principles. It allows general clients to track daily food intake and calculate precise caloric/macronutrient requirements (BMR/TDEE), while empowering professional Nutritionists to construct personalized multi-day meal plans and export dynamic shopping lists.
+
+## 🚀 Public Deployment Links
+- **Frontend App (Vercel):** [https://nutri-plan-chi-two.vercel.app](https://nutri-plan-chi-two.vercel.app)
+- **Backend API (Render):** `https://nutriplan-b3i6.onrender.com/api/v1`
+- **Database:** Neon Cloud Serverless PostgreSQL (Singapore Region)
+
+## 🔑 Test Credentials
+- **Client:** `client@test.com` / `Password123!`
+- **Nutritionist:** `nutritionist@test.com` / `Password123!`
+- **User:** `user@test.com` / `Password123!`
+
+## 📐 Key Design Patterns & Software Engineering Principles
+1. **Clean Architecture:** Strict isolation between Domain, Application, Infrastructure, and API layers.
+2. **Repository & Unit of Work:** Decoupled data access logic for high testability.
+3. **Factory Method Pattern:** Encapsulated shopping list export generation (PDF / Text formats).
+4. **SOLID & DIP:** Complete interface-driven dependency injection across the codebase.
+
+---
 
 <div align="center">
 
-Developed with ❤️ for Academic & Professional Excellence in Object-Oriented Software Engineering.
+Distributed under the **MIT License**. Created with ❤️ for Academic & Professional Software Engineering.
 
 </div>
