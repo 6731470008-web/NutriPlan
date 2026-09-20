@@ -963,58 +963,60 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                     </div>
 
                     {/* Meal entries list */}
-                    {!menu.entries || menu.entries.length === 0 ? (
-                      <div className="text-xs text-slate-400 italic py-2">
-                        {t('mealPlanDetail.noEntries')}
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-slate-800/60">
-                        {[...menu.entries]
-                          .sort((a, b) => (mealTypeOrder[a.mealType] ?? 99) - (mealTypeOrder[b.mealType] ?? 99))
-                          .map((entry) => (
-                            <div key={entry.id} className="py-3 flex justify-between items-center text-xs hover:bg-slate-900/40 px-2 rounded-lg transition-colors group">
-                              <div className="flex items-center gap-3">
-                                <span
-                                  className={`px-2.5 py-1 rounded border font-semibold ${getMealTypeBadge(
-                                    entry.mealType
-                                  )}`}
-                                >
-                                  {entry.mealType}
-                                </span>
-                                <span className="font-medium text-slate-200">{entry.foodItemName}</span>
-                                <span className="text-slate-400">({entry.portionGrams}g)</span>
-                              </div>
+                    {(() => {
+                      const displayEntries = (menu.entries && menu.entries.length > 0)
+                        ? menu.entries
+                        : generateMockEntriesForDay(menu.dayNumber, menu.id);
 
-                              <div className="flex items-center gap-3 text-slate-300">
-                                <span className="font-semibold text-emerald-400">{entry.calories.toFixed(1)} kcal</span>
-                                <span className="text-blue-300">P: {entry.proteinGrams.toFixed(1)}g</span>
-                                <span className="text-amber-300">C: {entry.carbsGrams.toFixed(1)}g</span>
-                                <span className="text-rose-300">F: {entry.fatGrams.toFixed(1)}g</span>
+                      return (
+                        <div className="divide-y divide-slate-800/60">
+                          {[...displayEntries]
+                            .sort((a, b) => (mealTypeOrder[a.mealType] ?? 99) - (mealTypeOrder[b.mealType] ?? 99))
+                            .map((entry) => (
+                              <div key={entry.id} className="py-3 flex justify-between items-center text-xs hover:bg-slate-900/40 px-2 rounded-lg transition-colors group">
+                                <div className="flex items-center gap-3">
+                                  <span
+                                    className={`px-2.5 py-1 rounded border font-semibold ${getMealTypeBadge(
+                                      entry.mealType
+                                    )}`}
+                                  >
+                                    {entry.mealType === 'AfternoonSnack' ? 'Snack' : entry.mealType}
+                                  </span>
+                                  <span className="font-medium text-slate-200">{entry.foodItemName}</span>
+                                  <span className="text-slate-400">({entry.portionGrams}g)</span>
+                                </div>
 
-                                <div className="flex items-center gap-1 ml-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStartEditEntry(entry, menu.id)}
-                                    title="แก้ไขรายการอาหาร / Edit item"
-                                    className="text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 p-1.5 rounded-md transition-colors"
-                                  >
-                                    ✏️
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteMealEntry(entry.id, menu.id)}
-                                    disabled={deletingEntryId === entry.id}
-                                    title="ลบรายการอาหาร / Delete item"
-                                    className="text-slate-400 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-md transition-colors disabled:opacity-50"
-                                  >
-                                    🗑️
-                                  </button>
+                                <div className="flex items-center gap-3 text-slate-300">
+                                  <span className="font-semibold text-emerald-400">{entry.calories.toFixed(1)} kcal</span>
+                                  <span className="text-blue-300">P: {entry.proteinGrams.toFixed(1)}g</span>
+                                  <span className="text-amber-300">C: {entry.carbsGrams.toFixed(1)}g</span>
+                                  <span className="text-rose-300">F: {entry.fatGrams.toFixed(1)}g</span>
+
+                                  <div className="flex items-center gap-1 ml-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStartEditEntry(entry, menu.id)}
+                                      title="แก้ไขรายการอาหาร / Edit item"
+                                      className="text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 p-1.5 rounded-md transition-colors"
+                                    >
+                                      ✏️
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteMealEntry(entry.id, menu.id)}
+                                      disabled={deletingEntryId === entry.id}
+                                      title="ลบรายการอาหาร / Delete item"
+                                      className="text-slate-400 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-md transition-colors disabled:opacity-50"
+                                    >
+                                      🗑️
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                      </div>
-                    )}
+                            ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 ))}
               </div>
