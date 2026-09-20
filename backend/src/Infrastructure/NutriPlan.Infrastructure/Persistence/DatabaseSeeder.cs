@@ -13,16 +13,16 @@ public static class DatabaseSeeder
         {
             await context.Database.EnsureCreatedAsync();
 
-            // Ensure missing columns exist and elevate admin@admin.com to Admin role
+            var defaultPasswordHash = BCrypt.Net.BCrypt.HashPassword("00000000");
+
+            // Ensure missing columns exist and elevate admin@admin.com to Admin role with default password
             await context.Database.ExecuteSqlRawAsync(@"
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS ""DateOfBirth"" timestamp with time zone NULL;
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS ""Gender"" integer NOT NULL DEFAULT 0;
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS ""HealthConditions"" text NULL;
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS ""FoodAllergies"" text NULL;
-                UPDATE users SET ""Role"" = 3 WHERE LOWER(""Email"") = 'admin@admin.com';
             ");
-
-            var defaultPasswordHash = BCrypt.Net.BCrypt.HashPassword("00000000");
+            await context.Database.ExecuteSqlAsync($"UPDATE users SET \"Role\" = 3, \"PasswordHash\" = {defaultPasswordHash} WHERE LOWER(\"Email\") = 'admin@admin.com';");
 
             // Seed user@test.com if it doesn't exist
             if (!await context.Users.AnyAsync(u => u.Email == "user@test.com"))

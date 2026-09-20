@@ -27,7 +27,7 @@ export default function LoginPage() {
       localStorage.setItem('nutriplan_user_name', res.fullName || res.email);
       localStorage.setItem('nutriplan_user_email', res.email || '');
 
-      if (res.role === 'Nutritionist') {
+      if (res.role === 'Nutritionist' || res.role === 'Admin') {
         router.push('/dashboard/nutritionist');
       } else {
         router.push('/dashboard/client');
