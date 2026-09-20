@@ -3,7 +3,7 @@
 import { useEffect, useState, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { mealPlanService, foodService, userService } from '@/services/nutriServices';
-import { MealPlanDto, FoodItemDto, MealType } from '@/types';
+import { MealPlanDto, FoodItemDto, MealType, MealEntryDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
@@ -187,10 +187,11 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
           })
         };
 
-        const planTotalCalories = processedPlan.dailyMenus.reduce((sum, m) => sum + m.totalCalories, 0);
-        const planTotalProtein = processedPlan.dailyMenus.reduce((sum, m) => sum + m.totalProteinGrams, 0);
-        const planTotalCarbs = processedPlan.dailyMenus.reduce((sum, m) => sum + m.totalCarbsGrams, 0);
-        const planTotalFat = processedPlan.dailyMenus.reduce((sum, m) => sum + m.totalFatGrams, 0);
+        const validMenus = processedPlan.dailyMenus || [];
+        const planTotalCalories = validMenus.reduce((sum, m) => sum + m.totalCalories, 0);
+        const planTotalProtein = validMenus.reduce((sum, m) => sum + m.totalProteinGrams, 0);
+        const planTotalCarbs = validMenus.reduce((sum, m) => sum + m.totalCarbsGrams, 0);
+        const planTotalFat = validMenus.reduce((sum, m) => sum + m.totalFatGrams, 0);
 
         processedPlan.totalCalories = planTotalCalories;
         processedPlan.totalProteinGrams = planTotalProtein;
