@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { mealPlanService, foodService, userService } from '@/services/nutriServices';
 import { MealPlanDto, FoodItemDto, MealType, MealEntryDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { UserHeader } from '@/components/UserHeader';
 
 export default function MealPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -664,15 +664,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
-      <div className="flex justify-between items-center mb-6">
-        <button
-          onClick={handleBackToDashboard}
-          className="text-xs text-slate-400 hover:text-emerald-400 flex items-center gap-1 transition-colors"
-        >
-          ← {t('common.backToDashboard')}
-        </button>
-        <LanguageSwitcher />
-      </div>
+      <UserHeader showBack={true} />
 
       {isLoading ? (
         <div className="text-center text-slate-400 py-12">{t('mealPlanDetail.loadingDetails')}</div>

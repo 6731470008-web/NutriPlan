@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { mealPlanService, trackingService } from '@/services/nutriServices';
 import { MealPlanDto, AdherenceReportDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { UserHeader } from '@/components/UserHeader';
 
 export default function ClientDashboard() {
   const router = useRouter();
@@ -47,21 +47,10 @@ export default function ClientDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
-      <header className="flex justify-between items-center pb-6 border-b border-slate-800 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-emerald-400">{t('clientDashboard.title')}</h1>
-          <p className="text-slate-400 text-sm">{t('clientDashboard.subtitle')}</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <LanguageSwitcher />
-          <button
-            onClick={handleLogout}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-4 py-2 rounded-lg border border-slate-700"
-          >
-            {t('common.logout')}
-          </button>
-        </div>
-      </header>
+      <UserHeader
+        title={t('clientDashboard.title')}
+        subtitle={t('clientDashboard.subtitle')}
+      />
 
       {isLoading ? (
         <div className="text-center text-slate-400 py-12">{t('clientDashboard.loadingRecords')}</div>

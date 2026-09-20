@@ -4,7 +4,7 @@ import { useState, useRef, FormEvent, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { mealPlanService } from '@/services/nutriServices';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { UserHeader } from '@/components/UserHeader';
 
 function CreateMealPlanForm() {
   const router = useRouter();
@@ -173,17 +173,8 @@ export default function CreateMealPlanPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8 flex flex-col items-center">
-      <div className="w-full max-w-lg flex justify-between items-center mb-8">
-        <button
-          onClick={() => {
-            const role = typeof window !== 'undefined' ? localStorage.getItem('nutriplan_user_role') : null;
-            router.push(role === 'Client' ? '/dashboard/client' : '/dashboard/nutritionist');
-          }}
-          className="text-xs text-slate-400 hover:text-emerald-400 flex items-center gap-1"
-        >
-          ← {t('common.backToDashboard')}
-        </button>
-        <LanguageSwitcher />
+      <div className="w-full max-w-lg">
+        <UserHeader showBack={true} />
       </div>
 
       <Suspense fallback={<div className="text-slate-400 py-12">{t('common.loading')}</div>}>

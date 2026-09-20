@@ -58,6 +58,8 @@ export default function RegisterPage() {
       localStorage.setItem('nutriplan_jwt_token', res.token);
       localStorage.setItem('nutriplan_user_role', res.role);
       localStorage.setItem('nutriplan_user_id', res.userId);
+      localStorage.setItem('nutriplan_user_name', res.fullName || res.email);
+      localStorage.setItem('nutriplan_user_email', res.email || '');
 
       if (res.role === 'Nutritionist') {
         router.push('/dashboard/nutritionist');

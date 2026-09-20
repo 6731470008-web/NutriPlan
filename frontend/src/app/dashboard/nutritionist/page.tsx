@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { userService, mealPlanService } from '@/services/nutriServices';
 import { MealPlanDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { UserHeader } from '@/components/UserHeader';
 
 interface ClientItem {
   id: string;
@@ -139,21 +139,10 @@ export default function NutritionistDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
-      <header className="flex justify-between items-center pb-6 border-b border-slate-800 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-emerald-400">{t('nutritionistDashboard.title')}</h1>
-          <p className="text-slate-400 text-sm">{t('nutritionistDashboard.subtitle')}</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <LanguageSwitcher />
-          <button
-            onClick={handleLogout}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-4 py-2 rounded-lg border border-slate-700 transition-colors"
-          >
-            {t('common.logout')}
-          </button>
-        </div>
-      </header>
+      <UserHeader
+        title={t('nutritionistDashboard.title')}
+        subtitle={t('nutritionistDashboard.subtitle')}
+      />
 
       {error && (
         <div className="bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-lg mb-6">
