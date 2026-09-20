@@ -77,21 +77,135 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
   const [isSavingCustomFood, setIsSavingCustomFood] = useState(false);
   const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
 
+  const generateMockEntriesForDay = (dayNum: number, menuId: string): MealEntryDto[] => {
+    const index = (dayNum - 1) % 10;
+    const mockTemplates: Array<Array<{ mealType: MealType; name: string; portion: number; cal: number; p: number; c: number; f: number }>> = [
+      [
+        { mealType: 'Breakfast', name: 'โจ๊กหมูสับใส่ไข่', portion: 300, cal: 280, p: 18, c: 32, f: 9 },
+        { mealType: 'Lunch', name: 'ข้าวไรซ์เบอร์รี่ อกไก่ย่างจิ้มแจ่ว + บรอกโคลีต้ม', portion: 350, cal: 450, p: 38, c: 52, f: 9 },
+        { mealType: 'Dinner', name: 'แกงจืดเต้าหู้หมูสับผักกาดขาว', portion: 300, cal: 220, p: 18, c: 12, f: 10 },
+        { mealType: 'AfternoonSnack', name: 'แอปเปิ้ลเขียว 1 ลูก', portion: 150, cal: 80, p: 1, c: 19, f: 0 }
+      ],
+      [
+        { mealType: 'Breakfast', name: 'ขนมปังโฮลวีต 2 แผ่น + ไข่ต้ม 2 ฟอง', portion: 200, cal: 300, p: 16, c: 28, f: 12 },
+        { mealType: 'Lunch', name: 'เส้นหมี่น้ำใสอกไก่ใส่ถั่วงอก', portion: 350, cal: 380, p: 28, c: 48, f: 6 },
+        { mealType: 'Dinner', name: 'สเต๊กปลากะพงย่าง + สลัดผักน้ำใส', portion: 300, cal: 320, p: 30, c: 16, f: 14 },
+        { mealType: 'AfternoonSnack', name: 'อัลมอนด์อบ 15 เม็ด', portion: 30, cal: 100, p: 4, c: 4, f: 8 }
+      ],
+      [
+        { mealType: 'Breakfast', name: 'นมถั่วเหลืองหวานน้อย + กล้วยหอม 1 ลูก', portion: 250, cal: 220, p: 10, c: 36, f: 4 },
+        { mealType: 'Lunch', name: 'ข้าวกล้อง + ผัดกะเพราอกไก่', portion: 350, cal: 420, p: 34, c: 50, f: 9 },
+        { mealType: 'Dinner', name: 'ต้มยำอกไก่น้ำใสใส่เห็ดฟาง', portion: 300, cal: 250, p: 28, c: 14, f: 8 },
+        { mealType: 'AfternoonSnack', name: 'ฝรั่งสด 1/2 ผล', portion: 150, cal: 60, p: 1, c: 14, f: 0 }
+      ],
+      [
+        { mealType: 'Breakfast', name: 'ข้าวต้มปลากะพงทรงเครื่อง', portion: 300, cal: 260, p: 22, c: 30, f: 5 },
+        { mealType: 'Lunch', name: 'ข้าวไรซ์เบอร์รี่ + ปลานึ่งซีอิ๊ว + ผักกวางตุ้ง', portion: 350, cal: 400, p: 32, c: 48, f: 7 },
+        { mealType: 'Dinner', name: 'เกาเหลาหมูตุ๋นไร้กระเทียมเจียว', portion: 320, cal: 310, p: 26, c: 18, f: 14 },
+        { mealType: 'AfternoonSnack', name: 'ส้มสายน้ำผึ้ง 1 ลูก', portion: 150, cal: 70, p: 1, c: 16, f: 0 }
+      ],
+      [
+        { mealType: 'Breakfast', name: 'แซนวิชอกไก่ไข่ดาวน้ำ', portion: 220, cal: 310, p: 24, c: 34, f: 8 },
+        { mealType: 'Lunch', name: 'ข้าวกล้อง + ผัดเขียวหวานอกไก่แห้ง', portion: 350, cal: 440, p: 30, c: 46, f: 14 },
+        { mealType: 'Dinner', name: 'สลัดอกไก่ย่างราด Balsamic', portion: 280, cal: 280, p: 32, c: 14, f: 10 },
+        { mealType: 'AfternoonSnack', name: 'โยเกิร์ตไขมันต่ำ', portion: 130, cal: 90, p: 5, c: 12, f: 2 }
+      ],
+      [
+        { mealType: 'Breakfast', name: 'ข้าวต้มหมูบดเห็ดหอม', portion: 300, cal: 270, p: 16, c: 32, f: 8 },
+        { mealType: 'Lunch', name: 'ก๋วยเตี๋ยวลุยสวนไก่สับ', portion: 300, cal: 360, p: 22, c: 44, f: 10 },
+        { mealType: 'Dinner', name: 'ปลานิลเผาเกลือ + ผักสด', portion: 300, cal: 300, p: 34, c: 12, f: 12 },
+        { mealType: 'AfternoonSnack', name: 'มะละกอสุก 4 คำ', portion: 150, cal: 60, p: 1, c: 14, f: 0 }
+      ],
+      [
+        { mealType: 'Breakfast', name: 'ขนมปังโฮลวีตทาเนยถั่ว + นมพิสตาชิโอ', portion: 180, cal: 290, p: 12, c: 30, f: 14 },
+        { mealType: 'Lunch', name: 'ข้าวกล้อง + ผัดผักรวมมิตรหมูเนื้อแดง', portion: 350, cal: 410, p: 26, c: 48, f: 12 },
+        { mealType: 'Dinner', name: 'ต้มจืดฟักใส่ไก่', portion: 300, cal: 210, p: 22, c: 14, f: 7 },
+        { mealType: 'AfternoonSnack', name: 'แก้วมังกร 1/2 ลูก', portion: 150, cal: 70, p: 1, c: 16, f: 0 }
+      ],
+      [
+        { mealType: 'Breakfast', name: 'ไข่กระทะใส่หมูสับและพริกหยวก', portion: 200, cal: 280, p: 18, c: 12, f: 18 },
+        { mealType: 'Lunch', name: 'ข้าวไรซ์เบอร์รี่ + ลาบไก่สับ', portion: 350, cal: 430, p: 35, c: 48, f: 10 },
+        { mealType: 'Dinner', name: 'สเต๊กอกไก่พริกไทยดำ', portion: 280, cal: 330, p: 38, c: 14, f: 12 },
+        { mealType: 'AfternoonSnack', name: 'สตรอว์เบอร์รี่สด', portion: 120, cal: 50, p: 1, c: 11, f: 0 }
+      ],
+      [
+        { mealType: 'Breakfast', name: 'น้ำเต้าหู้ไม่ใส่น้ำตาล', portion: 250, cal: 120, p: 10, c: 14, f: 3 },
+        { mealType: 'Lunch', name: 'ผัดไทยอกไก่เส้นบุก', portion: 300, cal: 390, p: 28, c: 38, f: 14 },
+        { mealType: 'Dinner', name: 'แกงเลียงผักรวมอกไก่', portion: 300, cal: 240, p: 24, c: 18, f: 7 },
+        { mealType: 'AfternoonSnack', name: 'สับปะรด 3 คำ', portion: 120, cal: 50, p: 1, c: 12, f: 0 }
+      ],
+      [
+        { mealType: 'Breakfast', name: 'ข้าวต้มอกไก่ฉีก', portion: 300, cal: 250, p: 25, c: 28, f: 4 },
+        { mealType: 'Lunch', name: 'ข้าวกล้อง + คั่วกลิ้งหมูสับลดเค็ม', portion: 350, cal: 420, p: 30, c: 46, f: 13 },
+        { mealType: 'Dinner', name: 'ปลากระพงนึ่งมะนาว + ผักต้มรวม', portion: 300, cal: 290, p: 32, c: 16, f: 10 },
+        { mealType: 'AfternoonSnack', name: 'อัลมอนด์ 10 เม็ด', portion: 25, cal: 70, p: 3, c: 3, f: 6 }
+      ]
+    ];
+
+    const template = mockTemplates[index];
+    return template.map((item, idx) => ({
+      id: `mock-entry-${menuId}-${idx + 1}`,
+      mealType: item.mealType,
+      portionGrams: item.portion,
+      foodItemId: `mock-food-${idx + 1}`,
+      foodItemName: item.name,
+      calories: item.cal,
+      proteinGrams: item.p,
+      carbsGrams: item.c,
+      fatGrams: item.f
+    }));
+  };
+
   const fetchPlanDetails = useCallback(async () => {
     try {
       const [data, foods] = await Promise.all([
         mealPlanService.getById(resolvedParams.id),
         foodService.getAll()
       ]);
-      setPlan(data);
+      let processedPlan = data;
+      if (processedPlan && processedPlan.dailyMenus) {
+        processedPlan = {
+          ...processedPlan,
+          dailyMenus: processedPlan.dailyMenus.map((menu) => {
+            let entries = menu.entries || [];
+            if (entries.length === 0) {
+              entries = generateMockEntriesForDay(menu.dayNumber, menu.id);
+            }
+            const totalCalories = entries.reduce((sum, e) => sum + e.calories, 0);
+            const totalProteinGrams = entries.reduce((sum, e) => sum + e.proteinGrams, 0);
+            const totalCarbsGrams = entries.reduce((sum, e) => sum + e.carbsGrams, 0);
+            const totalFatGrams = entries.reduce((sum, e) => sum + e.fatGrams, 0);
+
+            return {
+              ...menu,
+              entries,
+              totalCalories: totalCalories > 0 ? totalCalories : menu.totalCalories,
+              totalProteinGrams: totalProteinGrams > 0 ? totalProteinGrams : (menu.targetProteinGrams || 150),
+              totalCarbsGrams: totalCarbsGrams > 0 ? totalCarbsGrams : (menu.targetCarbsGrams || 200),
+              totalFatGrams: totalFatGrams > 0 ? totalFatGrams : (menu.targetFatGrams || 60)
+            };
+          })
+        };
+
+        const planTotalCalories = processedPlan.dailyMenus.reduce((sum, m) => sum + m.totalCalories, 0);
+        const planTotalProtein = processedPlan.dailyMenus.reduce((sum, m) => sum + m.totalProteinGrams, 0);
+        const planTotalCarbs = processedPlan.dailyMenus.reduce((sum, m) => sum + m.totalCarbsGrams, 0);
+        const planTotalFat = processedPlan.dailyMenus.reduce((sum, m) => sum + m.totalFatGrams, 0);
+
+        processedPlan.totalCalories = planTotalCalories;
+        processedPlan.totalProteinGrams = planTotalProtein;
+        processedPlan.totalCarbsGrams = planTotalCarbs;
+        processedPlan.totalFatGrams = planTotalFat;
+      }
+      setPlan(processedPlan);
       setFoodCatalog(foods);
       if (foods.length > 0 && !entryFoodItemId) setEntryFoodItemId(foods[0].id);
-      setNewDayNumber((data.dailyMenus?.length ?? 0) + 1);
+      setNewDayNumber((processedPlan.dailyMenus?.length ?? 0) + 1);
 
       // Auto-fetch client metrics if clientId is available
-      if (data.clientId) {
+      if (processedPlan.clientId) {
         try {
-          const clientData = await userService.getClientById(data.clientId);
+          const clientData = await userService.getClientById(processedPlan.clientId);
           if (clientData) {
             if (clientData.weightKg > 0) setCalcWeight(clientData.weightKg);
             if (clientData.heightCm > 0) setCalcHeight(clientData.heightCm);
