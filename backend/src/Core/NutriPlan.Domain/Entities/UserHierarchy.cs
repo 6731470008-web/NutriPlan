@@ -44,8 +44,8 @@ public class Nutritionist : User
 
     protected Nutritionist() : base() { LicenseNumber = null!; Specialization = null!; }
 
-    public Nutritionist(string email, string passwordHash, string fullName, string licenseNumber, string specialization)
-        : base(email, passwordHash, fullName, UserRole.Nutritionist)
+    public Nutritionist(string email, string passwordHash, string fullName, string licenseNumber, string specialization, UserRole role = UserRole.Nutritionist)
+        : base(email, passwordHash, fullName, role)
     {
         if (string.IsNullOrWhiteSpace(licenseNumber))
             throw new DomainException("License number is mandatory for nutritionists.");

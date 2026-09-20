@@ -13,12 +13,13 @@ public static class DatabaseSeeder
         {
             await context.Database.EnsureCreatedAsync();
 
-            // Ensure missing columns exist in existing PostgreSQL schema
+            // Ensure missing columns exist and elevate admin@admin.com to Admin role
             await context.Database.ExecuteSqlRawAsync(@"
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS ""DateOfBirth"" timestamp with time zone NULL;
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS ""Gender"" integer NOT NULL DEFAULT 0;
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS ""HealthConditions"" text NULL;
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS ""FoodAllergies"" text NULL;
+                UPDATE users SET ""Role"" = 3 WHERE LOWER(""Email"") = 'admin@admin.com';
             ");
 
             var defaultPasswordHash = BCrypt.Net.BCrypt.HashPassword("00000000");
@@ -77,7 +78,7 @@ public static class DatabaseSeeder
                 await context.Users.AddAsync(nutritionistTest);
             }
 
-            // Seed admin@admin.com if it doesn't exist
+            // Seed admin@admin.com if it doesn't exist with Admin role
             Nutritionist adminUser;
             var existingAdmin = await context.Users.OfType<Nutritionist>().FirstOrDefaultAsync(u => u.Email == "admin@admin.com");
             if (existingAdmin == null)
@@ -85,9 +86,10 @@ public static class DatabaseSeeder
                 adminUser = new Nutritionist(
                     email: "admin@admin.com",
                     passwordHash: defaultPasswordHash,
-                    fullName: "ดร. สมชาย ภักดีโภชน (Admin Nutritionist)",
+                    fullName: "ดร. สมชาย ภักดีโภชน (System Admin)",
                     licenseNumber: "LIC-102938",
-                    specialization: "Clinical Nutrition & Chronic Disease Management"
+                    specialization: "Clinical Nutrition & System Administration",
+                    role: UserRole.Admin
                 );
                 await context.Users.AddAsync(adminUser);
                 await context.SaveChangesAsync();

@@ -112,7 +112,7 @@ public class UsersController : ControllerBase
 
     // Endpoint 7: Get Nutritionist Clients
     [HttpGet("nutritionists/my-clients")]
-    [Authorize(Roles = "Nutritionist")]
+    [Authorize(Roles = "Nutritionist,Admin")]
     public async Task<ActionResult<List<object>>> GetMyClients([FromQuery] Guid nutritionistId)
     {
         var clients = await _userRepository.GetClientsByNutritionistIdAsync(nutritionistId);
