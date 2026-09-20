@@ -112,6 +112,8 @@ export interface AddMealEntryDto {
 
 export interface AdherenceReportDto {
   clientId: string;
+  totalLogged?: number;
+  adheredCount?: number;
   adherenceRatePercent: number;
   status: string;
 }

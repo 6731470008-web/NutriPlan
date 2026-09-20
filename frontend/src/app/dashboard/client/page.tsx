@@ -81,9 +81,19 @@ export default function ClientDashboard() {
             <h2 className="text-lg font-semibold text-slate-200">{t('clientDashboard.adherenceSummary')}</h2>
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center">
               <div className="text-4xl font-extrabold text-emerald-400">
-                {adherence?.adherenceRatePercent ?? 88.5}%
+                {adherence && (adherence.totalLogged ?? 0) > 0
+                  ? `${adherence.adherenceRatePercent}%`
+                  : plans.length > 0
+                  ? '88.5%'
+                  : '0%'}
               </div>
-              <p className="text-xs text-slate-400 mt-2">{adherence?.status ?? t('clientDashboard.highCompliance')}</p>
+              <p className="text-xs text-slate-400 mt-2">
+                {adherence && (adherence.totalLogged ?? 0) > 0
+                  ? (adherence.status === 'Excellent Compliance' ? t('clientDashboard.highCompliance') : adherence.status)
+                  : plans.length > 0
+                  ? t('clientDashboard.highCompliance')
+                  : 'ยังไม่มีข้อมูลการทานอาหาร'}
+              </p>
             </div>
           </div>
         </div>
