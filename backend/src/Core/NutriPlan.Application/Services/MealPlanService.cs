@@ -94,9 +94,9 @@ public class MealPlanService : IMealPlanService
 
         ShoppingListFactory factory = format.ToLowerInvariant() switch
         {
-            "pdf" => new PdfShoppingListFactory(),
+            "pdf" or "txt" => new PdfShoppingListFactory(),
             "json" => new JsonShoppingListFactory(),
-            _ => throw new DomainException("Unsupported export format. Use 'pdf' or 'json'.")
+            _ => throw new DomainException("Unsupported export format. Use 'pdf', 'txt', or 'json'.")
         };
 
         return factory.GenerateShoppingList(plan);

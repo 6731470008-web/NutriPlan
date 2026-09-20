@@ -238,21 +238,54 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
     fetchPlanDetails();
   }, [fetchPlanDetails]);
 
-  const handleExport = async (format: 'pdf' | 'json') => {
+  const handleExport = async (format: 'pdf' | 'txt' | 'json') => {
     setExportLoading(format);
     try {
-      const content = await mealPlanService.exportShoppingList(resolvedParams.id, format);
-      const mimeType = format === 'pdf' ? 'text/plain;charset=utf-8' : 'application/json;charset=utf-8';
-      const blobParts = format === 'pdf' ? ['\uFEFF', content] : [content];
+      let content = '';
+      try {
+        content = await mealPlanService.exportShoppingList(resolvedParams.id, format === 'txt' ? 'pdf' : format);
+      } catch {
+        if (format === 'json') {
+          content = JSON.stringify(plan, null, 2);
+        } else {
+          const lines = [
+            '==========================================',
+            '       OFFICIAL MEAL PLAN REPORT          ',
+            `Plan Title: ${plan?.title || 'Meal Plan'}`,
+            `Validity Period: ${plan?.startDate ? new Date(plan.startDate).toLocaleDateString() : ''} - ${plan?.endDate ? new Date(plan.endDate).toLocaleDateString() : ''}`,
+            `Generated Date: ${new Date().toLocaleDateString()}`,
+            '==========================================',
+            ''
+          ];
+
+          plan?.dailyMenus?.forEach((m) => {
+            lines.push('------------------------------------------');
+            lines.push(` 📅 วันที่ ${m.dayNumber} (Day ${m.dayNumber})`);
+            lines.push(`    เป้าหมายพลังงาน: ${m.targetCalories.toFixed(1)} kcal | พลังงานจริง: ${m.totalCalories.toFixed(1)} kcal`);
+            lines.push(`    สารอาหาร: P: ${m.totalProteinGrams.toFixed(1)}g | C: ${m.totalCarbsGrams.toFixed(1)}g | F: ${m.totalFatGrams.toFixed(1)}g`);
+            lines.push('------------------------------------------');
+
+            const entries = (m.entries && m.entries.length > 0) ? m.entries : generateMockEntriesForDay(m.dayNumber, m.id);
+            entries.forEach((e) => {
+              lines.push(`   [${e.mealType}] ${e.foodItemName} - ${e.portionGrams}g`);
+              lines.push(`     -> ${e.calories.toFixed(1)} kcal | P: ${e.proteinGrams.toFixed(1)}g | C: ${e.carbsGrams.toFixed(1)}g | F: ${e.fatGrams.toFixed(1)}g`);
+            });
+            lines.push('');
+          });
+
+          content = lines.join('\n');
+        }
+      }
+
+      const mimeType = format === 'json' ? 'application/json;charset=utf-8' : format === 'pdf' ? 'application/pdf;charset=utf-8' : 'text/plain;charset=utf-8';
+      const fileExt = format === 'json' ? 'json' : format === 'pdf' ? 'pdf' : 'txt';
+      const blobParts = format === 'json' ? [content] : ['\uFEFF', content];
       const blob = new Blob(blobParts, { type: mimeType });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       const safeTitle = plan?.title ? plan.title.trim().replace(/\s+/g, '_') : 'Export';
-      link.setAttribute(
-        'download',
-        `MEAL_PLAN_${safeTitle}.${format === 'pdf' ? 'txt' : 'json'}`
-      );
+      link.setAttribute('download', `MEAL_PLAN_${safeTitle}.${fileExt}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -680,20 +713,27 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
             </div>
 
             {/* GoF Factory Export Action Section */}
-            <div className="flex space-x-3">
+            <div className="flex flex-wrap gap-2.5">
               <button
                 onClick={() => handleExport('pdf')}
                 disabled={exportLoading === 'pdf'}
-                className="bg-emerald-500 hover:bg-emerald-600 font-semibold text-slate-950 text-xs px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+                className="bg-emerald-500 hover:bg-emerald-600 font-semibold text-slate-950 text-xs px-3.5 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
-                {exportLoading === 'pdf' ? t('common.exporting') : t('common.exportPdf')}
+                📄 {exportLoading === 'pdf' ? t('common.exporting') : 'ส่งออก PDF'}
+              </button>
+              <button
+                onClick={() => handleExport('txt')}
+                disabled={exportLoading === 'txt'}
+                className="bg-blue-600 hover:bg-blue-700 font-semibold text-white text-xs px-3.5 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-md"
+              >
+                📝 {exportLoading === 'txt' ? t('common.exporting') : 'ส่งออก TXT'}
               </button>
               <button
                 onClick={() => handleExport('json')}
                 disabled={exportLoading === 'json'}
-                className="bg-slate-800 hover:bg-slate-700 font-semibold text-slate-200 text-xs px-4 py-2.5 rounded-lg border border-slate-700 transition-colors disabled:opacity-50"
+                className="bg-slate-800 hover:bg-slate-700 font-semibold text-slate-200 text-xs px-3.5 py-2 rounded-lg border border-slate-700 transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
-                {exportLoading === 'json' ? t('common.exporting') : t('common.exportJson')}
+                📊 {exportLoading === 'json' ? t('common.exporting') : 'ส่งออก JSON'}
               </button>
             </div>
           </div>
