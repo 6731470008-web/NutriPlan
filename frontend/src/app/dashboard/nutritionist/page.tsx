@@ -92,7 +92,7 @@ export default function NutritionistDashboard() {
   };
 
   const handleDeletePlan = async (planId: string, clientName: string) => {
-    if (!confirm(`คุณต้องการลบแผนอาหารนี้ใช่หรือไม่? / Delete meal plan for ${clientName}?`)) {
+    if (!confirm(`${t('nutritionistDashboard.confirmDeletePlan')} (${clientName})`)) {
       return;
     }
     setDeletingPlanId(planId);
@@ -189,7 +189,7 @@ export default function NutritionistDashboard() {
                               )}
                               {client.foodAllergies && (
                                 <span className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-medium">
-                                  ⚠️ แพ้: {client.foodAllergies}
+                                  ⚠️ {t('common.allergies')}: {client.foodAllergies}
                                 </span>
                               )}
                             </div>
@@ -211,13 +211,13 @@ export default function NutritionistDashboard() {
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                            📋 แผนอาหารที่บันทึกไว้ ({plans.length})
+                            📋 {t('nutritionistDashboard.savedMealPlans')} ({plans.length})
                           </h4>
                         </div>
 
                         {plans.length === 0 ? (
                           <div className="bg-slate-950/60 border border-slate-800/60 rounded-lg p-3 text-center text-xs text-slate-500 italic">
-                            ยังไม่มีแผนอาหารในระบบ / No saved meal plans
+                            {t('nutritionistDashboard.noSavedPlans')}
                           </div>
                         ) : (
                           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -240,7 +240,7 @@ export default function NutritionistDashboard() {
                                       e.stopPropagation();
                                       handleStartEditPlan(p);
                                     }}
-                                    title="แก้ไขแผน / Edit plan"
+                                    title={t('nutritionistDashboard.editPlan')}
                                     className="text-slate-400 hover:text-amber-400 hover:bg-amber-500/20 p-1.5 rounded transition-colors"
                                   >
                                     ✏️
@@ -251,7 +251,7 @@ export default function NutritionistDashboard() {
                                       handleDeletePlan(p.id, client.fullName);
                                     }}
                                     disabled={deletingPlanId === p.id}
-                                    title="ลบแผน / Delete plan"
+                                    title={t('nutritionistDashboard.deletePlan')}
                                     className="text-slate-400 hover:text-red-400 hover:bg-red-500/20 p-1.5 rounded transition-colors disabled:opacity-50"
                                   >
                                     🗑️
@@ -329,11 +329,11 @@ export default function NutritionistDashboard() {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
             <h3 className="text-lg font-bold text-emerald-400">
-              ✏️ แก้ไขแผนอาหาร / Edit Meal Plan
+              ✏️ {t('nutritionistDashboard.editMealPlanModal')}
             </h3>
             <form onSubmit={handleSavePlanEdit} className="space-y-4">
               <div>
-                <label className="block text-xs text-slate-300 mb-1">ชื่อแผนอาหาร / Plan Title *</label>
+                <label className="block text-xs text-slate-300 mb-1">{t('createMealPlanPage.planTitleLabel')} *</label>
                 <input
                   type="text"
                   required
@@ -345,7 +345,7 @@ export default function NutritionistDashboard() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">วันเริ่มต้น / Start Date</label>
+                  <label className="block text-xs text-slate-300 mb-1">{t('createMealPlanPage.startDateLabel')}</label>
                   <input
                     type="date"
                     required
@@ -355,7 +355,7 @@ export default function NutritionistDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-300 mb-1">วันสิ้นสุด / End Date</label>
+                  <label className="block text-xs text-slate-300 mb-1">{t('createMealPlanPage.endDateLabel')}</label>
                   <input
                     type="date"
                     required
@@ -379,7 +379,7 @@ export default function NutritionistDashboard() {
                   disabled={isSavingPlan}
                   className="w-1/2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50"
                 >
-                  {isSavingPlan ? t('common.loading') : 'บันทึกการเปลี่ยนแปลง'}
+                  {isSavingPlan ? t('common.loading') : t('common.saveChanges')}
                 </button>
               </div>
             </form>

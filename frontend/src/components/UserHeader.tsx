@@ -64,9 +64,9 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
   };
 
   const getRoleLabel = (role: string) => {
-    if (role === 'Nutritionist') return 'นักโภชนาการ';
-    if (role === 'Client') return 'ผู้รับบริการ';
-    if (role === 'Admin') return 'ผู้ดูแลระบบ';
+    if (role === 'Nutritionist') return t('auth.nutritionistRole', 'Nutritionist');
+    if (role === 'Client') return t('auth.clientRole', 'Client');
+    if (role === 'Admin') return 'Admin';
     return role;
   };
 
@@ -111,7 +111,7 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
         <button
           onClick={handleLogout}
           className="bg-slate-900 hover:bg-red-950/80 hover:border-red-500/60 text-slate-300 hover:text-red-200 text-xs px-3.5 py-2 rounded-lg border border-slate-700 font-semibold transition-all flex items-center gap-1.5 shadow-sm"
-          title="ออกจากระบบ / Logout"
+          title={t('common.logout')}
         >
           <svg className="w-4 h-4 text-slate-400 group-hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
