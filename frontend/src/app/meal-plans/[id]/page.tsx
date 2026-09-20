@@ -241,40 +241,118 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
   const handleExport = async (format: 'pdf' | 'txt' | 'json') => {
     setExportLoading(format);
     try {
+      if (!plan) return;
       let content = '';
-      try {
-        content = await mealPlanService.exportShoppingList(resolvedParams.id, format === 'txt' ? 'pdf' : format);
-      } catch {
-        if (format === 'json') {
-          content = JSON.stringify(plan, null, 2);
-        } else {
-          const lines = [
-            '==========================================',
-            '       OFFICIAL MEAL PLAN REPORT          ',
-            `Plan Title: ${plan?.title || 'Meal Plan'}`,
-            `Validity Period: ${plan?.startDate ? new Date(plan.startDate).toLocaleDateString() : ''} - ${plan?.endDate ? new Date(plan.endDate).toLocaleDateString() : ''}`,
-            `Generated Date: ${new Date().toLocaleDateString()}`,
-            '==========================================',
-            ''
-          ];
 
-          plan?.dailyMenus?.forEach((m) => {
-            lines.push('------------------------------------------');
-            lines.push(` 📅 วันที่ ${m.dayNumber} (Day ${m.dayNumber})`);
-            lines.push(`    เป้าหมายพลังงาน: ${m.targetCalories.toFixed(1)} kcal | พลังงานจริง: ${m.totalCalories.toFixed(1)} kcal`);
-            lines.push(`    สารอาหาร: P: ${m.totalProteinGrams.toFixed(1)}g | C: ${m.totalCarbsGrams.toFixed(1)}g | F: ${m.totalFatGrams.toFixed(1)}g`);
-            lines.push('------------------------------------------');
+      const getProcessedDailyMenus = () => {
+        return (plan.dailyMenus || []).map((m) => {
+          const entries = (m.entries && m.entries.length > 0)
+            ? m.entries
+            : generateMockEntriesForDay(m.dayNumber, m.id);
+          return {
+            ...m,
+            entries
+          };
+        });
+      };
 
-            const entries = (m.entries && m.entries.length > 0) ? m.entries : generateMockEntriesForDay(m.dayNumber, m.id);
-            entries.forEach((e) => {
-              lines.push(`   [${e.mealType}] ${e.foodItemName} - ${e.portionGrams}g`);
-              lines.push(`     -> ${e.calories.toFixed(1)} kcal | P: ${e.proteinGrams.toFixed(1)}g | C: ${e.carbsGrams.toFixed(1)}g | F: ${e.fatGrams.toFixed(1)}g`);
-            });
-            lines.push('');
+      const processedMenus = getProcessedDailyMenus();
+
+      if (format === 'json') {
+        const foodSummaryMap: Record<string, number> = {};
+        const jsonMenus = processedMenus.map((m) => {
+          return {
+            dayNumber: m.dayNumber,
+            targetCalories: m.targetCalories,
+            totalCalories: m.totalCalories,
+            totalProteinGrams: m.totalProteinGrams,
+            totalCarbsGrams: m.totalCarbsGrams,
+            totalFatGrams: m.totalFatGrams,
+            entries: m.entries.map((e) => {
+              if (e.foodItemName) {
+                foodSummaryMap[e.foodItemName] = (foodSummaryMap[e.foodItemName] || 0) + e.portionGrams;
+              }
+              return {
+                id: e.id,
+                mealType: e.mealType,
+                foodItemName: e.foodItemName,
+                portionGrams: e.portionGrams,
+                calories: e.calories,
+                proteinGrams: e.proteinGrams,
+                carbsGrams: e.carbsGrams,
+                fatGrams: e.fatGrams
+              };
+            })
+          };
+        });
+
+        const shoppingListSummary = Object.entries(foodSummaryMap).map(([foodName, totalGrams]) => ({
+          foodName,
+          totalGrams
+        }));
+
+        const exportPayload = {
+          planTitle: plan.title,
+          startDate: plan.startDate,
+          endDate: plan.endDate,
+          generatedAt: new Date().toISOString(),
+          totalCalories: plan.totalCalories,
+          totalProteinGrams: plan.totalProteinGrams,
+          totalCarbsGrams: plan.totalCarbsGrams,
+          totalFatGrams: plan.totalFatGrams,
+          dailyMenus: jsonMenus,
+          shoppingListSummary
+        };
+
+        content = JSON.stringify(exportPayload, null, 2);
+      } else {
+        const lines: string[] = [
+          '==========================================================',
+          '               OFFICIAL MEAL PLAN REPORT                  ',
+          '                    NutriPlan Academic                    ',
+          '==========================================================',
+          `Plan Title: ${plan.title || 'Meal Plan'}`,
+          `Validity Period: ${plan.startDate ? new Date(plan.startDate).toLocaleDateString() : ''} - ${plan.endDate ? new Date(plan.endDate).toLocaleDateString() : ''}`,
+          `Generated Date: ${new Date().toLocaleDateString()}`,
+          `Total Energy Target: ${plan.totalCalories ? plan.totalCalories.toFixed(1) : 0} kcal`,
+          '==========================================================',
+          ''
+        ];
+
+        const foodSummaryMap: Record<string, number> = {};
+
+        processedMenus.forEach((m) => {
+          lines.push('----------------------------------------------------------');
+          lines.push(` 📅 วันที่ ${m.dayNumber} (Day ${m.dayNumber})`);
+          lines.push(`    เป้าหมายพลังงาน: ${m.targetCalories.toFixed(1)} kcal | พลังงานจริง: ${m.totalCalories.toFixed(1)} kcal`);
+          lines.push(`    สารอาหาร: P: ${(m.totalProteinGrams || 0).toFixed(1)}g | C: ${(m.totalCarbsGrams || 0).toFixed(1)}g | F: ${(m.totalFatGrams || 0).toFixed(1)}g`);
+          lines.push('----------------------------------------------------------');
+
+          m.entries.forEach((e) => {
+            lines.push(`   [${e.mealType}] ${e.foodItemName} - ${e.portionGrams}g`);
+            lines.push(`     -> ${e.calories.toFixed(1)} kcal | P: ${e.proteinGrams.toFixed(1)}g | C: ${e.carbsGrams.toFixed(1)}g | F: ${e.fatGrams.toFixed(1)}g`);
+
+            if (e.foodItemName) {
+              foodSummaryMap[e.foodItemName] = (foodSummaryMap[e.foodItemName] || 0) + e.portionGrams;
+            }
           });
+          lines.push('');
+        });
 
-          content = lines.join('\n');
+        lines.push('==========================================================');
+        lines.push(' 🛒 สรุปวัตถุดิบอาหารรวมทั้งหมด (Consolidated Shopping List)');
+        lines.push('==========================================================');
+        const summaryEntries = Object.entries(foodSummaryMap);
+        if (summaryEntries.length === 0) {
+          lines.push(' (ไม่มีวัตถุดิบในแผนอาหาร)');
+        } else {
+          summaryEntries.forEach(([foodName, totalGrams]) => {
+            lines.push(` [ ] ${foodName}: ${totalGrams.toFixed(1)}g`);
+          });
         }
+        lines.push('==========================================================');
+
+        content = lines.join('\n');
       }
 
       const mimeType = format === 'json' ? 'application/json;charset=utf-8' : format === 'pdf' ? 'application/pdf;charset=utf-8' : 'text/plain;charset=utf-8';
@@ -284,7 +362,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      const safeTitle = plan?.title ? plan.title.trim().replace(/\s+/g, '_') : 'Export';
+      const safeTitle = plan.title ? plan.title.trim().replace(/\s+/g, '_') : 'Export';
       link.setAttribute('download', `MEAL_PLAN_${safeTitle}.${fileExt}`);
       document.body.appendChild(link);
       link.click();
