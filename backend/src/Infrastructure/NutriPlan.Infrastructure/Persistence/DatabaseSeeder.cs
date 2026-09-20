@@ -97,6 +97,26 @@ public static class DatabaseSeeder
                 adminUser = existingAdmin;
             }
 
+            // Seed nutritionist@admin.com if it doesn't exist (Nutritionist role with full client access)
+            Nutritionist staffNutritionist;
+            var existingStaff = await context.Users.OfType<Nutritionist>().FirstOrDefaultAsync(u => u.Email == "nutritionist@admin.com");
+            if (existingStaff == null)
+            {
+                staffNutritionist = new Nutritionist(
+                    email: "nutritionist@admin.com",
+                    passwordHash: defaultPasswordHash,
+                    fullName: "พญ. นภาพร วงศ์โภชนา (Nutritionist Staff)",
+                    licenseNumber: "LIC-887766",
+                    specialization: "Clinical Nutrition & Patient Care"
+                );
+                await context.Users.AddAsync(staffNutritionist);
+                await context.SaveChangesAsync();
+            }
+            else
+            {
+                staffNutritionist = existingStaff;
+            }
+
             // Seed 10 clients assigned to admin@admin.com with 10-day meal plans
             var mockClientsData = new[]
             {
