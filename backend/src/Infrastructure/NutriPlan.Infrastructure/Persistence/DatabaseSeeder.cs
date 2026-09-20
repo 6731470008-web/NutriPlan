@@ -77,8 +77,76 @@ public static class DatabaseSeeder
                 await context.Users.AddAsync(nutritionistTest);
             }
 
+            // Seed admin@admin.com if it doesn't exist
+            Nutritionist adminUser;
+            var existingAdmin = await context.Users.OfType<Nutritionist>().FirstOrDefaultAsync(u => u.Email == "admin@admin.com");
+            if (existingAdmin == null)
+            {
+                adminUser = new Nutritionist(
+                    email: "admin@admin.com",
+                    passwordHash: defaultPasswordHash,
+                    fullName: "ดร. สมชาย ภักดีโภชน (Admin Nutritionist)",
+                    licenseNumber: "LIC-102938",
+                    specialization: "Clinical Nutrition & Chronic Disease Management"
+                );
+                await context.Users.AddAsync(adminUser);
+                await context.SaveChangesAsync();
+            }
+            else
+            {
+                adminUser = existingAdmin;
+            }
+
+            // Seed 10 clients assigned to admin@admin.com with 10-day meal plans
+            var mockClientsData = new[]
+            {
+                new { Email = "client01@nutriplan.com", Name = "คุณวิภาดา สุขสำราญ", Age = 34, W = 68.0, H = 160.0, Gender = Gender.Female, Act = ActivityLevel.ModeratelyActive, Health = "ไขมันในเลือดสูง (Hyperlipidemia)", Allergy = "กุ้ง, อาหารทะเล", GoalTitle = "แผนโภชนาการลดไขมัน 10 วัน", Cal = 1500.0, P = 94.0, C = 188.0, F = 42.0 },
+                new { Email = "client02@nutriplan.com", Name = "คุณสุรศักดิ์ เด่นดวง", Age = 45, W = 82.0, H = 172.0, Gender = Gender.Male, Act = ActivityLevel.LightlyActive, Health = "เบาหวานชนิดที่ 2 (Type 2 Diabetes)", Allergy = "ไม่มี", GoalTitle = "แผนโภชนาการ Low GI คุมน้ำตาล 10 วัน", Cal = 1700.0, P = 106.0, C = 213.0, F = 47.0 },
+                new { Email = "client03@nutriplan.com", Name = "คุณพิมลพรรณ วงศ์เทวา", Age = 29, W = 52.0, H = 163.0, Gender = Gender.Female, Act = ActivityLevel.ModeratelyActive, Health = "ภาวะโลหิตจาง (Anemia)", Allergy = "ถั่วเหลือง", GoalTitle = "แผนโภชนาการเสริมธาตุเหล็ก 10 วัน", Cal = 1800.0, P = 113.0, C = 225.0, F = 50.0 },
+                new { Email = "client04@nutriplan.com", Name = "คุณอนุรักษ์ ปัญญาวุธ", Age = 52, W = 78.0, H = 168.0, Gender = Gender.Male, Act = ActivityLevel.LightlyActive, Health = "ความดันโลหิตสูง (Hypertension - DASH)", Allergy = "นมวัว (Lactose)", GoalTitle = "แผนโภชนาการ DASH คุมความดัน 10 วัน", Cal = 1600.0, P = 100.0, C = 200.0, F = 44.0 },
+                new { Email = "client05@nutriplan.com", Name = "คุณณิชาภัทร เลิศศิริ", Age = 38, W = 59.0, H = 158.0, Gender = Gender.Female, Act = ActivityLevel.ModeratelyActive, Health = "กรดไหลย้อน (GERD)", Allergy = "ผงชูรส, อาหารรสจัด", GoalTitle = "แผนโภชนาการย่อยง่ายลดกรด 10 วัน", Cal = 1550.0, P = 97.0, C = 194.0, F = 43.0 },
+                new { Email = "client06@nutriplan.com", Name = "คุณชยุต รัตนโชติ", Age = 27, W = 74.0, H = 178.0, Gender = Gender.Male, Act = ActivityLevel.VeryActive, Health = "สร้างกล้ามเนื้อ (Athlete)", Allergy = "ไม่มี", GoalTitle = "แผนโภชนาการ High Protein 10 วัน", Cal = 2400.0, P = 180.0, C = 270.0, F = 67.0 },
+                new { Email = "client07@nutriplan.com", Name = "คุณธิดารัตน์ รุ่งเรือง", Age = 41, W = 64.0, H = 155.0, Gender = Gender.Female, Act = ActivityLevel.LightlyActive, Health = "ภาวะถุงน้ำในรังไข่ (PCOS)", Allergy = "แป้งสาลี (Gluten)", GoalTitle = "แผนโภชนาการ Gluten-Free Low Carb 10 วัน", Cal = 1450.0, P = 91.0, C = 145.0, F = 56.0 },
+                new { Email = "client08@nutriplan.com", Name = "คุณเกียรติศักดิ์ เจริญพร", Age = 60, W = 66.0, H = 165.0, Gender = Gender.Male, Act = ActivityLevel.Sedentary, Health = "โรคเกาต์ (Gout)", Allergy = "ปีกไก่, เครื่องในสัตว์", GoalTitle = "แผนโภชนาการ Low Purine 10 วัน", Cal = 1650.0, P = 103.0, C = 206.0, F = 46.0 },
+                new { Email = "client09@nutriplan.com", Name = "คุณมณีรัตน์ แสงทอง", Age = 31, W = 55.0, H = 162.0, Gender = Gender.Female, Act = ActivityLevel.ModeratelyActive, Health = "คุณแม่ให้นมบุตร (Postpartum)", Allergy = "ไม่มี", GoalTitle = "แผนโภชนาการบำรุงน้ำนม 10 วัน", Cal = 2200.0, P = 138.0, C = 275.0, F = 61.0 },
+                new { Email = "client10@nutriplan.com", Name = "คุณกิตติพงษ์ ศรีอุบล", Age = 50, W = 85.0, H = 170.0, Gender = Gender.Male, Act = ActivityLevel.LightlyActive, Health = "ไขมันพอกตับ (NAFLD)", Allergy = "อาหารหมักดอง", GoalTitle = "แผนโภชนาการ Mediterranean Diet 10 วัน", Cal = 1600.0, P = 100.0, C = 200.0, F = 44.0 }
+            };
+
+            foreach (var item in mockClientsData)
+            {
+                if (!await context.Users.AnyAsync(u => u.Email == item.Email))
+                {
+                    var client = new Client(
+                        email: item.Email,
+                        passwordHash: defaultPasswordHash,
+                        fullName: item.Name,
+                        age: item.Age,
+                        weightKg: item.W,
+                        heightCm: item.H,
+                        activityLevel: item.Act,
+                        gender: item.Gender,
+                        healthConditions: item.Health,
+                        foodAllergies: item.Allergy,
+                        dateOfBirth: DateTime.SpecifyKind(DateTime.UtcNow.AddYears(-item.Age), DateTimeKind.Utc)
+                    );
+
+                    client.AssignNutritionist(adminUser.Id);
+
+                    // Create 10-day MealPlan
+                    var plan = new MealPlan(client.Id, item.GoalTitle, DateTime.UtcNow, DateTime.UtcNow.AddDays(10));
+                    for (int day = 1; day <= 10; day++)
+                    {
+                        var dailyMenu = new DailyMenu(day, item.Cal, item.P, item.C, item.F);
+                        plan.AddDailyMenu(dailyMenu);
+                    }
+                    client.AddMealPlan(plan);
+
+                    await context.Users.AddAsync(client);
+                }
+            }
+
             await context.SaveChangesAsync();
-            Console.WriteLine("[DatabaseSeeder] Successfully updated database schema and seeded initial demo accounts (user@test.com, client@test.com, nutritionist@test.com).");
+            Console.WriteLine("[DatabaseSeeder] Successfully seeded admin@admin.com and 10 patients with 10-day meal plans.");
         }
         catch (Exception ex)
         {

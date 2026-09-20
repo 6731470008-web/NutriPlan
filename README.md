@@ -38,20 +38,11 @@
 
 ---
 
-## 🌐 ลิงก์ระบบออนไลน์และบัญชีเข้าใช้งาน
+## 🌐 ลิงก์ระบบออนไลน์ (Live Deployments)
 
-### 🔗 ระบบที่เปิดให้บริการสาธารณะ (Production Deployments)
 * **Frontend Application (Vercel):** [https://nutri-plan-chi-two.vercel.app](https://nutri-plan-chi-two.vercel.app)
 * **Backend RESTful API (Render):** `https://nutriplan-b3i6.onrender.com/api/v1`
 * **Cloud Database (Neon PostgreSQL):** Serverless PostgreSQL (Singapore Data Center)
-
-### 🔑 บัญชีทดสอบระบบตามบทบาท (Test Accounts)
-
-| บทบาท (Role) | อีเมล (Email) | รหัสผ่าน (Password) | สิทธิ์และขอบเขตการใช้งาน |
-| :--- | :--- | :--- | :--- |
-| 🥗 **Client (ผู้รับบริการ)** | `client@test.com` | `Password123!` | คำนวณ BMR/TDEE, บันทึกการรับประทานอาหารจริง, ดูรายงานความต่อเนื่อง |
-| 🩺 **Nutritionist (นักโภชนาการ)** | `nutritionist@test.com` | `Password123!` | จัดการรายชื่อลูกค้า, ออกแบบแผนอาหารประจำวัน, ส่งออกรายการวัตถุดิบ |
-| 👤 **User (ผู้ใช้งานทั่วไป)** | `user@test.com` | `Password123!` | จัดการข้อมูลส่วนตัว และค้นหาฐานข้อมูลสารอาหารของวัตถุดิบ |
 
 ---
 
@@ -194,20 +185,11 @@ Architected using **Clean Architecture (Onion Architecture)**, **Domain-Driven D
 
 ---
 
-## 🌐 Public Live Deployments & Credentials
+## 🌐 Public Live Deployments
 
-### 🔗 Live Environments
 * **Frontend Web Application (Vercel):** [https://nutri-plan-chi-two.vercel.app](https://nutri-plan-chi-two.vercel.app)
 * **Backend RESTful API (Render):** `https://nutriplan-b3i6.onrender.com/api/v1`
 * **Cloud Database (Neon PostgreSQL):** Serverless PostgreSQL (Singapore Data Center)
-
-### 🔑 Role-Based Test Accounts
-
-| Role | Email | Password | Access Scope & Capabilities |
-| :--- | :--- | :--- | :--- |
-| 🥗 **Client** | `client@test.com` | `Password123!` | Calculate BMR/TDEE, Log actual daily meals, View adherence metrics |
-| 🩺 **Nutritionist** | `nutritionist@test.com` | `Password123!` | Manage client roster, Design daily meal plans, Export shopping lists |
-| 👤 **General User** | `user@test.com` | `Password123!` | Personal profile management and food item nutrient database lookup |
 
 ---
 
