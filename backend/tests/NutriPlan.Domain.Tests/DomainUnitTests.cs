@@ -20,7 +20,8 @@ public class DomainUnitTests
             age: 28,
             weightKg: 65,
             heightCm: 168,
-            activityLevel: ActivityLevel.ModeratelyActive
+            activityLevel: ActivityLevel.ModeratelyActive,
+            gender: Gender.Male
         );
 
         // Act
