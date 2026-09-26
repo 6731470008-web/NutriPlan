@@ -10,6 +10,7 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 ![.NET 8](https://img.shields.io/badge/.NET_8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google_Gemini_AI-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 ![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)
@@ -20,7 +21,7 @@
 
 <br/>
 
-**[ 🇹🇭 ภาษาไทย ]** | **[ 🇬🇧 English ]**
+**[ 🇹🇭 ภาษาไทย ](#-ภาษาไทย)** | **[ 🇬🇧 English ](#-english)**
 
 ---
 
@@ -32,7 +33,7 @@
 
 ## 📌 บทนำและวัตถุประสงค์ของระบบ
 
-**NutriPlan** คือแพลตฟอร์มจัดการโภชนาการและวางแผนมื้ออาหารแบบครบวงจร ออกแบบมาเพื่อยกระดับการดูแลสุขภาพส่วนบุคคลและการทำงานของนักโภชนาการมืออาชีพ ระบบช่วยแก้ปัญหาความซับซ้อนในการคำนวณพลังงาน สารอาหารหลัก (Macronutrients) การจัดรายการอาหารที่สอดคล้องกับข้อจำกัดด้านสุขภาพ และการติดตามความต่อเนื่องในการรับประทานอาหารของผู้ใช้
+**NutriPlan** คือแพลตฟอร์มจัดการโภชนาการและวางแผนมื้ออาหารแบบครบวงจร ออกแบบมาเพื่อยกระดับการดูแลสุขภาพส่วนบุคคลและการทำงานของนักโภชนาการมืออาชีพ ระบบช่วยแก้ปัญหาความซับซ้อนในการคำนวณพลังงาน สารอาหารหลัก (Macronutrients) การจัดรายการอาหารที่สอดคล้องกับข้อจำกัดด้านสุขภาพ การติดตามความต่อเนื่องในการรับประทานอาหารของผู้ใช้ และการนำ **ปัญญาประดิษฐ์ (AI Computer Vision)** มาช่วยประเมินสารอาหารจากภาพถ่ายมื้ออาหารจริง
 
 โปรเจกต์นี้ได้รับการพัฒนาภายใต้สถาปัตยกรรม **Clean Architecture (Onion Architecture)** ร่วมกับหลักการ **SOLID Principles** และ **Domain-Driven Design (DDD)** โดยมีการนำเสนอการประยุกต์ใช้ **Object-Oriented Design (OOD)** และ **Design Patterns** ระดับสูง เพื่อให้โค้ดมีความยืดหยุ่น รองรับการขยายตัว (Scalability) และมีประสิทธิภาพสูง
 
@@ -42,29 +43,53 @@
 
 * **Frontend Application (Vercel):** [https://nutri-plan-chi-two.vercel.app](https://nutri-plan-chi-two.vercel.app)
 * **Backend RESTful API (Render):** `https://nutriplan-b3i6.onrender.com/api/v1`
-* **Cloud Database (Neon PostgreSQL):** Serverless PostgreSQL (Singapore Data Center)
+* **Cloud Database (Neon PostgreSQL):** Serverless PostgreSQL 16 (AWS Singapore Data Center)
 
 ---
 
-## ✨ ฟีเจอร์และความสามารถหลัก
+## 🔑 ข้อมูลบัญชีสำหรับทดสอบระบบ (Demo Accounts)
 
-### 🔐 1. ระบบยืนยันตัวตนและการจัดการสิทธิ์ (Authentication & RBAC)
-* ยืนยันตัวตนด้วย **JSON Web Token (JWT)** พร้อมระบบจำแนกสิทธิ์ตามบทบาท (Role-Based Access Control)
-* รองรับโครงสร้างผู้ใช้ตามลำดับขั้น (User Hierarchy: Admin, Nutritionist, Client)
+สามารถใช้บัญชีที่เตรียมไว้ในระบบเพื่อทดสอบการทำงานในแต่ละ Role ได้ทันที:
 
-### 🧮 2. เครื่องมือคำนวณโภชนาการตามหลักวิทยาศาสตร์ (BMR & TDEE Engine)
+| บทบาท (Role) | อีเมล (Email) | รหัสผ่าน (Password) | สิทธิ์และความสามารถหลัก |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@admin.com` | `00000000` | จัดการผู้ใช้ทั้งหมด, ดูแลฐานข้อมูลอาหาร, ควบคุมระบบส่วนกลาง |
+| **Nutritionist** | `nutritionist@test.com` | `00000000` | จัดทำแผนอาหารให้ลูกค้า, จัดการวัตถุดิบ, ตรวจสอบผลการปฏิบัติตามแผน |
+| **Client** | `client@test.com` | `00000000` | ดูแผนอาหาร, บันทึกการกิน, สแกนอาหารด้วย AI, เพิ่มเมนูอาหารเอง |
+
+---
+
+## ✨ ฟีเจอร์และความสามารถหลักของระบบในปัจจุบัน
+
+### 📸 1. ระบบวิเคราะห์และสแกนอาหารด้วย AI (Google Gemini Vision AI Engine)
+* **สแกนและตรวจจำแนกอาหารจากภาพถ่าย:** ถ่ายรูปหรืออัปโหลดรูปภาพอาหาร/เครื่องดื่มจากโทรศัพท์มือถือหรือคอมพิวเตอร์
+* **ตรวจจับเมนูอาหารเฉพาะทางและเมนูไทยได้อย่างแม่นยำ:** จำแนกเมนูอาหารจานเดียวของไทย รวมถึงเครื่องดื่มสุขภาพ เช่น **อกไก่ปั่น**, **อกไก่ปั่นสมูทตี้**, **เวย์โปรตีนเชค**, **สเต๊ก**, **ต้มยำ** ฯลฯ
+* **คำนวณสารอาหารและแจกแจงส่วนประกอบ:** แสดงชื่อเมนู, ปริมาณแคลอรีรวม, โปรตีน, คาร์โบไฮเดรต, ไขมัน และแจกแจงส่วนประกอบย่อยในจาน (Breakdown Items) พร้อมค่าน้ำหนักโดยประมาณและระดับความเชื่อมั่น (Confidence Score)
+* **ระบบเชื่อมโยงเบื้องหลังอัตโนมัติ (Zero Configuration):** ผูกระบบเข้ากับ **Google Gemini 3.5 Flash Lite** และ **3.8 Flash** โดยตรง ผู้ใช้งานไม่ต้องกรอก API Key เองหน้าเว็บ
+* **Smart Auto-Fill to Meal Plan:** นำผลลัพธ์จากการสแกนไปกรอกเป็นรายการอาหารในแผนโภชนาการได้ทันทีในคลิกเดียว
+
+### 📋 2. ระบบจัดทำและจัดการแผนอาหาร (Dynamic Meal Plan Builder & Client Self-Management)
+* **การวางแผนหลายวัน (Multi-Day Meal Plans):** กำหนดเมนูอาหารและเป้าหมายสารอาหารสำหรับแต่ละมื้อ (เช้า, ว่างเช้า, กลางวัน, ว่างบ่าย, เย็น)
+* **ลูกค้าสามารถเพิ่ม/ปรับปรุงเมนูอาหารในแผนได้เอง (Client Meal Addition):** แก้ไขข้อจำกัดเดิมที่ให้เฉพาะนักโภชนาการเพิ่มเมนูได้ โดยปัจจุบันลูกค้าสามารถเพิ่มรายการอาหาร หรือใช้กล้อง AI สแกนอาหารเพิ่มเข้าในแต่ละวันได้โดยตรง
+* **ระบบตรวจจับสารก่อภูมิแพ้อัจฉริยะ (Smart Allergen Detection):** ตรวจสอบวัตถุดิบเทียบกับประวัติการแพ้อาหารของลูกค้า และแจ้งเตือนทันทีหากพบส่วนผสมอันตราย
+
+### 📱 3. รองรับการปรับสเกลหน้าจอตามอุปกรณ์อัตโนมัติ (Fully Responsive & Mobile Viewport Scaling)
+* ออกแบบและปรับแต่งโครงสร้าง CSS ให้รองรับหน้าจอทุกขนาด ตั้งแต่มือถือสมาร์ตโฟน แท็บเล็ต ไปจนถึงเดสก์ท็อป
+* แก้ไขปัญหาเนื้อหาหลุดจอ (Mobile Overflow) ด้วย Next.js Viewport Configuration (`width: device-width`, `initialScale: 1`) และ Tailwind CSS v4 Responsive Breakpoints
+* รองรับ Touch Gesture และเปิดกล้องถ่ายภาพบนโทรศัพท์มือถือได้โดยตรง
+
+### 🌐 4. ระบบรองรับ 2 ภาษา (Bilingual Support: TH / EN)
+* สามารถสลับภาษาระหว่าง **ภาษาไทย** และ **English** ได้แบบ Real-time ตลอดการใช้งานผ่าน `LanguageContext`
+
+### 🧮 5. เครื่องมือคำนวณโภชนาการตามหลักวิทยาศาสตร์ (BMR & TDEE Engine)
 * คำนวณอัตราการเผาผลาญพื้นฐาน (BMR) และพลังงานที่ใช้ต่อวัน (TDEE) ด้วยสูตร **Mifflin-St Jeor** และ **Harris-Benedict**
 * ปรับแต่งเป้าหมายพลังงานอัตโนมัติ (Calorie Target) ตามวัตถุประสงค์ (ลดน้ำหนัก / คงน้ำหนัก / เพิ่มมวลกล้ามเนื้อ)
 
-### 📋 3. ระบบจัดทำแผนอาหารและเมนูประจำวัน (Dynamic Meal Plan Generator)
-* สร้างแผนอาหารแบบหลายวัน (Multi-Day Meal Plan) พร้อมกำหนดสัดส่วนสารอาหาร โปรตีน คาร์โบไฮเดรต ไขมัน และไฟเบอร์
-* ระบบคัดกรองและแจ้งเตือนวัตถุดิบที่เป็นอันตรายต่อผู้ที่มีอาการแพ้อาหาร (Smart Allergen Detection)
-
-### 🛍️ 4. ระบบสรุปและส่งออกรายการวัตถุดิบ (Automated Shopping List Aggregator)
+### 🛍️ 6. ระบบสรุปและส่งออกรายการวัตถุดิบ (Automated Shopping List Aggregator)
 * คำนวณรวมปริมาณวัตถุดิบที่ต้องใช้จากแผนอาหารทั้งหมดโดยอัตโนมัติ
 * ส่งออกเอกสารได้หลายรูปแบบ (PDF / Text) ผ่านการประยุกต์ใช้ **Factory Method Pattern**
 
-### 📊 5. ระบบติดตามและวิเคราะห์พฤติกรรม (Adherence Tracking & Analytics)
+### 📊 7. ระบบติดตามและวิเคราะห์พฤติกรรม (Adherence Tracking & Analytics)
 * บันทึกปริมาณอาหารที่รับประทานจริงเปรียบเทียบกับแผนงาน
 * ประเมินและคำนวณคะแนนความต่อเนื่อง (% Adherence Score) พร้อมรายงานผลการปฏิบัติตนตามแผนอาหาร
 
@@ -78,26 +103,34 @@ graph TD
     
     subgraph "Vercel Edge Platform (Frontend Tier)"
         NextJS["⚡ Next.js 16 App Router<br/>(React 19 + TypeScript + TailwindCSS v4)"]
+        ScannerModal["📸 AI Food Scanner Modal<br/>(Gemini Vision Engine)"]
         Axios["Client API Layer (Axios Interceptors)"]
+    end
+
+    subgraph "AI Services (Google Cloud)"
+        Gemini["🤖 Google Gemini Vision API<br/>(gemini-3.5-flash-lite / 3.8-flash)"]
     end
     
     subgraph "Render Cloud Container (Backend Tier)"
         NETCore[".NET 8 Web API<br/>(Clean Architecture & Controllers)"]
         Domain["Core Domain Layer<br/>(Entities, Value Objects, Enums)"]
         AppLayer["Application Use Cases<br/>(Services, DTOs, Interfaces)"]
-        Infra["Infrastructure Layer<br/>(EF Core 8 + Repositories)"]
+        Infra["Infrastructure Layer<br/>(EF Core 8 + Gemini Service)"]
     end
     
     subgraph "Neon Cloud Persistence (Database Tier)"
-        Postgres[(🐘 Serverless PostgreSQL<br/>AWS Singapore Data Center)]
+        Postgres[(🐘 Serverless PostgreSQL 16<br/>AWS Singapore Data Center)]
     end
 
     User -->|HTTPS Request| NextJS
+    NextJS --> ScannerModal
+    ScannerModal -.->|Image Analysis| Gemini
     NextJS --> Axios
-    Axios -->|REST API / JSON| NETCore
+    Axios -->|REST API / JWT| NETCore
     NETCore --> AppLayer
     AppLayer --> Domain
     AppLayer --> Infra
+    Infra -.->|Server-side Food Vision| Gemini
     Infra -->|Encrypted SSL Connection| Postgres
 ```
 
@@ -106,9 +139,9 @@ graph TD
 ## 📐 การออกแบบเชิงวัตถุและสถาปัตยกรรมซอฟต์แวร์ (OOD & Architecture)
 
 ### 1. โครงสร้าง Clean Architecture (4-Tier Layering)
-* **`NutriPlan.Domain`:** ชั้นในสุดที่เป็นศูนย์กลางของ Business Logic ประกอบด้วย Core Entities (`User`, `Client`, `Nutritionist`, `MealPlan`, `DailyMenu`, `FoodItem`), Value Objects (`NutrientProfile`) และ Enums โดยไม่มี Dependency ต่อ Library ภายนอก
-* **`NutriPlan.Application`:** รวม Use Cases ของระบบ, Data Transfer Objects (DTOs) และ Interfaces ของ Service (`IMealPlanService`, `IAuthService`)
-* **`NutriPlan.Infrastructure`:** การจัดการข้อมูลผ่าน Entity Framework Core 8, Repository Pattern, Database Migrations และระบบรักษาความปลอดภัย
+* **`NutriPlan.Domain`:** ชั้นในสุดที่เป็นศูนย์กลางของ Business Logic ประกอบด้วย Core Entities (`User`, `Client`, `Nutritionist`, `MealPlan`, `DailyMenu`, `FoodItem`, `MealLog`), Value Objects (`NutrientProfile`) และ Enums โดยไม่มี Dependency ต่อ Library ภายนอก
+* **`NutriPlan.Application`:** รวม Use Cases ของระบบ, Data Transfer Objects (DTOs) และ Interfaces ของ Service (`IMealPlanService`, `IAuthService`, `IFoodRecognitionService`)
+* **`NutriPlan.Infrastructure`:** การจัดการข้อมูลผ่าน Entity Framework Core 8, Repository Pattern, Database Migrations, บริการ Gemini AI (`GeminiFoodRecognitionService`) และระบบรักษาความปลอดภัย
 * **`NutriPlan.Api`:** RESTful Controllers, Middleware จัดการ Exception และการลงทะเบียน Dependency Injection (DI)
 
 ### 2. Design Patterns ที่นำมาประยุกต์ใช้ในระบบ
@@ -123,10 +156,11 @@ graph TD
 
 | ส่วนประกอบ (Component) | เทคโนโลยีหลัก (Tech Stack) | รายละเอียด |
 | :--- | :--- | :--- |
-| **Frontend UI Framework** | **Next.js 16 (React 19)** | App Router, TypeScript 5, Tailwind CSS v4 |
+| **Frontend UI Framework** | **Next.js 16 (React 19)** | App Router, TypeScript 5, Tailwind CSS v4, Lucide Icons |
 | **Backend API Engine** | **.NET 8 (ASP.NET Core)** | C#, Clean Architecture, Entity Framework Core 8 |
+| **AI Computer Vision** | **Google Gemini Vision API** | `gemini-3.5-flash-lite`, `gemini-3.8-flash` |
 | **Database System** | **PostgreSQL 16** | Serverless Architecture บน Neon Cloud (AWS Singapore) |
-| **Authentication & Security** | **JWT Bearer Token** | Role-Based Access Control (RBAC), Password Hashing |
+| **Authentication & Security** | **JWT Bearer Token** | Role-Based Access Control (RBAC), BCrypt Password Hashing |
 | **Deployment & Hosting** | **Vercel & Render** | Frontend บน Vercel Edge Network / Backend Docker บน Render |
 
 ---
@@ -168,7 +202,7 @@ npm install
 # รัน Development Server
 npm run dev
 ```
-*เปิดใช้งานหน้าเว็บได้ที่: `http://localhost:3001`*
+*เปิดใช้งานหน้าเว็บได้ที่: `http://localhost:3000` (หรือ `http://localhost:3001`)*
 
 ---
 
@@ -179,7 +213,7 @@ npm run dev
 
 ## 📌 System Overview & Vision
 
-**NutriPlan** is an enterprise-grade nutrition management platform designed to revolutionize personal health tracking and professional dietetic planning. The platform solves the underlying complexity of caloric calculations, macronutrient balancing, health-specific dietary constraint management, and client adherence tracking.
+**NutriPlan** is an enterprise-grade nutrition management platform designed to revolutionize personal health tracking and professional dietetic planning. The platform solves the underlying complexity of caloric calculations, macronutrient balancing, health-specific dietary constraint management, client adherence tracking, and the integration of **AI Computer Vision** for instant food macro recognition from photos.
 
 Architected using **Clean Architecture (Onion Architecture)**, **Domain-Driven Design (DDD)**, and **SOLID Principles**, NutriPlan showcases advanced **Object-Oriented Design (OOD)** and **Design Patterns** ensuring maintainability, high testability, and seamless scalability.
 
@@ -189,40 +223,104 @@ Architected using **Clean Architecture (Onion Architecture)**, **Domain-Driven D
 
 * **Frontend Web Application (Vercel):** [https://nutri-plan-chi-two.vercel.app](https://nutri-plan-chi-two.vercel.app)
 * **Backend RESTful API (Render):** `https://nutriplan-b3i6.onrender.com/api/v1`
-* **Cloud Database (Neon PostgreSQL):** Serverless PostgreSQL (Singapore Data Center)
+* **Cloud Database (Neon PostgreSQL):** Serverless PostgreSQL 16 (Singapore Data Center)
+
+---
+
+## 🔑 Demo Evaluation Credentials
+
+Pre-seeded accounts are available for instant testing and academic evaluation:
+
+| Role | Email | Password | Primary Permissions & Capabilities |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@admin.com` | `00000000` | Full administrative control, user & food item catalog management |
+| **Nutritionist** | `nutritionist@test.com` | `00000000` | Client plan creation, meal orchestration, adherence review |
+| **Client** | `client@test.com` | `00000000` | View assigned plans, log meals, AI food photo scanning, add entries |
 
 ---
 
 ## ✨ Core Platform Capabilities
 
-### 🔐 1. Authentication & Role-Based Access Control (RBAC)
-* Secure authentication backed by **JSON Web Tokens (JWT)**.
-* Domain-driven User Hierarchy supporting `Admin`, `Nutritionist`, and `Client` permissions.
+### 📸 1. AI Food Vision & Recognition Engine (Google Gemini Vision API)
+* **Visual Food Classification:** Capture photos or upload meal images directly from mobile cameras or desktop devices.
+* **Specialized & Thai Food Identification:** Recognizes specialized health foods and Thai dishes accurately (e.g., blended chicken breast / smoothies, protein shakes, steak, Tom Yum).
+* **Nutritional Decomposition & Estimation:** Returns menu title, total calories, macronutrients (Protein, Carbs, Fat), and ingredient breakdown items with estimated weights and confidence scores.
+* **Zero Client Configuration:** Server-bound integration powered by **Gemini 3.5 Flash Lite** and **3.8 Flash**; clients do not need to configure API keys.
+* **Smart Auto-Fill to Meal Plan:** Add scanned meal analysis directly into the daily meal plan with one click.
 
-### 🧮 2. Scientific Caloric & Macronutrient Engine (BMR & TDEE)
+### 📋 2. Dynamic Meal Plan Builder & Client Self-Management
+* **Multi-Day Meal Plans:** Plan breakfast, morning snack, lunch, afternoon snack, and dinner targets.
+* **Client Meal Addition:** Clients can add their own food entries and scan meals directly inside `/meal-plans/[id]`.
+* **Smart Allergen Detection:** Real-time cross-referencing between food ingredients and client allergy profiles.
+
+### 📱 3. Fully Responsive & Mobile Viewport Scaling
+* Engineered with mobile-first viewport scaling (`width=device-width`, `initial-scale=1`) preventing screen overflow on all mobile devices.
+* Touch-friendly controls with native camera access.
+
+### 🌐 4. Real-Time Bilingual Localization (TH / EN)
+* Dynamic language switching between Thai and English via React `LanguageContext`.
+
+### 🧮 5. Scientific Caloric & Macronutrient Engine (BMR & TDEE)
 * Implements **Mifflin-St Jeor** and **Harris-Benedict** equations based on age, gender, height, weight, and activity metrics.
 * Dynamic target calorie adjustments for Weight Loss, Maintenance, or Muscle Building.
 
-### 📋 3. Dynamic Meal Plan & Daily Menu Builder
-* Multi-day meal plan orchestration with targeted macronutrient distribution (Protein, Carbs, Fat, Fiber).
-* **Smart Allergen Detection** triggering warnings when food items conflict with client allergies.
-
-### 🛍️ 4. Automated Shopping List Aggregator (Factory Pattern)
+### 🛍️ 6. Automated Shopping List Aggregator (Factory Pattern)
 * Aggregates total ingredient requirements across meal plans.
 * Multi-format document generation (PDF / Text) driven by the **Factory Method Pattern**.
 
-### 📊 5. Adherence Analytics & Progress Monitoring
+### 📊 7. Adherence Analytics & Progress Monitoring
 * Real-time comparison between planned vs. actual consumed portions.
 * Automated compliance calculation (% Adherence Score) with historical logging.
+
+---
+
+## 🏗️ System Architecture Diagram
+
+```mermaid
+graph TD
+    User([📱 Users / Client / Nutritionist])
+    
+    subgraph "Vercel Edge Platform (Frontend Tier)"
+        NextJS["⚡ Next.js 16 App Router<br/>(React 19 + TypeScript + TailwindCSS v4)"]
+        ScannerModal["📸 AI Food Scanner Modal<br/>(Gemini Vision Engine)"]
+        Axios["Client API Layer (Axios Interceptors)"]
+    end
+
+    subgraph "AI Services (Google Cloud)"
+        Gemini["🤖 Google Gemini Vision API<br/>(gemini-3.5-flash-lite / 3.8-flash)"]
+    end
+    
+    subgraph "Render Cloud Container (Backend Tier)"
+        NETCore[".NET 8 Web API<br/>(Clean Architecture & Controllers)"]
+        Domain["Core Domain Layer<br/>(Entities, Value Objects, Enums)"]
+        AppLayer["Application Use Cases<br/>(Services, DTOs, Interfaces)"]
+        Infra["Infrastructure Layer<br/>(EF Core 8 + Gemini Service)"]
+    end
+    
+    subgraph "Neon Cloud Persistence (Database Tier)"
+        Postgres[(🐘 Serverless PostgreSQL 16<br/>AWS Singapore Data Center)]
+    end
+
+    User -->|HTTPS Request| NextJS
+    NextJS --> ScannerModal
+    ScannerModal -.->|Image Analysis| Gemini
+    NextJS --> Axios
+    Axios -->|REST API / JWT| NETCore
+    NETCore --> AppLayer
+    AppLayer --> Domain
+    AppLayer --> Infra
+    Infra -.->|Server-side Food Vision| Gemini
+    Infra -->|Encrypted SSL Connection| Postgres
+```
 
 ---
 
 ## 📐 Object-Oriented Engineering & Architecture Showcase
 
 ### 1. Clean Architecture Breakdown (4-Tier)
-* **`NutriPlan.Domain`:** Pure business domain containing core entities (`User`, `Client`, `Nutritionist`, `MealPlan`, `DailyMenu`, `FoodItem`), immutable Value Objects (`NutrientProfile`), and Enums with zero external dependencies.
-* **`NutriPlan.Application`:** Application use-cases, Data Transfer Objects (DTOs), and service abstractions (`IMealPlanService`, `IAuthService`).
-* **`NutriPlan.Infrastructure`:** Data persistence powered by Entity Framework Core 8, Repository implementations, database migrations, and security.
+* **`NutriPlan.Domain`:** Pure business domain containing core entities (`User`, `Client`, `Nutritionist`, `MealPlan`, `DailyMenu`, `FoodItem`, `MealLog`), immutable Value Objects (`NutrientProfile`), and Enums with zero external dependencies.
+* **`NutriPlan.Application`:** Application use-cases, Data Transfer Objects (DTOs), and service abstractions (`IMealPlanService`, `IAuthService`, `IFoodRecognitionService`).
+* **`NutriPlan.Infrastructure`:** Data persistence powered by Entity Framework Core 8, Repository implementations, database migrations, Gemini AI Service, and security.
 * **`NutriPlan.Api`:** ASP.NET Core RESTful controllers, global exception middleware, and Dependency Injection wiring.
 
 ### 2. Design Patterns Implemented
@@ -237,8 +335,9 @@ Architected using **Clean Architecture (Onion Architecture)**, **Domain-Driven D
 
 | Tier | Technologies |
 | :--- | :--- |
-| **Frontend** | Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS v4, Axios |
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS v4, Lucide Icons, Axios |
 | **Backend** | .NET 8 (ASP.NET Core Web API), C#, Entity Framework Core 8, Npgsql, JWT |
+| **AI Computer Vision** | Google Gemini Vision API (`gemini-3.5-flash-lite`, `gemini-3.8-flash`) |
 | **Database** | Serverless PostgreSQL 16 on Neon Cloud (AWS Singapore Data Center) |
 | **Hosting & DevOps** | Vercel (Frontend Edge Network), Render (Backend Container Docker Service) |
 
