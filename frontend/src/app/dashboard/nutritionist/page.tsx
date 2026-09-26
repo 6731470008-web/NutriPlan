@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { userService, mealPlanService } from '@/services/nutriServices';
-import { MealPlanDto } from '@/types';
+import { userService, mealPlanService, trackingService } from '@/services/nutriServices';
+import { MealPlanDto, AdherenceReportDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { UserHeader } from '@/components/UserHeader';
 
@@ -38,6 +38,27 @@ export default function NutritionistDashboard() {
   const [editEndDate, setEditEndDate] = useState('');
   const [isSavingPlan, setIsSavingPlan] = useState(false);
 
+  // Features 3-6: Client Analytics State
+  interface ClientAnalytics {
+    adherence: AdherenceReportDto | null;
+    tdee: number;
+    bmr: number;
+    weightKg: number;
+    targetWeightKg?: number;
+    avgCalories: number;
+    avgProtein: number;
+    avgCarbs: number;
+    avgFat: number;
+    targetCalories: number;
+    targetProtein: number;
+    targetCarbs: number;
+    targetFat: number;
+    totalMeals: number;
+    totalDays: number;
+  }
+  const [clientAnalyticsMap, setClientAnalyticsMap] = useState<Record<string, ClientAnalytics>>({});
+  const [showAnalyticsForClient, setShowAnalyticsForClient] = useState<string | null>(null);
+
   const fetchDashboardData = useCallback(async () => {
     const nutritionistId = localStorage.getItem('nutriplan_user_id');
     if (!nutritionistId) {
@@ -65,6 +86,51 @@ export default function NutritionistDashboard() {
         })
       );
       setClientPlansMap(Object.fromEntries(plansEntries));
+
+      // Features 3-6: Fetch analytics for each assigned client
+      const analyticsEntries = await Promise.all(
+        assignedData.map(async (client) => {
+          try {
+            const [adherenceData, clientDetail] = await Promise.all([
+              trackingService.getAdherence(client.id),
+              userService.getClientById(client.id)
+            ]);
+            const plans = plansEntries.find(([id]) => id === client.id)?.[1] || [];
+            const allMenus = plans.flatMap((p: MealPlanDto) => p.dailyMenus || []);
+            const totalDays = allMenus.length || 1;
+            const totalCalories = allMenus.reduce((sum: number, m) => sum + (m.totalCalories || 0), 0);
+            const totalProtein = allMenus.reduce((sum: number, m) => sum + (m.totalProteinGrams || 0), 0);
+            const totalCarbs = allMenus.reduce((sum: number, m) => sum + (m.totalCarbsGrams || 0), 0);
+            const totalFat = allMenus.reduce((sum: number, m) => sum + (m.totalFatGrams || 0), 0);
+            const totalMeals = allMenus.reduce((sum: number, m) => sum + (m.entries?.length || 0), 0);
+
+            const avgTargetCal = allMenus.reduce((sum: number, m) => sum + (m.targetCalories || 0), 0) / totalDays;
+            const avgTargetP = allMenus.reduce((sum: number, m) => sum + (m.targetProteinGrams || 0), 0) / totalDays;
+            const avgTargetC = allMenus.reduce((sum: number, m) => sum + (m.targetCarbsGrams || 0), 0) / totalDays;
+            const avgTargetF = allMenus.reduce((sum: number, m) => sum + (m.targetFatGrams || 0), 0) / totalDays;
+
+            return [client.id, {
+              adherence: adherenceData,
+              tdee: clientDetail.tdee,
+              bmr: clientDetail.bmr,
+              weightKg: clientDetail.weightKg,
+              avgCalories: Math.round(totalCalories / totalDays),
+              avgProtein: Math.round(totalProtein / totalDays),
+              avgCarbs: Math.round(totalCarbs / totalDays),
+              avgFat: Math.round(totalFat / totalDays),
+              targetCalories: Math.round(avgTargetCal > 0 ? avgTargetCal : clientDetail.tdee),
+              targetProtein: Math.round(avgTargetP > 0 ? avgTargetP : clientDetail.tdee * 0.25 / 4),
+              targetCarbs: Math.round(avgTargetC > 0 ? avgTargetC : clientDetail.tdee * 0.50 / 4),
+              targetFat: Math.round(avgTargetF > 0 ? avgTargetF : clientDetail.tdee * 0.25 / 9),
+              totalMeals,
+              totalDays
+            }] as [string, ClientAnalytics];
+          } catch {
+            return [client.id, null] as [string, ClientAnalytics | null];
+          }
+        })
+      );
+      setClientAnalyticsMap(Object.fromEntries(analyticsEntries.filter(([, v]) => v !== null) as [string, ClientAnalytics][]));
     } catch (err: unknown) {
       setError(t('nutritionistDashboard.failedFetchClients'));
     } finally {
@@ -263,14 +329,151 @@ export default function NutritionistDashboard() {
                         )}
                       </div>
 
-                      <div className="pt-2">
+                      <div className="pt-2 flex gap-2">
                         <button
                           onClick={() => router.push(`/meal-plans/new?clientId=${client.id}`)}
-                          className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold py-2.5 rounded-lg text-xs transition-colors flex items-center justify-center gap-1 shadow-md"
+                          className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold py-2.5 rounded-lg text-xs transition-colors flex items-center justify-center gap-1 shadow-md"
                         >
                           + {t('nutritionistDashboard.createMealPlan')}
                         </button>
+                        <button
+                          onClick={() => setShowAnalyticsForClient(showAnalyticsForClient === client.id ? null : client.id)}
+                          className={`px-3 py-2.5 rounded-lg text-xs font-semibold transition-all border ${
+                            showAnalyticsForClient === client.id
+                              ? 'bg-blue-500 text-white border-blue-400'
+                              : 'bg-slate-800 text-blue-400 border-blue-500/40 hover:bg-blue-500/20'
+                          }`}
+                        >
+                          📊
+                        </button>
                       </div>
+
+                      {/* Features 3-6: Inline Client Analytics Panel */}
+                      {showAnalyticsForClient === client.id && clientAnalyticsMap[client.id] && (() => {
+                        const a = clientAnalyticsMap[client.id];
+                        const calPct = a.targetCalories > 0 ? Math.round((a.avgCalories / a.targetCalories) * 100) : 0;
+                        const pPct = a.targetProtein > 0 ? Math.round((a.avgProtein / a.targetProtein) * 100) : 0;
+                        const cPct = a.targetCarbs > 0 ? Math.round((a.avgCarbs / a.targetCarbs) * 100) : 0;
+                        const fPct = a.targetFat > 0 ? Math.round((a.avgFat / a.targetFat) * 100) : 0;
+
+                        // Feature 5: Predictive Goal Tracking
+                        const dailyDeficit = a.tdee - a.avgCalories;
+                        const weeklyLossKg = dailyDeficit > 0 ? (dailyDeficit * 7) / 7700 : 0;
+
+                        // Feature 6: Nutrient Gap Analysis
+                        const proteinGap = a.avgProtein - a.targetProtein;
+                        const carbsGap = a.avgCarbs - a.targetCarbs;
+                        const fatGap = a.avgFat - a.targetFat;
+
+                        const getGapStatus = (gap: number, threshold: number) => {
+                          const absGap = Math.abs(gap);
+                          if (absGap <= threshold * 0.1) return { label: '✅ ปกติ', color: 'text-emerald-400' };
+                          if (gap < 0) return { label: '⚠️ ขาด', color: 'text-amber-400' };
+                          return { label: '🔴 เกิน', color: 'text-red-400' };
+                        };
+
+                        return (
+                          <div className="mt-3 bg-slate-950 border border-blue-500/30 rounded-xl p-4 space-y-4 animate-in fade-in duration-300">
+                            {/* Feature 3: Weekly Progress Summary */}
+                            <div>
+                              <h4 className="text-xs font-bold text-blue-400 uppercase mb-2">📈 สรุปความก้าวหน้า</h4>
+                              <div className="grid grid-cols-3 gap-2 text-center">
+                                <div className="bg-slate-900 rounded-lg p-2">
+                                  <p className="text-lg font-bold text-emerald-400">{a.adherence && (a.adherence.totalLogged ?? 0) > 0 ? `${a.adherence.adherenceRatePercent}%` : '—'}</p>
+                                  <p className="text-[10px] text-slate-500">อัตราปฏิบัติ</p>
+                                </div>
+                                <div className="bg-slate-900 rounded-lg p-2">
+                                  <p className="text-lg font-bold text-blue-400">{a.totalMeals}</p>
+                                  <p className="text-[10px] text-slate-500">รายการอาหาร</p>
+                                </div>
+                                <div className="bg-slate-900 rounded-lg p-2">
+                                  <p className="text-lg font-bold text-amber-400">{a.totalDays}</p>
+                                  <p className="text-[10px] text-slate-500">วันในแผน</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Feature 4: Smart Meal Insights */}
+                            <div>
+                              <h4 className="text-xs font-bold text-purple-400 uppercase mb-2">🧠 วิเคราะห์สารอาหาร</h4>
+                              <div className="space-y-2">
+                                {[
+                                  { name: '🔥 พลังงาน', avg: a.avgCalories, target: a.targetCalories, pct: calPct, unit: 'kcal', color: 'emerald' },
+                                  { name: '💪 โปรตีน', avg: a.avgProtein, target: a.targetProtein, pct: pPct, unit: 'g', color: 'blue' },
+                                  { name: '🌾 คาร์บ', avg: a.avgCarbs, target: a.targetCarbs, pct: cPct, unit: 'g', color: 'amber' },
+                                  { name: '🥑 ไขมัน', avg: a.avgFat, target: a.targetFat, pct: fPct, unit: 'g', color: 'rose' },
+                                ].map((item) => (
+                                  <div key={item.name} className="flex items-center gap-2 text-[11px]">
+                                    <span className="w-20 text-slate-300 font-medium">{item.name}</span>
+                                    <div className="flex-1 bg-slate-900 h-2 rounded-full overflow-hidden">
+                                      <div
+                                        className={`h-full rounded-full transition-all duration-500 ${
+                                          item.pct > 110 ? 'bg-red-500' : item.pct >= 85 ? `bg-${item.color}-400` : 'bg-amber-400'
+                                        }`}
+                                        style={{ width: `${Math.min(100, item.pct)}%` }}
+                                      />
+                                    </div>
+                                    <span className="w-24 text-right text-slate-400">{item.avg}/{item.target} {item.unit}</span>
+                                    <span className={`w-10 text-right font-bold ${item.pct > 110 ? 'text-red-400' : item.pct >= 85 ? 'text-emerald-400' : 'text-amber-400'}`}>{item.pct}%</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Feature 5: Predictive Goal Tracking */}
+                            <div>
+                              <h4 className="text-xs font-bold text-emerald-400 uppercase mb-2">🔮 พยากรณ์เป้าหมาย</h4>
+                              <div className="bg-slate-900 rounded-lg p-3 text-xs space-y-1">
+                                <div className="flex justify-between">
+                                  <span className="text-slate-400">TDEE:</span>
+                                  <span className="text-emerald-400 font-bold">{Math.round(a.tdee)} kcal/day</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-slate-400">พลังงานเฉลี่ย/วัน:</span>
+                                  <span className="text-blue-400 font-bold">{a.avgCalories} kcal</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-slate-400">Caloric Deficit/Surplus:</span>
+                                  <span className={`font-bold ${dailyDeficit > 0 ? 'text-emerald-400' : dailyDeficit < 0 ? 'text-red-400' : 'text-slate-400'}`}>
+                                    {dailyDeficit > 0 ? `−${Math.round(dailyDeficit)}` : dailyDeficit < 0 ? `+${Math.round(Math.abs(dailyDeficit))}` : '0'} kcal
+                                  </span>
+                                </div>
+                                {weeklyLossKg > 0 && (
+                                  <div className="flex justify-between pt-1 border-t border-slate-800 mt-1">
+                                    <span className="text-slate-400">ประมาณน้ำหนักลด/สัปดาห์:</span>
+                                    <span className="text-emerald-400 font-bold">~{weeklyLossKg.toFixed(2)} kg</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Feature 6: Nutrient Gap Analysis */}
+                            <div>
+                              <h4 className="text-xs font-bold text-rose-400 uppercase mb-2">🔬 วิเคราะห์สารอาหารที่ขาด/เกิน</h4>
+                              <div className="space-y-1">
+                                {[
+                                  { name: 'โปรตีน', gap: proteinGap, target: a.targetProtein, unit: 'g' },
+                                  { name: 'คาร์โบไฮเดรต', gap: carbsGap, target: a.targetCarbs, unit: 'g' },
+                                  { name: 'ไขมัน', gap: fatGap, target: a.targetFat, unit: 'g' },
+                                ].map((item) => {
+                                  const status = getGapStatus(item.gap, item.target);
+                                  return (
+                                    <div key={item.name} className="flex items-center justify-between text-[11px] bg-slate-900 rounded-lg px-3 py-1.5">
+                                      <span className="text-slate-300">{item.name}</span>
+                                      <div className="flex items-center gap-2">
+                                        <span className={status.color + ' font-bold'}>
+                                          {item.gap > 0 ? `+${item.gap}` : item.gap} {item.unit}
+                                        </span>
+                                        <span className={status.color + ' text-[10px]'}>{status.label}</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}
