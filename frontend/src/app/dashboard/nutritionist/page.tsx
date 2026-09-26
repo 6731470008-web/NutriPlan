@@ -367,41 +367,41 @@ export default function NutritionistDashboard() {
 
                         const getGapStatus = (gap: number, threshold: number) => {
                           const absGap = Math.abs(gap);
-                          if (absGap <= threshold * 0.1) return { label: '✅ ปกติ', color: 'text-emerald-400' };
-                          if (gap < 0) return { label: '⚠️ ขาด', color: 'text-amber-400' };
-                          return { label: '🔴 เกิน', color: 'text-red-400' };
+                          if (absGap <= threshold * 0.1) return { label: t('nutritionistDashboard.normal', '✅ Normal'), color: 'text-emerald-400' };
+                          if (gap < 0) return { label: t('nutritionistDashboard.deficit', '⚠️ Deficit'), color: 'text-amber-400' };
+                          return { label: t('nutritionistDashboard.excess', '🔴 Excess'), color: 'text-red-400' };
                         };
 
                         return (
                           <div className="mt-3 bg-slate-950 border border-blue-500/30 rounded-xl p-4 space-y-4 animate-in fade-in duration-300">
                             {/* Feature 3: Weekly Progress Summary */}
                             <div>
-                              <h4 className="text-xs font-bold text-blue-400 uppercase mb-2">📈 สรุปความก้าวหน้า</h4>
+                              <h4 className="text-xs font-bold text-blue-400 uppercase mb-2">📈 {t('nutritionistDashboard.progressSummary', 'Weekly Progress')}</h4>
                               <div className="grid grid-cols-3 gap-2 text-center">
                                 <div className="bg-slate-900 rounded-lg p-2">
                                   <p className="text-lg font-bold text-emerald-400">{a.adherence && (a.adherence.totalLogged ?? 0) > 0 ? `${a.adherence.adherenceRatePercent}%` : '—'}</p>
-                                  <p className="text-[10px] text-slate-500">อัตราปฏิบัติ</p>
+                                  <p className="text-[10px] text-slate-500">{t('nutritionistDashboard.adherenceRate', 'Adherence Rate')}</p>
                                 </div>
                                 <div className="bg-slate-900 rounded-lg p-2">
                                   <p className="text-lg font-bold text-blue-400">{a.totalMeals}</p>
-                                  <p className="text-[10px] text-slate-500">รายการอาหาร</p>
+                                  <p className="text-[10px] text-slate-500">{t('nutritionistDashboard.mealItems', 'Meals')}</p>
                                 </div>
                                 <div className="bg-slate-900 rounded-lg p-2">
                                   <p className="text-lg font-bold text-amber-400">{a.totalDays}</p>
-                                  <p className="text-[10px] text-slate-500">วันในแผน</p>
+                                  <p className="text-[10px] text-slate-500">{t('nutritionistDashboard.planDays', 'Plan Days')}</p>
                                 </div>
                               </div>
                             </div>
 
                             {/* Feature 4: Smart Meal Insights */}
                             <div>
-                              <h4 className="text-xs font-bold text-purple-400 uppercase mb-2">🧠 วิเคราะห์สารอาหาร</h4>
+                              <h4 className="text-xs font-bold text-purple-400 uppercase mb-2">🧠 {t('nutritionistDashboard.nutrientAnalysis', 'Nutrient Analysis')}</h4>
                               <div className="space-y-2">
                                 {[
-                                  { name: '🔥 พลังงาน', avg: a.avgCalories, target: a.targetCalories, pct: calPct, unit: 'kcal', color: 'emerald' },
-                                  { name: '💪 โปรตีน', avg: a.avgProtein, target: a.targetProtein, pct: pPct, unit: 'g', color: 'blue' },
-                                  { name: '🌾 คาร์บ', avg: a.avgCarbs, target: a.targetCarbs, pct: cPct, unit: 'g', color: 'amber' },
-                                  { name: '🥑 ไขมัน', avg: a.avgFat, target: a.targetFat, pct: fPct, unit: 'g', color: 'rose' },
+                                  { name: `🔥 ${t('nutritionistDashboard.energy', 'Energy')}`, avg: a.avgCalories, target: a.targetCalories, pct: calPct, unit: 'kcal', color: 'emerald' },
+                                  { name: `💪 ${t('nutritionistDashboard.protein', 'Protein')}`, avg: a.avgProtein, target: a.targetProtein, pct: pPct, unit: 'g', color: 'blue' },
+                                  { name: `🌾 ${t('nutritionistDashboard.carbs', 'Carbs')}`, avg: a.avgCarbs, target: a.targetCarbs, pct: cPct, unit: 'g', color: 'amber' },
+                                  { name: `🥑 ${t('nutritionistDashboard.fat', 'Fat')}`, avg: a.avgFat, target: a.targetFat, pct: fPct, unit: 'g', color: 'rose' },
                                 ].map((item) => (
                                   <div key={item.name} className="flex items-center gap-2 text-[11px]">
                                     <span className="w-20 text-slate-300 font-medium">{item.name}</span>
@@ -422,25 +422,25 @@ export default function NutritionistDashboard() {
 
                             {/* Feature 5: Predictive Goal Tracking */}
                             <div>
-                              <h4 className="text-xs font-bold text-emerald-400 uppercase mb-2">🔮 พยากรณ์เป้าหมาย</h4>
+                              <h4 className="text-xs font-bold text-emerald-400 uppercase mb-2">🔮 {t('nutritionistDashboard.predictiveGoal', 'Predictive Goal')}</h4>
                               <div className="bg-slate-900 rounded-lg p-3 text-xs space-y-1">
                                 <div className="flex justify-between">
                                   <span className="text-slate-400">TDEE:</span>
                                   <span className="text-emerald-400 font-bold">{Math.round(a.tdee)} kcal/day</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span className="text-slate-400">พลังงานเฉลี่ย/วัน:</span>
+                                  <span className="text-slate-400">{t('nutritionistDashboard.avgEnergyDay', 'Avg Energy/Day:')}</span>
                                   <span className="text-blue-400 font-bold">{a.avgCalories} kcal</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span className="text-slate-400">Caloric Deficit/Surplus:</span>
+                                  <span className="text-slate-400">{t('nutritionistDashboard.caloricDeficitSurplus', 'Caloric Deficit/Surplus:')}</span>
                                   <span className={`font-bold ${dailyDeficit > 0 ? 'text-emerald-400' : dailyDeficit < 0 ? 'text-red-400' : 'text-slate-400'}`}>
                                     {dailyDeficit > 0 ? `−${Math.round(dailyDeficit)}` : dailyDeficit < 0 ? `+${Math.round(Math.abs(dailyDeficit))}` : '0'} kcal
                                   </span>
                                 </div>
                                 {weeklyLossKg > 0 && (
                                   <div className="flex justify-between pt-1 border-t border-slate-800 mt-1">
-                                    <span className="text-slate-400">ประมาณน้ำหนักลด/สัปดาห์:</span>
+                                    <span className="text-slate-400">{t('nutritionistDashboard.estWeightLoss', 'Est. Weight Loss/Week:')}</span>
                                     <span className="text-emerald-400 font-bold">~{weeklyLossKg.toFixed(2)} kg</span>
                                   </div>
                                 )}
@@ -449,12 +449,12 @@ export default function NutritionistDashboard() {
 
                             {/* Feature 6: Nutrient Gap Analysis */}
                             <div>
-                              <h4 className="text-xs font-bold text-rose-400 uppercase mb-2">🔬 วิเคราะห์สารอาหารที่ขาด/เกิน</h4>
+                              <h4 className="text-xs font-bold text-rose-400 uppercase mb-2">🔬 {t('nutritionistDashboard.nutrientGapAnalysis', 'Nutrient Gap Analysis')}</h4>
                               <div className="space-y-1">
                                 {[
-                                  { name: 'โปรตีน', gap: proteinGap, target: a.targetProtein, unit: 'g' },
-                                  { name: 'คาร์โบไฮเดรต', gap: carbsGap, target: a.targetCarbs, unit: 'g' },
-                                  { name: 'ไขมัน', gap: fatGap, target: a.targetFat, unit: 'g' },
+                                  { name: t('nutritionistDashboard.protein', 'Protein'), gap: proteinGap, target: a.targetProtein, unit: 'g' },
+                                  { name: t('nutritionistDashboard.carbs', 'Carbs'), gap: carbsGap, target: a.targetCarbs, unit: 'g' },
+                                  { name: t('nutritionistDashboard.fat', 'Fat'), gap: fatGap, target: a.targetFat, unit: 'g' },
                                 ].map((item) => {
                                   const status = getGapStatus(item.gap, item.target);
                                   return (

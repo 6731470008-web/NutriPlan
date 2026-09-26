@@ -119,10 +119,10 @@ export default function ClientDashboard() {
   };
 
   const getProgressLabel = (percent: number) => {
-    if (percent > 110) return 'เกินเป้า';
-    if (percent >= 90) return 'ใกล้เป้า';
-    if (percent >= 70) return 'ดี';
-    return 'ต่ำกว่าเป้า';
+    if (percent > 110) return t('clientDashboard.overTarget', 'Over Target');
+    if (percent >= 90) return t('clientDashboard.nearTarget', 'Near Target');
+    if (percent >= 70) return t('clientDashboard.onTrack', 'On Track');
+    return t('clientDashboard.belowTarget', 'Below Target');
   };
 
   return (
@@ -142,7 +142,7 @@ export default function ClientDashboard() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
-                  📊 สรุปโภชนาการเฉลี่ยรายวัน
+                  📊 {t('clientDashboard.dailyNutritionSummary', 'Daily Nutrition Summary')}
                 </h2>
               </div>
 
@@ -159,9 +159,9 @@ export default function ClientDashboard() {
                   <p className="text-[9px] sm:text-[10px] text-slate-500">kcal/day</p>
                 </div>
                 <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
-                  <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold truncate">มื้อทั้งหมด</p>
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold truncate">{t('clientDashboard.totalMeals', 'Total Meals')}</p>
                   <p className="text-base sm:text-xl font-bold text-amber-400 mt-1">{nutritionSummary.totalMeals}</p>
-                  <p className="text-[9px] sm:text-[10px] text-slate-500">meals</p>
+                  <p className="text-[9px] sm:text-[10px] text-slate-500">{t('clientDashboard.meals', 'meals')}</p>
                 </div>
               </div>
 
@@ -173,7 +173,7 @@ export default function ClientDashboard() {
                   return (
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-semibold text-slate-300 uppercase">🔥 พลังงานเฉลี่ย/วัน</span>
+                        <span className="text-xs font-semibold text-slate-300 uppercase">🔥 {t('clientDashboard.avgEnergy', 'Avg Energy / Day')}</span>
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pct > 110 ? 'bg-red-500/20 text-red-400' : pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
                           {getProgressLabel(pct)}
                         </span>
@@ -196,7 +196,7 @@ export default function ClientDashboard() {
                   return (
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-semibold text-slate-300 uppercase">💪 โปรตีนเฉลี่ย/วัน</span>
+                        <span className="text-xs font-semibold text-slate-300 uppercase">💪 {t('clientDashboard.avgProtein', 'Avg Protein / Day')}</span>
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pct > 110 ? 'bg-red-500/20 text-red-400' : pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
                           {getProgressLabel(pct)}
                         </span>
@@ -219,7 +219,7 @@ export default function ClientDashboard() {
                   return (
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-semibold text-slate-300 uppercase">🌾 คาร์โบไฮเดรตเฉลี่ย/วัน</span>
+                        <span className="text-xs font-semibold text-slate-300 uppercase">🌾 {t('clientDashboard.avgCarbs', 'Avg Carbs / Day')}</span>
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pct > 110 ? 'bg-red-500/20 text-red-400' : pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
                           {getProgressLabel(pct)}
                         </span>
@@ -242,7 +242,7 @@ export default function ClientDashboard() {
                   return (
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-semibold text-slate-300 uppercase">🥑 ไขมันเฉลี่ย/วัน</span>
+                        <span className="text-xs font-semibold text-slate-300 uppercase">🥑 {t('clientDashboard.avgFat', 'Avg Fat / Day')}</span>
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pct > 110 ? 'bg-red-500/20 text-red-400' : pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
                           {getProgressLabel(pct)}
                         </span>
@@ -282,7 +282,7 @@ export default function ClientDashboard() {
                     </p>
                     {plan.dailyMenus && plan.dailyMenus.length > 0 && (
                       <p className="text-[11px] text-slate-500 mt-1">
-                        📋 {plan.dailyMenus.length} วัน | 🔥 {Math.round(plan.totalCalories)} kcal รวม
+                        📋 {plan.dailyMenus.length} {t('clientDashboard.days', 'days')} | 🔥 {Math.round(plan.totalCalories)} kcal {t('clientDashboard.totalKcal', 'total')}
                       </p>
                     )}
                   </div>
@@ -306,11 +306,11 @@ export default function ClientDashboard() {
                     ? (adherence.status === 'Excellent Compliance' ? t('clientDashboard.highCompliance') : adherence.status)
                     : plans.length > 0
                     ? t('clientDashboard.highCompliance')
-                    : 'ยังไม่มีข้อมูลการทานอาหาร'}
+                    : t('clientDashboard.noTrackingData', 'No meal tracking data yet')}
                 </p>
                 {adherence && (adherence.totalLogged ?? 0) > 0 && (
                   <p className="text-[10px] text-slate-500 mt-1">
-                    บันทึกแล้ว {adherence.totalLogged} มื้อ | ตรงแผน {adherence.adheredCount} มื้อ
+                    {t('clientDashboard.loggedSummary', 'Logged')} {adherence.totalLogged} {t('clientDashboard.meals', 'meals')} | {t('clientDashboard.adheredSummary', 'Adhered')} {adherence.adheredCount} {t('clientDashboard.meals', 'meals')}
                   </p>
                 )}
               </div>
@@ -318,23 +318,23 @@ export default function ClientDashboard() {
               {/* Body Metrics Card */}
               {clientMetrics && (
                 <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-                  <h3 className="text-xs font-semibold text-slate-300 uppercase">📏 ข้อมูลร่างกาย</h3>
+                  <h3 className="text-xs font-semibold text-slate-300 uppercase">📏 {t('clientDashboard.bodyMetrics', 'Body Metrics')}</h3>
                   <div className="grid grid-cols-2 gap-3 text-center">
                     <div>
                       <p className="text-lg font-bold text-blue-400">{clientMetrics.weightKg}</p>
-                      <p className="text-[10px] text-slate-500">น้ำหนัก (kg)</p>
+                      <p className="text-[10px] text-slate-500">{t('clientDashboard.weightKg', 'Weight (kg)')}</p>
                     </div>
                     <div>
                       <p className="text-lg font-bold text-blue-400">{clientMetrics.heightCm}</p>
-                      <p className="text-[10px] text-slate-500">ส่วนสูง (cm)</p>
+                      <p className="text-[10px] text-slate-500">{t('clientDashboard.heightCm', 'Height (cm)')}</p>
                     </div>
                     <div>
                       <p className="text-lg font-bold text-emerald-400">{clientMetrics.age}</p>
-                      <p className="text-[10px] text-slate-500">อายุ (ปี)</p>
+                      <p className="text-[10px] text-slate-500">{t('clientDashboard.ageYrs', 'Age (yrs)')}</p>
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-amber-400">{clientMetrics.gender === 'Male' ? '♂ ชาย' : clientMetrics.gender === 'Female' ? '♀ หญิง' : '⚧ อื่นๆ'}</p>
-                      <p className="text-[10px] text-slate-500">เพศ</p>
+                      <p className="text-lg font-bold text-amber-400">{clientMetrics.gender === 'Male' ? t('clientDashboard.male', '♂ Male') : clientMetrics.gender === 'Female' ? t('clientDashboard.female', '♀ Female') : t('clientDashboard.other', '⚧ Other')}</p>
+                      <p className="text-[10px] text-slate-500">{t('clientDashboard.gender', 'Gender')}</p>
                     </div>
                   </div>
                 </div>

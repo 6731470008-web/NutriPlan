@@ -11,7 +11,7 @@ import { AIFoodScannerModal } from '@/components/AIFoodScannerModal';
 export default function MealPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [plan, setPlan] = useState<MealPlanDto | null>(null);
   const [foodCatalog, setFoodCatalog] = useState<FoodItemDto[]>([]);
@@ -1019,7 +1019,9 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
         localStorage.setItem(storageKey, JSON.stringify(Array.from(updated)));
       }
       setLogToast({
-        message: `↩️ ยกเลิกการกิน: ${entry.foodItemName} (-${entry.calories.toFixed(0)} kcal)`,
+        message: language === 'en'
+          ? `↩️ Reverted: ${entry.foodItemName} (-${entry.calories.toFixed(0)} kcal)`
+          : `↩️ ยกเลิกการกิน: ${entry.foodItemName} (-${entry.calories.toFixed(0)} kcal)`,
         type: 'info'
       });
       setTimeout(() => setLogToast(null), 3000);
@@ -1034,7 +1036,9 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
     }
 
     setLogToast({
-      message: `🍽️ บันทึกการกิน: ${entry.foodItemName} (+${entry.calories.toFixed(0)} kcal) สำเร็จ!`,
+      message: language === 'en'
+        ? `🍽️ Logged: ${entry.foodItemName} (+${entry.calories.toFixed(0)} kcal)`
+        : `🍽️ บันทึกการกิน: ${entry.foodItemName} (+${entry.calories.toFixed(0)} kcal) สำเร็จ!`,
       type: 'success'
     });
     setTimeout(() => setLogToast(null), 3000);
@@ -1256,7 +1260,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                       : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  {t('common.cancel') === 'Cancel' ? 'All Days' : 'รวมทุกวัน'}
+                  {t('mealPlanDetail.allDays', 'All Days')}
                 </button>
                 {plan.dailyMenus?.map((m) => (
                   <button
@@ -1278,19 +1282,19 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                   onClick={() => handleOpenEditTargets()}
                   className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/40 text-xs px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-semibold shadow-md"
                 >
-                  ✏️ {t('common.cancel') === 'Cancel' ? 'Set Target Macros' : 'กำหนดเป้าหมายสารอาหาร'}
+                  ✏️ {t('mealPlanDetail.setTargetMacros', 'Set Target Macros')}
                 </button>
               )}
             </div>
 
             {(!plan.dailyMenus || plan.dailyMenus.length === 0) && (
               <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs rounded-xl p-3 flex items-center justify-between">
-                <span>👉 <strong>ขั้นตอนที่ 1:</strong> กดปุ่ม <strong>"✏️ กำหนดเป้าหมายสารอาหาร"</strong> ด้านบน เพื่อเริ่มตั้งเป้าหมายแคลอรี่และสารอาหารสำหรับวันแรก</span>
+                <span>👉 <strong>{language === 'en' ? 'Step 1:' : 'ขั้นตอนที่ 1:'}</strong> {language === 'en' ? 'Click "Set Target Macros" above to establish daily caloric and macro targets.' : 'กดปุ่ม "✏️ กำหนดเป้าหมายสารอาหาร" ด้านบน เพื่อเริ่มตั้งเป้าหมายแคลอรี่และสารอาหารสำหรับวันแรก'}</span>
                 <button
                   onClick={() => handleOpenEditTargets()}
                   className="bg-amber-500 text-slate-950 px-3 py-1 rounded-lg font-bold hover:bg-amber-400 transition-colors text-[11px]"
                 >
-                  เริ่มตั้งเป้าหมาย
+                  {language === 'en' ? 'Set Targets' : 'เริ่มตั้งเป้าหมาย'}
                 </button>
               </div>
             )}
@@ -1303,22 +1307,22 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                 return (
                   <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl text-center shadow-lg relative overflow-hidden">
                     <div className="flex items-center justify-between text-xs text-slate-400 uppercase font-semibold mb-1">
-                      <span>{t('common.cancel') === 'Cancel' ? 'Remaining Energy' : 'พลังงานคงเหลือ'}</span>
+                      <span>{t('mealPlanDetail.remainingEnergy', 'Remaining Energy')}</span>
                       <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
-                        ทานแล้ว {consumedEntries.length}/{currentViewEntries.length}
+                        {language === 'en' ? 'Eaten' : 'ทานแล้ว'} {consumedEntries.length}/{currentViewEntries.length}
                       </span>
                     </div>
                     <div className="mt-1">
                       <span className={`text-2xl font-bold ${isOverCal ? 'text-red-400' : 'text-emerald-400'}`}>
-                        {isOverCal ? `เกิน +${Math.abs(remCal).toFixed(1)}` : remCal.toFixed(1)}
+                        {isOverCal ? (language === 'en' ? `Over +${Math.abs(remCal).toFixed(1)}` : `เกิน +${Math.abs(remCal).toFixed(1)}`) : remCal.toFixed(1)}
                       </span>
                       <span className="text-xs text-slate-400 font-semibold ml-1">kcal</span>
                     </div>
                     <p className="text-[11px] text-slate-300 mt-1 font-medium">
-                      {t('common.cancel') === 'Cancel' ? 'Consumed:' : 'ทานแล้ว:'} <strong className="text-emerald-400">{currentCal.toFixed(1)}</strong> / {targetCal.toFixed(1)} kcal
+                      {t('mealPlanDetail.consumed', 'Consumed:')} <strong className="text-emerald-400">{currentCal.toFixed(1)}</strong> / {targetCal.toFixed(1)} kcal
                     </p>
                     <p className="text-[10px] text-slate-500 mt-0.5">
-                      (วางแผนไว้: {plannedCal.toFixed(1)} kcal)
+                      ({t('mealPlanDetail.planned', 'Planned:')} {plannedCal.toFixed(1)} kcal)
                     </p>
                     <div className="w-full bg-slate-950 h-2 rounded-full mt-2.5 overflow-hidden">
                       <div
@@ -1339,19 +1343,19 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                 return (
                   <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl text-center shadow-lg relative overflow-hidden">
                     <p className="text-xs text-slate-400 uppercase font-semibold">
-                      {t('common.cancel') === 'Cancel' ? 'Remaining Protein' : 'โปรตีนคงเหลือ'}
+                      {t('mealPlanDetail.remainingProtein', 'Remaining Protein')}
                     </p>
                     <div className="mt-1">
                       <span className={`text-2xl font-bold ${isOverP ? 'text-red-400' : 'text-blue-400'}`}>
-                        {isOverP ? `เกิน +${Math.abs(remP).toFixed(1)}` : remP.toFixed(1)}
+                        {isOverP ? (language === 'en' ? `Over +${Math.abs(remP).toFixed(1)}` : `เกิน +${Math.abs(remP).toFixed(1)}`) : remP.toFixed(1)}
                       </span>
                       <span className="text-xs text-slate-400 font-semibold ml-1">g</span>
                     </div>
                     <p className="text-[11px] text-slate-300 mt-1 font-medium">
-                      {t('common.cancel') === 'Cancel' ? 'Consumed:' : 'ทานแล้ว:'} <strong className="text-blue-400">{currentP.toFixed(1)}</strong> / {targetP} g
+                      {t('mealPlanDetail.consumed', 'Consumed:')} <strong className="text-blue-400">{currentP.toFixed(1)}</strong> / {targetP} g
                     </p>
                     <p className="text-[10px] text-slate-500 mt-0.5">
-                      (วางแผนไว้: {plannedP.toFixed(1)} g)
+                      ({t('mealPlanDetail.planned', 'Planned:')} {plannedP.toFixed(1)} g)
                     </p>
                     <div className="w-full bg-slate-950 h-2 rounded-full mt-2.5 overflow-hidden">
                       <div
@@ -1372,19 +1376,19 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                 return (
                   <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl text-center shadow-lg relative overflow-hidden">
                     <p className="text-xs text-slate-400 uppercase font-semibold">
-                      {t('common.cancel') === 'Cancel' ? 'Remaining Carbs' : 'คาร์โบไฮเดรตคงเหลือ'}
+                      {t('mealPlanDetail.remainingCarbs', 'Remaining Carbs')}
                     </p>
                     <div className="mt-1">
                       <span className={`text-2xl font-bold ${isOverC ? 'text-red-400' : 'text-amber-400'}`}>
-                        {isOverC ? `เกิน +${Math.abs(remC).toFixed(1)}` : remC.toFixed(1)}
+                        {isOverC ? (language === 'en' ? `Over +${Math.abs(remC).toFixed(1)}` : `เกิน +${Math.abs(remC).toFixed(1)}`) : remC.toFixed(1)}
                       </span>
                       <span className="text-xs text-slate-400 font-semibold ml-1">g</span>
                     </div>
                     <p className="text-[11px] text-slate-300 mt-1 font-medium">
-                      {t('common.cancel') === 'Cancel' ? 'Consumed:' : 'ทานแล้ว:'} <strong className="text-amber-400">{currentC.toFixed(1)}</strong> / {targetC} g
+                      {t('mealPlanDetail.consumed', 'Consumed:')} <strong className="text-amber-400">{currentC.toFixed(1)}</strong> / {targetC} g
                     </p>
                     <p className="text-[10px] text-slate-500 mt-0.5">
-                      (วางแผนไว้: {plannedC.toFixed(1)} g)
+                      ({t('mealPlanDetail.planned', 'Planned:')} {plannedC.toFixed(1)} g)
                     </p>
                     <div className="w-full bg-slate-950 h-2 rounded-full mt-2.5 overflow-hidden">
                       <div
@@ -1405,19 +1409,19 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                 return (
                   <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl text-center shadow-lg relative overflow-hidden">
                     <p className="text-xs text-slate-400 uppercase font-semibold">
-                      {t('common.cancel') === 'Cancel' ? 'Remaining Fat' : 'ไขมันคงเหลือ'}
+                      {t('mealPlanDetail.remainingFat', 'Remaining Fat')}
                     </p>
                     <div className="mt-1">
                       <span className={`text-2xl font-bold ${isOverF ? 'text-red-400' : 'text-rose-400'}`}>
-                        {isOverF ? `เกิน +${Math.abs(remF).toFixed(1)}` : remF.toFixed(1)}
+                        {isOverF ? (language === 'en' ? `Over +${Math.abs(remF).toFixed(1)}` : `เกิน +${Math.abs(remF).toFixed(1)}`) : remF.toFixed(1)}
                       </span>
                       <span className="text-xs text-slate-400 font-semibold ml-1">g</span>
                     </div>
                     <p className="text-[11px] text-slate-300 mt-1 font-medium">
-                      {t('common.cancel') === 'Cancel' ? 'Consumed:' : 'ทานแล้ว:'} <strong className="text-rose-400">{currentF.toFixed(1)}</strong> / {targetF} g
+                      {t('mealPlanDetail.consumed', 'Consumed:')} <strong className="text-rose-400">{currentF.toFixed(1)}</strong> / {targetF} g
                     </p>
                     <p className="text-[10px] text-slate-500 mt-0.5">
-                      (วางแผนไว้: {plannedF.toFixed(1)} g)
+                      ({t('mealPlanDetail.planned', 'Planned:')} {plannedF.toFixed(1)} g)
                     </p>
                     <div className="w-full bg-slate-950 h-2 rounded-full mt-2.5 overflow-hidden">
                       <div
@@ -1482,7 +1486,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                               </span>
                               <span className="text-slate-600">|</span>
                               <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-semibold text-[11px] flex items-center gap-1">
-                                🍽️ ทานแล้ว: {menuConsumedCal.toFixed(1)} kcal ({menuConsumed.length}/{displayEntries.length} มื้อ)
+                                🍽️ {language === 'en' ? 'Eaten:' : 'ทานแล้ว:'} {menuConsumedCal.toFixed(1)} kcal ({menuConsumed.length}/{displayEntries.length} {language === 'en' ? 'meals' : 'มื้อ'})
                               </span>
                               <span className="text-slate-600">|</span>
                               <span className="text-blue-300 font-medium">
@@ -1589,8 +1593,8 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                                       disabled={loggingEntryId === entry.id}
                                       title={
                                         loggedEntryIds.has(entry.id)
-                                          ? 'กดเพื่อยกเลิกการบันทึกว่ากินแล้ว / Click to undo'
-                                          : 'กดเพื่อบันทึกว่ากินแล้ว / Mark as eaten'
+                                          ? (language === 'en' ? 'Click to undo' : 'กดเพื่อยกเลิกการบันทึกว่ากินแล้ว')
+                                          : (language === 'en' ? 'Mark as eaten' : 'กดเพื่อบันทึกว่ากินแล้ว')
                                       }
                                       className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                                         loggedEntryIds.has(entry.id)
@@ -1599,16 +1603,16 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                                       }`}
                                     >
                                       {loggingEntryId === entry.id ? (
-                                        <span>⏳ กำลังบันทึก...</span>
+                                        <span>⏳ {language === 'en' ? 'Logging...' : 'กำลังบันทึก...'}</span>
                                       ) : loggedEntryIds.has(entry.id) ? (
                                         <>
                                           <span className="text-emerald-400">✅</span>
-                                          <span>กินแล้ว</span>
+                                          <span>{language === 'en' ? 'Eaten' : 'กินแล้ว'}</span>
                                         </>
                                       ) : (
                                         <>
                                           <span>🍽️</span>
-                                          <span>กินแล้ว</span>
+                                          <span>{language === 'en' ? 'Mark Eaten' : 'กินแล้ว'}</span>
                                         </>
                                       )}
                                     </button>
