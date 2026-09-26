@@ -267,6 +267,203 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
 
       const processedMenus = getProcessedDailyMenus();
 
+      if (format === 'pdf') {
+        const { default: jsPDF } = await import('jspdf');
+        const { default: html2canvas } = await import('html2canvas');
+
+        const foodSummaryMap: Record<string, number> = {};
+        processedMenus.forEach((m) => {
+          m.entries.forEach((e) => {
+            if (e.foodItemName) {
+              foodSummaryMap[e.foodItemName] = (foodSummaryMap[e.foodItemName] || 0) + e.portionGrams;
+            }
+          });
+        });
+
+        const container = document.createElement('div');
+        container.style.position = 'fixed';
+        container.style.left = '-9999px';
+        container.style.top = '0';
+        container.style.width = '750px';
+        container.style.backgroundColor = '#ffffff';
+        container.style.color = '#0f172a';
+        container.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+        container.style.padding = '32px';
+        container.style.boxSizing = 'border-box';
+        container.style.zIndex = '-9999';
+
+        const safeTitle = plan.title ? plan.title.trim().replace(/\s+/g, '_') : 'Export';
+        const startDateStr = plan.startDate ? new Date(plan.startDate).toLocaleDateString('th-TH') : '-';
+        const endDateStr = plan.endDate ? new Date(plan.endDate).toLocaleDateString('th-TH') : '-';
+        const totalCalStr = plan.totalCalories ? plan.totalCalories.toFixed(0) : '0';
+        const totalPStr = plan.totalProteinGrams ? plan.totalProteinGrams.toFixed(1) : '0';
+        const totalCStr = plan.totalCarbsGrams ? plan.totalCarbsGrams.toFixed(1) : '0';
+        const totalFStr = plan.totalFatGrams ? plan.totalFatGrams.toFixed(1) : '0';
+
+        let menusHtml = '';
+        processedMenus.forEach((m) => {
+          let entriesRows = '';
+          if (!m.entries || m.entries.length === 0) {
+            entriesRows = `<tr><td colspan="6" style="padding: 10px; text-align: center; color: #94a3b8; font-size: 12px;">(ไม่มีรายการอาหารในวันนี้)</td></tr>`;
+          } else {
+            m.entries.forEach((e) => {
+              entriesRows += `
+                <tr style="border-bottom: 1px solid #f1f5f9; font-size: 12px;">
+                  <td style="padding: 8px 10px; font-weight: 600; color: #059669;">${e.mealType}</td>
+                  <td style="padding: 8px 10px; color: #1e293b;">${e.foodItemName}</td>
+                  <td style="padding: 8px 10px; text-align: right; color: #475569;">${e.portionGrams}g</td>
+                  <td style="padding: 8px 10px; text-align: right; font-weight: 600; color: #ea580c;">${e.calories.toFixed(0)} kcal</td>
+                  <td style="padding: 8px 10px; text-align: right; color: #0284c7;">P: ${e.proteinGrams.toFixed(1)}g</td>
+                  <td style="padding: 8px 10px; text-align: right; color: #d97706;">C: ${e.carbsGrams.toFixed(1)}g | F: ${e.fatGrams.toFixed(1)}g</td>
+                </tr>
+              `;
+            });
+          }
+
+          menusHtml += `
+            <div style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
+              <div style="background: #f8fafc; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; color: #0f172a; font-size: 13px;">📅 วันที่ ${m.dayNumber} (Day ${m.dayNumber})</span>
+                <span style="font-size: 12px; color: #475569;">
+                  เป้าหมาย: <strong style="color: #059669;">${m.targetCalories.toFixed(0)} kcal</strong> | 
+                  จริง: <strong style="color: #ea580c;">${m.totalCalories.toFixed(0)} kcal</strong> (P: ${(m.totalProteinGrams || 0).toFixed(0)}g / C: ${(m.totalCarbsGrams || 0).toFixed(0)}g / F: ${(m.totalFatGrams || 0).toFixed(0)}g)
+                </span>
+              </div>
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #ffffff; border-bottom: 1px solid #e2e8f0; font-size: 11px; color: #64748b; text-align: left;">
+                    <th style="padding: 6px 10px;">มื้อ</th>
+                    <th style="padding: 6px 10px;">รายการอาหาร</th>
+                    <th style="padding: 6px 10px; text-align: right;">ปริมาณ</th>
+                    <th style="padding: 6px 10px; text-align: right;">พลังงาน</th>
+                    <th style="padding: 6px 10px; text-align: right;">โปรตีน</th>
+                    <th style="padding: 6px 10px; text-align: right;">สารอาหาร</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${entriesRows}
+                </tbody>
+              </table>
+            </div>
+          `;
+        });
+
+        let shoppingHtml = '';
+        const summaryEntries = Object.entries(foodSummaryMap);
+        if (summaryEntries.length === 0) {
+          shoppingHtml = `<p style="font-size: 12px; color: #94a3b8; font-style: italic;">ไม่มีวัตถุดิบในแผนอาหาร</p>`;
+        } else {
+          shoppingHtml = `
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 12px;">
+              ${summaryEntries.map(([food, grams]) => `
+                <div style="display: flex; justify-content: space-between; padding: 6px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+                  <span style="color: #1e293b; font-weight: 500;">▫️ ${food}</span>
+                  <strong style="color: #059669;">${grams.toFixed(0)} g</strong>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        container.innerHTML = `
+          <div style="border-bottom: 3px solid #10b981; padding-bottom: 16px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <h1 style="font-size: 22px; font-weight: 800; color: #047857; margin: 0;">
+                  🥗 NutriPlan Official Meal Plan Report
+                </h1>
+                <p style="font-size: 12px; color: #64748b; margin: 4px 0 0 0;">รายงานแผนโภชนาการและรายการอาหารประจำบุคคล (Meal Plan & Shopping Schedule)</p>
+              </div>
+              <div style="text-align: right; font-size: 11px; color: #64748b; line-height: 1.4;">
+                <p style="margin: 0;">วันที่พิมพ์: <strong>${new Date().toLocaleDateString('th-TH')}</strong></p>
+                <p style="margin: 0; color: #059669; font-weight: 600;">Status: Approved Plan</p>
+              </div>
+            </div>
+
+            <div style="margin-top: 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size: 12px;">
+              <div>
+                <span style="color: #166534; font-size: 11px; display: block; font-weight: 600;">ชื่อแผนอาหาร</span>
+                <strong style="color: #0f172a; font-size: 13px;">${plan.title || 'Meal Plan'}</strong>
+              </div>
+              <div>
+                <span style="color: #166534; font-size: 11px; display: block; font-weight: 600;">ระยะเวลา</span>
+                <strong style="color: #0f172a;">${startDateStr} - ${endDateStr}</strong>
+              </div>
+              <div>
+                <span style="color: #166534; font-size: 11px; display: block; font-weight: 600;">พลังงานรวมเป้าหมาย</span>
+                <strong style="color: #ea580c; font-size: 13px;">${totalCalStr} kcal</strong>
+              </div>
+              <div>
+                <span style="color: #166534; font-size: 11px; display: block; font-weight: 600;">สัดส่วนสารอาหาร (P/C/F)</span>
+                <strong style="color: #0f172a;">${totalPStr}g / ${totalCStr}g / ${totalFStr}g</strong>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <h2 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 10px 0; border-left: 4px solid #10b981; padding-left: 8px;">
+              📅 แผนอาหารประจำวัน (Daily Meal Schedules)
+            </h2>
+            ${menusHtml}
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 10px 0; border-left: 4px solid #0284c7; padding-left: 8px;">
+              🛒 สรุปรายการวัตถุดิบรวมทั้งหมด (Consolidated Shopping List)
+            </h2>
+            ${shoppingHtml}
+          </div>
+
+          <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8;">
+            <span>Generated by NutriPlan Platform • Clean Architecture System</span>
+            <span>Nutrition & Health Records</span>
+          </div>
+        `;
+
+        document.body.appendChild(container);
+
+        try {
+          const canvas = await html2canvas(container, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+          });
+
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+          const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+          });
+
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const imgWidth = pdfWidth;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+          let heightLeft = imgHeight;
+          let position = 0;
+          let pageIndex = 0;
+
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pdfHeight;
+
+          while (heightLeft > 0) {
+            pageIndex++;
+            position = -(pageIndex * pdfHeight);
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+          }
+
+          pdf.save(`MEAL_PLAN_${safeTitle}.pdf`);
+        } finally {
+          document.body.removeChild(container);
+        }
+        return;
+      }
+
       if (format === 'json') {
         const foodSummaryMap: Record<string, number> = {};
         const jsonMenus = processedMenus.map((m) => {
@@ -315,6 +512,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
 
         content = JSON.stringify(exportPayload, null, 2);
       } else {
+        // TXT format
         const lines: string[] = [
           '==========================================================',
           '               OFFICIAL MEAL PLAN REPORT                  ',
@@ -364,8 +562,8 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
         content = lines.join('\n');
       }
 
-      const mimeType = format === 'json' ? 'application/json;charset=utf-8' : format === 'pdf' ? 'application/pdf;charset=utf-8' : 'text/plain;charset=utf-8';
-      const fileExt = format === 'json' ? 'json' : format === 'pdf' ? 'pdf' : 'txt';
+      const mimeType = format === 'json' ? 'application/json;charset=utf-8' : 'text/plain;charset=utf-8';
+      const fileExt = format === 'json' ? 'json' : 'txt';
       const blobParts = format === 'json' ? [content] : ['\uFEFF', content];
       const blob = new Blob(blobParts, { type: mimeType });
       const url = window.URL.createObjectURL(blob);
