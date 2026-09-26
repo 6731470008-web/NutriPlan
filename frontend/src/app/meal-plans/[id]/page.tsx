@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use, useCallback } from 'react';
+import { useEffect, useState, use, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { mealPlanService, foodService, userService, trackingService } from '@/services/nutriServices';
 import { MealPlanDto, FoodItemDto, MealType, MealEntryDto, FoodAnalysisResult } from '@/types';
@@ -81,6 +81,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
   // Meal Logging state (Feature 1: Daily Meal Logging UI)
   const [loggedEntryIds, setLoggedEntryIds] = useState<Set<string>>(new Set());
   const [loggingEntryId, setLoggingEntryId] = useState<string | null>(null);
+  const [logToast, setLogToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
   // AI Food Scanner Modal state
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -243,9 +244,21 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setUserRole(localStorage.getItem('nutriplan_user_role'));
+      const storageKey = `nutriplan_logged_entries_${resolvedParams.id}`;
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            setLoggedEntryIds(new Set(parsed));
+          }
+        } catch {
+          // ignore corrupted data
+        }
+      }
     }
     fetchPlanDetails();
-  }, [fetchPlanDetails]);
+  }, [fetchPlanDetails, resolvedParams.id]);
 
   const handleExport = async (format: 'pdf' | 'print' | 'txt' | 'json') => {
     setExportLoading(format);
@@ -993,20 +1006,51 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
     }
   };
 
-  // Feature 1: Handle meal logging — Client clicks "✅ กินแล้ว"
-  const handleLogMeal = async (entryId: string, portionGrams: number) => {
+  // Feature 1: Handle meal logging — User clicks "🍽️ กินแล้ว" / "✅ กินแล้ว"
+  const handleToggleMealLog = async (entry: MealEntryDto) => {
+    const isCurrentlyLogged = loggedEntryIds.has(entry.id);
+    const updated = new Set(loggedEntryIds);
+    const storageKey = `nutriplan_logged_entries_${resolvedParams.id}`;
+
+    if (isCurrentlyLogged) {
+      updated.delete(entry.id);
+      setLoggedEntryIds(updated);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(storageKey, JSON.stringify(Array.from(updated)));
+      }
+      setLogToast({
+        message: `↩️ ยกเลิกการกิน: ${entry.foodItemName} (-${entry.calories.toFixed(0)} kcal)`,
+        type: 'info'
+      });
+      setTimeout(() => setLogToast(null), 3000);
+      return;
+    }
+
+    // Otherwise, mark as logged
+    updated.add(entry.id);
+    setLoggedEntryIds(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(storageKey, JSON.stringify(Array.from(updated)));
+    }
+
+    setLogToast({
+      message: `🍽️ บันทึกการกิน: ${entry.foodItemName} (+${entry.calories.toFixed(0)} kcal) สำเร็จ!`,
+      type: 'success'
+    });
+    setTimeout(() => setLogToast(null), 3000);
+
+    // Call backend tracking API asynchronously
     const clientId = typeof window !== 'undefined' ? localStorage.getItem('nutriplan_user_id') : null;
-    if (!clientId) return;
-    setLoggingEntryId(entryId);
-    try {
-      await trackingService.logMeal(clientId, entryId, portionGrams, portionGrams);
-      setLoggedEntryIds(prev => new Set(prev).add(entryId));
-    } catch (err: unknown) {
-      console.error('Failed to log meal:', err);
-      // Still mark as logged in UI for mock entries that won't have real IDs
-      setLoggedEntryIds(prev => new Set(prev).add(entryId));
-    } finally {
-      setLoggingEntryId(null);
+    const isGuid = (val: string) => /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(val);
+    if (clientId && isGuid(clientId) && isGuid(entry.id)) {
+      setLoggingEntryId(entry.id);
+      try {
+        await trackingService.logMeal(clientId, entry.id, entry.portionGrams, entry.portionGrams);
+      } catch (err: unknown) {
+        console.error('Failed to log meal to backend:', err);
+      } finally {
+        setLoggingEntryId(null);
+      }
     }
   };
 
@@ -1055,16 +1099,49 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
   const sumTargetC = plan?.dailyMenus?.reduce((acc, m) => acc + (m.targetCarbsGrams || 200), 0) || 200;
   const sumTargetF = plan?.dailyMenus?.reduce((acc, m) => acc + (m.targetFatGrams || 60), 0) || 60;
 
-  const currentCal = activeDayId === 'all' ? (plan?.totalCalories ?? 0) : (activeMenu?.totalCalories ?? 0);
+  // Processed daily menus ensuring each menu has entries
+  const processedDailyMenus = useMemo(() => {
+    return (plan?.dailyMenus || []).map((m) => {
+      const entries = (m.entries && m.entries.length > 0)
+        ? m.entries
+        : generateMockEntriesForDay(m.dayNumber, m.id);
+      return {
+        ...m,
+        entries
+      };
+    });
+  }, [plan]);
+
+  // Entries within current view (all days or active day)
+  const currentViewEntries = useMemo(() => {
+    if (activeDayId === 'all') {
+      return processedDailyMenus.flatMap((m) => m.entries);
+    }
+    const currentMenu = processedDailyMenus.find((m) => m.id === activeDayId);
+    return currentMenu ? currentMenu.entries : [];
+  }, [activeDayId, processedDailyMenus]);
+
+  // Consumed entries for current view based on user clicks
+  const consumedEntries = useMemo(() => {
+    return currentViewEntries.filter((e) => loggedEntryIds.has(e.id));
+  }, [currentViewEntries, loggedEntryIds]);
+
+  // Planned totals for current view
+  const plannedCal = currentViewEntries.reduce((sum, e) => sum + (e.calories || 0), 0);
+  const plannedP = currentViewEntries.reduce((sum, e) => sum + (e.proteinGrams || 0), 0);
+  const plannedC = currentViewEntries.reduce((sum, e) => sum + (e.carbsGrams || 0), 0);
+  const plannedF = currentViewEntries.reduce((sum, e) => sum + (e.fatGrams || 0), 0);
+
+  // Consumed totals (dynamic live sum based on user clicking "กินแล้ว")
+  const currentCal = consumedEntries.reduce((sum, e) => sum + (e.calories || 0), 0);
+  const currentP = consumedEntries.reduce((sum, e) => sum + (e.proteinGrams || 0), 0);
+  const currentC = consumedEntries.reduce((sum, e) => sum + (e.carbsGrams || 0), 0);
+  const currentF = consumedEntries.reduce((sum, e) => sum + (e.fatGrams || 0), 0);
+
+  // Targets
   const targetCal = activeDayId === 'all' ? sumTargetCal : (activeMenu ? activeMenu.targetCalories : 2000);
-
-  const currentP = activeDayId === 'all' ? (plan?.totalProteinGrams ?? 0) : (activeMenu?.totalProteinGrams ?? 0);
   const targetP = activeDayId === 'all' ? sumTargetP : (activeMenu ? (activeMenu.targetProteinGrams || 150) : 150);
-
-  const currentC = activeDayId === 'all' ? (plan?.totalCarbsGrams ?? 0) : (activeMenu?.totalCarbsGrams ?? 0);
   const targetC = activeDayId === 'all' ? sumTargetC : (activeMenu ? (activeMenu.targetCarbsGrams || 200) : 200);
-
-  const currentF = activeDayId === 'all' ? (plan?.totalFatGrams ?? 0) : (activeMenu?.totalFatGrams ?? 0);
   const targetF = activeDayId === 'all' ? sumTargetF : (activeMenu ? (activeMenu.targetFatGrams || 60) : 60);
 
   const getMealTypeBadge = (mealType: string) => {
@@ -1225,19 +1302,25 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                 const isOverCal = remCal < 0;
                 return (
                   <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl text-center shadow-lg relative overflow-hidden">
-                    <p className="text-xs text-slate-400 uppercase font-semibold">
-                      {t('common.cancel') === 'Cancel' ? 'Remaining Energy' : 'พลังงานคงเหลือ'}
-                    </p>
+                    <div className="flex items-center justify-between text-xs text-slate-400 uppercase font-semibold mb-1">
+                      <span>{t('common.cancel') === 'Cancel' ? 'Remaining Energy' : 'พลังงานคงเหลือ'}</span>
+                      <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                        ทานแล้ว {consumedEntries.length}/{currentViewEntries.length}
+                      </span>
+                    </div>
                     <div className="mt-1">
                       <span className={`text-2xl font-bold ${isOverCal ? 'text-red-400' : 'text-emerald-400'}`}>
                         {isOverCal ? `เกิน +${Math.abs(remCal).toFixed(1)}` : remCal.toFixed(1)}
                       </span>
                       <span className="text-xs text-slate-400 font-semibold ml-1">kcal</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      {t('common.cancel') === 'Cancel' ? 'Consumed:' : 'ทานแล้ว:'} {currentCal.toFixed(1)} / {targetCal.toFixed(1)} kcal
+                    <p className="text-[11px] text-slate-300 mt-1 font-medium">
+                      {t('common.cancel') === 'Cancel' ? 'Consumed:' : 'ทานแล้ว:'} <strong className="text-emerald-400">{currentCal.toFixed(1)}</strong> / {targetCal.toFixed(1)} kcal
                     </p>
-                    <div className="w-full bg-slate-950 h-1.5 rounded-full mt-2 overflow-hidden">
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      (วางแผนไว้: {plannedCal.toFixed(1)} kcal)
+                    </p>
+                    <div className="w-full bg-slate-950 h-2 rounded-full mt-2.5 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
                           isOverCal ? 'bg-red-500' : 'bg-emerald-400'
@@ -1264,10 +1347,13 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                       </span>
                       <span className="text-xs text-slate-400 font-semibold ml-1">g</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      {t('common.cancel') === 'Cancel' ? 'Consumed:' : 'ทานแล้ว:'} {currentP.toFixed(1)} / {targetP} g
+                    <p className="text-[11px] text-slate-300 mt-1 font-medium">
+                      {t('common.cancel') === 'Cancel' ? 'Consumed:' : 'ทานแล้ว:'} <strong className="text-blue-400">{currentP.toFixed(1)}</strong> / {targetP} g
                     </p>
-                    <div className="w-full bg-slate-950 h-1.5 rounded-full mt-2 overflow-hidden">
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      (วางแผนไว้: {plannedP.toFixed(1)} g)
+                    </p>
+                    <div className="w-full bg-slate-950 h-2 rounded-full mt-2.5 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
                           isOverP ? 'bg-red-500' : 'bg-blue-400'
@@ -1294,10 +1380,13 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                       </span>
                       <span className="text-xs text-slate-400 font-semibold ml-1">g</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      {t('common.cancel') === 'Cancel' ? 'Consumed:' : 'ทานแล้ว:'} {currentC.toFixed(1)} / {targetC} g
+                    <p className="text-[11px] text-slate-300 mt-1 font-medium">
+                      {t('common.cancel') === 'Cancel' ? 'Consumed:' : 'ทานแล้ว:'} <strong className="text-amber-400">{currentC.toFixed(1)}</strong> / {targetC} g
                     </p>
-                    <div className="w-full bg-slate-950 h-1.5 rounded-full mt-2 overflow-hidden">
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      (วางแผนไว้: {plannedC.toFixed(1)} g)
+                    </p>
+                    <div className="w-full bg-slate-950 h-2 rounded-full mt-2.5 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
                           isOverC ? 'bg-red-500' : 'bg-amber-400'
@@ -1324,10 +1413,13 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                       </span>
                       <span className="text-xs text-slate-400 font-semibold ml-1">g</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      {t('common.cancel') === 'Cancel' ? 'Consumed:' : 'ทานแล้ว:'} {currentF.toFixed(1)} / {targetF} g
+                    <p className="text-[11px] text-slate-300 mt-1 font-medium">
+                      {t('common.cancel') === 'Cancel' ? 'Consumed:' : 'ทานแล้ว:'} <strong className="text-rose-400">{currentF.toFixed(1)}</strong> / {targetF} g
                     </p>
-                    <div className="w-full bg-slate-950 h-1.5 rounded-full mt-2 overflow-hidden">
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      (วางแผนไว้: {plannedF.toFixed(1)} g)
+                    </p>
+                    <div className="w-full bg-slate-950 h-2 rounded-full mt-2.5 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
                           isOverF ? 'bg-red-500' : 'bg-rose-400'
@@ -1375,22 +1467,36 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                         <h3 className="font-bold text-emerald-400 text-base">
                           {t('mealPlanDetail.dayTitle')} {menu.dayNumber}
                         </h3>
-                        <div className="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-3">
-                          <span>
-                            {t('mealPlanDetail.target')}: <span className="text-emerald-400 font-semibold">{menu.targetCalories.toFixed(1)} kcal</span>
-                            <span className="text-slate-500 ml-1">({t('mealPlanDetail.actual')}: {menu.totalCalories.toFixed(1)} kcal)</span>
-                          </span>
-                          <span className="text-slate-600">|</span>
-                          <span className="text-blue-300 font-medium">
-                            P: {menu.totalProteinGrams.toFixed(1)}{menu.targetProteinGrams ? ` / ${menu.targetProteinGrams}g` : 'g'}
-                          </span>
-                          <span className="text-amber-300 font-medium">
-                            C: {menu.totalCarbsGrams.toFixed(1)}{menu.targetCarbsGrams ? ` / ${menu.targetCarbsGrams}g` : 'g'}
-                          </span>
-                          <span className="text-rose-300 font-medium">
-                            F: {menu.totalFatGrams.toFixed(1)}{menu.targetFatGrams ? ` / ${menu.targetFatGrams}g` : 'g'}
-                          </span>
-                        </div>
+                        {(() => {
+                          const displayEntries = (menu.entries && menu.entries.length > 0)
+                            ? menu.entries
+                            : generateMockEntriesForDay(menu.dayNumber, menu.id);
+                          const menuConsumed = displayEntries.filter((e) => loggedEntryIds.has(e.id));
+                          const menuConsumedCal = menuConsumed.reduce((sum, e) => sum + (e.calories || 0), 0);
+
+                          return (
+                            <div className="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-2 sm:gap-3">
+                              <span>
+                                {t('mealPlanDetail.target')}: <span className="text-emerald-400 font-semibold">{menu.targetCalories.toFixed(1)} kcal</span>
+                                <span className="text-slate-500 ml-1">({t('mealPlanDetail.actual')}: {menu.totalCalories.toFixed(1)} kcal)</span>
+                              </span>
+                              <span className="text-slate-600">|</span>
+                              <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-semibold text-[11px] flex items-center gap-1">
+                                🍽️ ทานแล้ว: {menuConsumedCal.toFixed(1)} kcal ({menuConsumed.length}/{displayEntries.length} มื้อ)
+                              </span>
+                              <span className="text-slate-600">|</span>
+                              <span className="text-blue-300 font-medium">
+                                P: {menu.totalProteinGrams.toFixed(1)}{menu.targetProteinGrams ? ` / ${menu.targetProteinGrams}g` : 'g'}
+                              </span>
+                              <span className="text-amber-300 font-medium">
+                                C: {menu.totalCarbsGrams.toFixed(1)}{menu.targetCarbsGrams ? ` / ${menu.targetCarbsGrams}g` : 'g'}
+                              </span>
+                              <span className="text-rose-300 font-medium">
+                                F: {menu.totalFatGrams.toFixed(1)}{menu.targetFatGrams ? ` / ${menu.targetFatGrams}g` : 'g'}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       <div className="flex items-center gap-2 flex-wrap">
@@ -1445,7 +1551,14 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                           {[...displayEntries]
                             .sort((a, b) => (mealTypeOrder[a.mealType] ?? 99) - (mealTypeOrder[b.mealType] ?? 99))
                             .map((entry) => (
-                              <div key={entry.id} className="py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2.5 text-xs hover:bg-slate-900/40 px-2 rounded-lg transition-colors group">
+                              <div
+                                key={entry.id}
+                                className={`py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2.5 text-xs px-2.5 rounded-lg transition-all group ${
+                                  loggedEntryIds.has(entry.id)
+                                    ? 'bg-emerald-950/25 border border-emerald-500/30'
+                                    : 'hover:bg-slate-900/40'
+                                }`}
+                              >
                                 <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                                   <span
                                     className={`px-2.5 py-0.5 sm:py-1 rounded border font-semibold text-[11px] sm:text-xs ${getMealTypeBadge(
@@ -1454,7 +1567,9 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                                   >
                                     {entry.mealType === 'AfternoonSnack' ? 'Snack' : entry.mealType}
                                   </span>
-                                  <span className="font-medium text-slate-200">{entry.foodItemName}</span>
+                                  <span className={`font-medium ${loggedEntryIds.has(entry.id) ? 'text-emerald-300 font-semibold' : 'text-slate-200'}`}>
+                                    {entry.foodItemName}
+                                  </span>
                                   <span className="text-slate-400">({entry.portionGrams}g)</span>
                                 </div>
 
@@ -1466,28 +1581,37 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                                     <span className="text-rose-300">F: {entry.fatGrams.toFixed(1)}g</span>
                                   </div>
 
-                                  <div className="flex items-center gap-1 ml-auto sm:ml-2">
-                                    {/* Feature 1: Meal Logging Button for Client */}
-                                    {userRole === 'Client' && (
-                                      loggedEntryIds.has(entry.id) ? (
-                                        <span
-                                          className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-default whitespace-nowrap"
-                                          title="บันทึกแล้ว / Logged"
-                                        >
-                                          ✔️ บันทึกแล้ว
-                                        </span>
+                                  <div className="flex items-center gap-1.5 ml-auto sm:ml-2">
+                                    {/* Feature 1: Meal Logging Button */}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleMealLog(entry)}
+                                      disabled={loggingEntryId === entry.id}
+                                      title={
+                                        loggedEntryIds.has(entry.id)
+                                          ? 'กดเพื่อยกเลิกการบันทึกว่ากินแล้ว / Click to undo'
+                                          : 'กดเพื่อบันทึกว่ากินแล้ว / Mark as eaten'
+                                      }
+                                      className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                                        loggedEntryIds.has(entry.id)
+                                          ? 'bg-emerald-500/20 hover:bg-red-500/20 text-emerald-400 hover:text-red-400 border border-emerald-500/40 hover:border-red-500/40'
+                                          : 'bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 hover:scale-105 active:scale-95'
+                                      }`}
+                                    >
+                                      {loggingEntryId === entry.id ? (
+                                        <span>⏳ กำลังบันทึก...</span>
+                                      ) : loggedEntryIds.has(entry.id) ? (
+                                        <>
+                                          <span className="text-emerald-400">✅</span>
+                                          <span>กินแล้ว</span>
+                                        </>
                                       ) : (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleLogMeal(entry.id, entry.portionGrams)}
-                                          disabled={loggingEntryId === entry.id}
-                                          title="กดเพื่อบันทึกว่ากินแล้ว / Log this meal"
-                                          className="bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all hover:scale-105 active:scale-95 flex items-center gap-1 disabled:opacity-50 whitespace-nowrap"
-                                        >
-                                          {loggingEntryId === entry.id ? '⏳' : '✅'} กินแล้ว
-                                        </button>
-                                      )
-                                    )}
+                                        <>
+                                          <span>🍽️</span>
+                                          <span>กินแล้ว</span>
+                                        </>
+                                      )}
+                                    </button>
                                     <button
                                       type="button"
                                       onClick={() => handleStartEditEntry(entry, menu.id)}
@@ -2205,6 +2329,19 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
         onClose={() => setIsScannerOpen(false)}
         onSelectResult={handleScanSelectResult}
       />
+
+      {/* Meal Logging Live Feedback Toast */}
+      {logToast && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-2xl border text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all transform pointer-events-none ${
+            logToast.type === 'success'
+              ? 'bg-emerald-950 border-emerald-500/80 text-emerald-200'
+              : 'bg-slate-900 border-slate-700 text-slate-200'
+          }`}
+        >
+          <span>{logToast.message}</span>
+        </div>
+      )}
     </div>
   );
 }
