@@ -876,24 +876,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
             </div>
 
             {/* GoF Factory Export Action Section */}
-            <div className="flex flex-wrap gap-2.5 items-center">
-              <button
-                type="button"
-                onClick={() => {
-                  const targetMenu = (activeDayId !== 'all' ? plan.dailyMenus?.find(m => m.id === activeDayId) : null) || plan.dailyMenus?.[0];
-                  if (targetMenu) {
-                    setSelectedMenuId(targetMenu.id);
-                    setScannerTargetMenuId(targetMenu.id);
-                  }
-                  setIsScannerOpen(true);
-                }}
-                className="px-3.5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-bold rounded-lg shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5"
-                title="ถ่ายรูปอาหารเพื่อเพิ่มลงในแผนอาหารด้วย AI"
-              >
-                <span>📸</span>
-                <span>ถ่ายรูปสแกนอาหารด้วย AI</span>
-              </button>
-
+            <div className="flex flex-wrap gap-2.5">
               <button
                 onClick={() => handleExport('pdf')}
                 disabled={exportLoading === 'pdf'}
@@ -1173,20 +1156,6 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                         >
                           <span>➕</span>
                           <span>{t('mealPlanDetail.addMealEntry')}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedMenuId(menu.id);
-                            setScannerTargetMenuId(menu.id);
-                            setIsScannerOpen(true);
-                          }}
-                          className="bg-slate-800 hover:bg-slate-700 text-teal-300 border border-teal-500/30 text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"
-                          title="ถ่ายรูปอาหารเพื่อเพิ่มลงในวันนี้ทันที"
-                        >
-                          <span>📸</span>
-                          <span>ถ่ายรูปอาหาร</span>
                         </button>
 
                         {userRole === 'Nutritionist' && (
