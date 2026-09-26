@@ -106,8 +106,8 @@ public class GeminiFoodRecognitionService : IFoodRecognitionService
                 }
             };
 
-            // Use official Gemini 1.5 Flash (with fallback to 2.0 Flash)
-            var models = new[] { "gemini-1.5-flash", "gemini-2.0-flash" };
+            // Use official Gemini 3.8 Flash (with fallbacks)
+            var models = new[] { "gemini-3.8-flash", "gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-1.5-flash" };
             HttpResponseMessage? response = null;
 
             foreach (var modelName in models)
