@@ -3,9 +3,10 @@
 import { useEffect, useState, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { mealPlanService, foodService, userService, trackingService } from '@/services/nutriServices';
-import { MealPlanDto, FoodItemDto, MealType, MealEntryDto } from '@/types';
+import { MealPlanDto, FoodItemDto, MealType, MealEntryDto, FoodAnalysisResult } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { UserHeader } from '@/components/UserHeader';
+import { AIFoodScannerModal } from '@/components/AIFoodScannerModal';
 
 export default function MealPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -80,6 +81,10 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
   // Meal Logging state (Feature 1: Daily Meal Logging UI)
   const [loggedEntryIds, setLoggedEntryIds] = useState<Set<string>>(new Set());
   const [loggingEntryId, setLoggingEntryId] = useState<string | null>(null);
+
+  // AI Food Scanner Modal state
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannerTargetMenuId, setScannerTargetMenuId] = useState<string | null>(null);
 
   const generateMockEntriesForDay = (dayNum: number, menuId: string): MealEntryDto[] => {
     const index = (dayNum - 1) % 10;
@@ -648,6 +653,73 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
     }
   };
 
+  const handleScanSelectResult = async (result: FoodAnalysisResult) => {
+    // If Add Entry Modal is open, auto-fill custom food fields
+    if (showAddEntryModal) {
+      const firstItem = result.items && result.items.length > 0 ? result.items[0] : null;
+      setIsCreatingCustomFood(true);
+      setCustomFoodName(firstItem?.foodName || result.summaryTitle || 'อาหารจากการสแกน');
+      setCustomProtein(Number((firstItem?.proteinGrams ?? result.totalProteinGrams ?? 0).toFixed(1)));
+      setCustomCarbs(Number((firstItem?.carbsGrams ?? result.totalCarbsGrams ?? 0).toFixed(1)));
+      setCustomFat(Number((firstItem?.fatGrams ?? result.totalFatGrams ?? 0).toFixed(1)));
+      setCustomFiber(0);
+      setEntryPortionGrams(firstItem?.estimatedWeightGrams && firstItem.estimatedWeightGrams > 0 ? Math.round(firstItem.estimatedWeightGrams) : 100);
+      setIsScannerOpen(false);
+      return;
+    }
+
+    // If opened from page header or day menu button: auto-add to the targeted menu
+    const targetMenu = plan?.dailyMenus?.find(m => m.id === (scannerTargetMenuId || selectedMenuId))
+      || (activeDayId !== 'all' ? plan?.dailyMenus?.find(m => m.id === activeDayId) : null)
+      || plan?.dailyMenus?.[0];
+
+    if (!targetMenu) {
+      setIsScannerOpen(false);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const itemsToAdd = (result.items && result.items.length > 0) ? result.items : [{
+        foodName: result.summaryTitle || 'อาหารจากการสแกน',
+        estimatedWeightGrams: 150,
+        calories: result.totalCalories,
+        proteinGrams: result.totalProteinGrams,
+        carbsGrams: result.totalCarbsGrams,
+        fatGrams: result.totalFatGrams,
+        confidenceScore: 0.95
+      }];
+
+      for (const item of itemsToAdd) {
+        const createdFood = await foodService.create({
+          name: item.foodName,
+          category: 'General',
+          proteinGrams: Number((item.proteinGrams || 0).toFixed(1)),
+          carbsGrams: Number((item.carbsGrams || 0).toFixed(1)),
+          fatGrams: Number((item.fatGrams || 0).toFixed(1)),
+          fiberGrams: 0,
+          isAllergenic: false
+        });
+
+        setFoodCatalog((prev) => [createdFood, ...prev]);
+
+        await mealPlanService.addEntry({
+          dailyMenuId: targetMenu.id,
+          mealType: entryMealType || 'Lunch',
+          portionGrams: Math.round(item.estimatedWeightGrams > 0 ? item.estimatedWeightGrams : 100),
+          foodItemId: createdFood.id
+        });
+      }
+
+      await fetchPlanDetails();
+    } catch (err: unknown) {
+      console.error('Failed to add food items from scan', err);
+    } finally {
+      setIsSubmitting(false);
+      setIsScannerOpen(false);
+    }
+  };
+
   const handleDeleteMealEntry = async (entryId: string, menuId: string) => {
     if (!confirm('คุณต้องการลบรายการอาหารนี้ใช่หรือไม่? / Are you sure you want to delete this meal entry?')) {
       return;
@@ -804,7 +876,24 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
             </div>
 
             {/* GoF Factory Export Action Section */}
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap gap-2.5 items-center">
+              <button
+                type="button"
+                onClick={() => {
+                  const targetMenu = (activeDayId !== 'all' ? plan.dailyMenus?.find(m => m.id === activeDayId) : null) || plan.dailyMenus?.[0];
+                  if (targetMenu) {
+                    setSelectedMenuId(targetMenu.id);
+                    setScannerTargetMenuId(targetMenu.id);
+                  }
+                  setIsScannerOpen(true);
+                }}
+                className="px-3.5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-bold rounded-lg shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5"
+                title="ถ่ายรูปอาหารเพื่อเพิ่มลงในแผนอาหารด้วย AI"
+              >
+                <span>📸</span>
+                <span>ถ่ายรูปสแกนอาหารด้วย AI</span>
+              </button>
+
               <button
                 onClick={() => handleExport('pdf')}
                 disabled={exportLoading === 'pdf'}
@@ -1058,8 +1147,8 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                         </div>
                       </div>
 
-                      {userRole === 'Nutritionist' && (
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {userRole === 'Nutritionist' && (
                           <button
                             onClick={() => handleStartEditMenu(menu)}
                             title="แก้ไขเป้าหมายแคลอรี่และสารอาหาร / Edit daily targets"
@@ -1067,21 +1156,40 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                           >
                             ✏️ {t('common.cancel') === 'Cancel' ? 'Edit Target' : 'แก้ไขเป้าหมาย'}
                           </button>
+                        )}
 
-                          <button
-                            onClick={() => {
-                              setEditingEntryId(null);
-                              setSelectedMenuId(menu.id);
-                              if (foodCatalog.length > 0) setEntryFoodItemId(foodCatalog[0].id);
-                              setEntryMealType('Breakfast');
-                              setEntryPortionGrams(100);
-                              setShowAddEntryModal(true);
-                            }}
-                            className="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 text-xs px-3 py-1.5 rounded-lg transition-colors"
-                          >
-                            {t('mealPlanDetail.addMealEntry')}
-                          </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingEntryId(null);
+                            setSelectedMenuId(menu.id);
+                            if (foodCatalog.length > 0) setEntryFoodItemId(foodCatalog[0].id);
+                            setEntryMealType('Breakfast');
+                            setEntryPortionGrams(100);
+                            setIsCreatingCustomFood(false);
+                            setShowAddEntryModal(true);
+                          }}
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium border border-emerald-500/40 text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                        >
+                          <span>➕</span>
+                          <span>{t('mealPlanDetail.addMealEntry')}</span>
+                        </button>
 
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedMenuId(menu.id);
+                            setScannerTargetMenuId(menu.id);
+                            setIsScannerOpen(true);
+                          }}
+                          className="bg-slate-800 hover:bg-slate-700 text-teal-300 border border-teal-500/30 text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                          title="ถ่ายรูปอาหารเพื่อเพิ่มลงในวันนี้ทันที"
+                        >
+                          <span>📸</span>
+                          <span>ถ่ายรูปอาหาร</span>
+                        </button>
+
+                        {userRole === 'Nutritionist' && (
                           <button
                             onClick={() => handleDeleteDailyMenu(menu.id, menu.dayNumber)}
                             disabled={deletingMenuId === menu.id}
@@ -1090,8 +1198,8 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                           >
                             🗑️ {t('common.cancel') === 'Cancel' ? `Delete Day ${menu.dayNumber}` : `ลบวัน ${menu.dayNumber}`}
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
 
                     {/* Meal entries list */}
@@ -1570,6 +1678,25 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
               </button>
             </div>
 
+            {/* Quick Camera Food Capture Banner */}
+            <div className="p-3 bg-slate-950/80 border border-emerald-500/30 rounded-xl flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">📸</span>
+                <div>
+                  <p className="text-xs font-semibold text-emerald-300">ถ่ายรูปอาหารด้วย AI</p>
+                  <p className="text-[11px] text-slate-400">สแกนภาพเพื่อกรอกชื่อและสารอาหารให้อัตโนมัติ</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsScannerOpen(true)}
+                className="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs rounded-lg shadow transition-all flex items-center gap-1.5 whitespace-nowrap"
+              >
+                <span>📷</span>
+                <span>ถ่ายรูปอาหาร</span>
+              </button>
+            </div>
+
             {modalError && (
               <div className="bg-red-900/50 border border-red-500 text-red-200 text-xs rounded-lg p-3">
                 {modalError}
@@ -1837,6 +1964,13 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
       )}
+
+      {/* AI Food Scanner Modal */}
+      <AIFoodScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onSelectResult={handleScanSelectResult}
+      />
     </div>
   );
 }

@@ -9,12 +9,14 @@ interface AIFoodScannerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccessLog?: () => void;
+  onSelectResult?: (result: FoodAnalysisResult) => void;
 }
 
 export const AIFoodScannerModal: React.FC<AIFoodScannerModalProps> = ({
   isOpen,
   onClose,
-  onSuccessLog
+  onSuccessLog,
+  onSelectResult
 }) => {
   const { t } = useLanguage();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -61,6 +63,9 @@ export const AIFoodScannerModal: React.FC<AIFoodScannerModalProps> = ({
 
   const handleConfirmLog = () => {
     setSuccessMessage('🎉 บันทึกมื้ออาหารจากภาพถ่ายเรียบร้อยแล้ว!');
+    if (analysisResult) {
+      onSelectResult?.(analysisResult);
+    }
     setTimeout(() => {
       onSuccessLog?.();
       handleClose();
