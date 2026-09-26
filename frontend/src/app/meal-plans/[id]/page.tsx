@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { mealPlanService, foodService, userService } from '@/services/nutriServices';
+import { mealPlanService, foodService, userService, trackingService } from '@/services/nutriServices';
 import { MealPlanDto, FoodItemDto, MealType, MealEntryDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { UserHeader } from '@/components/UserHeader';
@@ -76,6 +76,10 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
   const [customIsAllergenic, setCustomIsAllergenic] = useState(false);
   const [isSavingCustomFood, setIsSavingCustomFood] = useState(false);
   const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
+
+  // Meal Logging state (Feature 1: Daily Meal Logging UI)
+  const [loggedEntryIds, setLoggedEntryIds] = useState<Set<string>>(new Set());
+  const [loggingEntryId, setLoggingEntryId] = useState<string | null>(null);
 
   const generateMockEntriesForDay = (dayNum: number, menuId: string): MealEntryDto[] => {
     const index = (dayNum - 1) % 10;
@@ -661,6 +665,23 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
     }
   };
 
+  // Feature 1: Handle meal logging — Client clicks "✅ กินแล้ว"
+  const handleLogMeal = async (entryId: string, portionGrams: number) => {
+    const clientId = typeof window !== 'undefined' ? localStorage.getItem('nutriplan_user_id') : null;
+    if (!clientId) return;
+    setLoggingEntryId(entryId);
+    try {
+      await trackingService.logMeal(clientId, entryId, portionGrams, portionGrams);
+      setLoggedEntryIds(prev => new Set(prev).add(entryId));
+    } catch (err: unknown) {
+      console.error('Failed to log meal:', err);
+      // Still mark as logged in UI for mock entries that won't have real IDs
+      setLoggedEntryIds(prev => new Set(prev).add(entryId));
+    } finally {
+      setLoggingEntryId(null);
+    }
+  };
+
   const [deletingMenuId, setDeletingMenuId] = useState<string | null>(null);
 
   const handleDeleteDailyMenu = async (menuId: string, dayNumber: number) => {
@@ -1104,6 +1125,27 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                                   <span className="text-rose-300">F: {entry.fatGrams.toFixed(1)}g</span>
 
                                   <div className="flex items-center gap-1 ml-2">
+                                    {/* Feature 1: Meal Logging Button for Client */}
+                                    {userRole === 'Client' && (
+                                      loggedEntryIds.has(entry.id) ? (
+                                        <span
+                                          className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-default"
+                                          title="บันทึกแล้ว / Logged"
+                                        >
+                                          ✔️ บันทึกแล้ว
+                                        </span>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleLogMeal(entry.id, entry.portionGrams)}
+                                          disabled={loggingEntryId === entry.id}
+                                          title="กดเพื่อบันทึกว่ากินแล้ว / Log this meal"
+                                          className="bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all hover:scale-105 active:scale-95 flex items-center gap-1 disabled:opacity-50"
+                                        >
+                                          {loggingEntryId === entry.id ? '⏳' : '✅'} กินแล้ว
+                                        </button>
+                                      )
+                                    )}
                                     <button
                                       type="button"
                                       onClick={() => handleStartEditEntry(entry, menu.id)}

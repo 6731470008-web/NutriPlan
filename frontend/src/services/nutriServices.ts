@@ -167,8 +167,8 @@ export const mealPlanService = {
 
 // Tracking & Analytics Services (Endpoints 18-20)
 export const trackingService = {
-  logMeal: async (mealEntryId: string, portionGrams: number): Promise<void> => {
-    await apiClient.post('/tracking/logs', { mealEntryId, portionGrams });
+  logMeal: async (clientId: string, mealEntryId: string, actualPortionGrams: number, plannedPortionGrams: number): Promise<void> => {
+    await apiClient.post('/tracking/logs', { clientId, mealEntryId, actualPortionGrams, plannedPortionGrams });
   },
 
   getAdherence: async (clientId: string): Promise<AdherenceReportDto> => {
