@@ -26,7 +26,11 @@ public class GeminiFoodRecognitionService : IFoodRecognitionService
 
     public async Task<FoodAnalysisResultDto> AnalyzeFoodImageAsync(Stream imageStream, string contentType, CancellationToken ct = default)
     {
-        string apiKey = _configuration["Gemini:ApiKey"] ?? string.Empty;
+        string apiKey = _configuration["Gemini:ApiKey"] 
+            ?? _configuration["GEMINI_API_KEY"] 
+            ?? Environment.GetEnvironmentVariable("GEMINI_API_KEY") 
+            ?? Environment.GetEnvironmentVariable("Gemini__ApiKey") 
+            ?? string.Empty;
 
         // If no API key is configured or is default placeholder, return a realistic mock estimation for demonstration/testing
         if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "YOUR_GEMINI_API_KEY")
@@ -42,26 +46,33 @@ public class GeminiFoodRecognitionService : IFoodRecognitionService
             byte[] imageBytes = ms.ToArray();
             string base64Image = Convert.ToBase64String(imageBytes);
 
-            var promptText = @"คุณเป็นนักโภชนาการมืออาชีพและระบบ AI วิเคราะห์ภาพถ่ายอาหาร 
-โปรดวิเคราะห์ภาพถ่ายอาหารนี้อย่างละเอียด ระบุ:
-1. ชื่ออาหารโดยรวม (SummaryTitle) ภาษาไทย
-2. รายการองค์ประกอบอาหารแต่ละชนิดในจาน (Items) พร้อมปริมาณกรัมโดยประมาณ (EstimatedWeightGrams), แคลอรี (Calories), โปรตีน (ProteinGrams), คาร์โบไฮเดรต (CarbsGrams), ไขมัน (FatGrams) และความเชื่อมั่น 0.0-1.0 (ConfidenceScore)
-3. สรุปแคลอรีรวมและสารอาหารรวมทั้งหมด
+            var promptText = @"คุณเป็นระบบ AI ผู้เชี่ยวชาญด้านการวิเคราะห์ภาพถ่ายอาหารและโภชนาการ (Food Recognition AI)
+โปรดดูภาพถ่ายอาหารอย่างละเอียดและระบุชื่ออาหารให้ตรงกับภาพจริงมากที่สุด (ห้ามสุ่มหรือเดามั่ว):
+1. ระบุชื่ออาหารโดยรวม (SummaryTitle) เป็นภาษาไทยที่ตรงกับอาหารในภาพที่สุด เช่น 'ผัดไทยกุ้งสด', 'ข้าวมันไก่', 'ส้มตำไทย', 'สเต๊กหมู', 'ต้มยำกุ้ง', 'กาแฟลาเต้', 'เค้กช็อกโกแลต' เป็นต้น
+2. วิเคราะห์ส่วนประกอบอาหารแต่ละรายการที่มองเห็นในจาน (Items):
+   - foodName: ชื่อส่วนประกอบ (เช่น ข้าวสวย, อกไก่, ไข่ดาว, ผักชี, น้ำซุป)
+   - estimatedWeightGrams: น้ำหนักกรัมโดยประมาณ
+   - calories: พลังงาน (kcal)
+   - proteinGrams: โปรตีน (กรัม)
+   - carbsGrams: คาร์โบไฮเดรต (กรัม)
+   - fatGrams: ไขมัน (กรัม)
+   - confidenceScore: ความเชื่อมั่น 0.0 - 1.0
+3. คำนวณผลรวมแคลอรีและสารอาหารรวมทั้งหมดในจานให้สอดคล้องกับส่วนประกอบ
 
-ตอบกลับเป็น JSON ที่มีโครงสร้างดังนี้เท่านั้น (ไม่ต้องใส่ markdown backticks):
+ตอบกลับเป็น JSON ตามโครงสร้างนี้เท่านั้น (ห้ามใส่ markdown code block หรือข้อความอื่น):
 {
-  ""summaryTitle"": ""ชื่ออาหาร ภาษาไทย"",
+  ""summaryTitle"": ""ชื่อเมนูอาหารภาษาไทย"",
   ""totalCalories"": 450,
-  ""totalProteinGrams"": 35,
+  ""totalProteinGrams"": 25,
   ""totalCarbsGrams"": 50,
-  ""totalFatGrams"": 12,
+  ""totalFatGrams"": 15,
   ""items"": [
     {
       ""foodName"": ""ชื่อส่วนประกอบ"",
-      ""estimatedWeightGrams"": 200,
-      ""calories"": 300,
-      ""proteinGrams"": 25,
-      ""carbsGrams"": 40,
+      ""estimatedWeightGrams"": 150,
+      ""calories"": 200,
+      ""proteinGrams"": 10,
+      ""carbsGrams"": 30,
       ""fatGrams"": 5,
       ""confidenceScore"": 0.95
     }
@@ -91,17 +102,29 @@ public class GeminiFoodRecognitionService : IFoodRecognitionService
                 generationConfig = new
                 {
                     response_mime_type = "application/json",
-                    temperature = 0.2
+                    temperature = 0.1
                 }
             };
 
-            var endpointUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}";
-            var response = await _httpClient.PostAsJsonAsync(endpointUrl, requestPayload, ct);
+            // Use official Gemini 1.5 Flash (with fallback to 2.0 Flash)
+            var models = new[] { "gemini-1.5-flash", "gemini-2.0-flash" };
+            HttpResponseMessage? response = null;
 
-            if (!response.IsSuccessStatusCode)
+            foreach (var modelName in models)
             {
-                var errorText = await response.Content.ReadAsStringAsync(ct);
-                _logger.LogError("Gemini API error ({StatusCode}): {ErrorText}", response.StatusCode, errorText);
+                var endpointUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{modelName}:generateContent?key={apiKey}";
+                response = await _httpClient.PostAsJsonAsync(endpointUrl, requestPayload, ct);
+                if (response.IsSuccessStatusCode)
+                {
+                    break;
+                }
+                _logger.LogWarning("Gemini model {ModelName} failed with status {StatusCode}, trying next model if available.", modelName, response.StatusCode);
+            }
+
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                var errorText = response != null ? await response.Content.ReadAsStringAsync(ct) : "No response";
+                _logger.LogError("Gemini API error: {ErrorText}", errorText);
                 return GenerateMockFoodAnalysis();
             }
 
@@ -120,12 +143,24 @@ public class GeminiFoodRecognitionService : IFoodRecognitionService
                 return GenerateMockFoodAnalysis();
             }
 
+            // Strip markdown backticks if returned despite json mode
+            var cleanJson = textContent.Trim();
+            if (cleanJson.StartsWith("```"))
+            {
+                var firstNewline = cleanJson.IndexOf('\n');
+                var lastBackticks = cleanJson.LastIndexOf("```");
+                if (firstNewline != -1 && lastBackticks > firstNewline)
+                {
+                    cleanJson = cleanJson.Substring(firstNewline + 1, lastBackticks - firstNewline - 1).Trim();
+                }
+            }
+
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             };
 
-            var parsedResult = JsonSerializer.Deserialize<FoodAnalysisResultDto>(textContent, options);
+            var parsedResult = JsonSerializer.Deserialize<FoodAnalysisResultDto>(cleanJson, options);
             return parsedResult ?? GenerateMockFoodAnalysis();
         }
         catch (Exception ex)
