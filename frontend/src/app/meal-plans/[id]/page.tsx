@@ -247,7 +247,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
     fetchPlanDetails();
   }, [fetchPlanDetails]);
 
-  const handleExport = async (format: 'pdf' | 'txt' | 'json') => {
+  const handleExport = async (format: 'pdf' | 'print' | 'txt' | 'json') => {
     setExportLoading(format);
     try {
       if (!plan) return;
@@ -267,10 +267,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
 
       const processedMenus = getProcessedDailyMenus();
 
-      if (format === 'pdf') {
-        const { default: jsPDF } = await import('jspdf');
-        const { default: html2canvas } = await import('html2canvas');
-
+      if (format === 'pdf' || format === 'print') {
         const foodSummaryMap: Record<string, number> = {};
         processedMenus.forEach((m) => {
           m.entries.forEach((e) => {
@@ -281,8 +278,8 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
         });
 
         const container = document.createElement('div');
-        container.style.position = 'fixed';
-        container.style.left = '-9999px';
+        container.style.position = 'absolute';
+        container.style.left = '0';
         container.style.top = '0';
         container.style.width = '750px';
         container.style.backgroundColor = '#ffffff';
@@ -291,6 +288,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
         container.style.padding = '32px';
         container.style.boxSizing = 'border-box';
         container.style.zIndex = '-9999';
+        container.style.pointerEvents = 'none';
 
         const safeTitle = plan.title ? plan.title.trim().replace(/\s+/g, '_') : 'Export';
         const startDateStr = plan.startDate ? new Date(plan.startDate).toLocaleDateString('th-TH') : '-';
@@ -420,9 +418,44 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
           </div>
         `;
 
+        if (format === 'print') {
+          const printWindow = window.open('', '_blank');
+          if (printWindow) {
+            printWindow.document.write(`
+              <!DOCTYPE html>
+              <html lang="th">
+                <head>
+                  <meta charset="utf-8" />
+                  <title>MEAL_PLAN_${safeTitle}</title>
+                  <style>
+                    body { margin: 0; padding: 24px; font-family: system-ui, -apple-system, sans-serif; background: #fff; color: #0f172a; }
+                    @media print {
+                      body { padding: 0; }
+                      @page { size: A4; margin: 10mm; }
+                    }
+                  </style>
+                </head>
+                <body>
+                  ${container.innerHTML}
+                  <script>
+                    window.onload = function() {
+                      window.print();
+                    };
+                  </script>
+                </body>
+              </html>
+            `);
+            printWindow.document.close();
+          }
+          return;
+        }
+
         document.body.appendChild(container);
 
         try {
+          const { default: jsPDF } = await import('jspdf');
+          const { default: html2canvas } = await import('html2canvas');
+
           const canvas = await html2canvas(container, {
             scale: 2,
             useCORS: true,
@@ -458,8 +491,33 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
           }
 
           pdf.save(`MEAL_PLAN_${safeTitle}.pdf`);
+        } catch (pdfErr) {
+          console.warn('PDF export error, falling back to print dialog...', pdfErr);
+          const printWindow = window.open('', '_blank');
+          if (printWindow) {
+            printWindow.document.write(`
+              <!DOCTYPE html>
+              <html lang="th">
+                <head>
+                  <meta charset="utf-8" />
+                  <title>MEAL_PLAN_${safeTitle}</title>
+                  <style>
+                    body { margin: 0; padding: 24px; font-family: system-ui, sans-serif; }
+                    @media print { body { padding: 0; } @page { size: A4; margin: 10mm; } }
+                  </style>
+                </head>
+                <body>
+                  ${container.innerHTML}
+                  <script>window.onload = function() { window.print(); };</script>
+                </body>
+              </html>
+            `);
+            printWindow.document.close();
+          }
         } finally {
-          document.body.removeChild(container);
+          if (document.body.contains(container)) {
+            document.body.removeChild(container);
+          }
         }
         return;
       }
@@ -1078,9 +1136,16 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
               <button
                 onClick={() => handleExport('pdf')}
                 disabled={exportLoading === 'pdf'}
-                className="bg-emerald-500 hover:bg-emerald-600 font-semibold text-slate-950 text-xs px-3.5 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                className="bg-emerald-500 hover:bg-emerald-600 font-semibold text-slate-950 text-xs px-3.5 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow"
               >
-                📄 {exportLoading === 'pdf' ? t('common.exporting') : 'ส่งออก PDF'}
+                📄 {exportLoading === 'pdf' ? t('common.exporting') : 'ส่งออก PDF (A4)'}
+              </button>
+              <button
+                onClick={() => handleExport('print')}
+                disabled={exportLoading === 'print'}
+                className="bg-teal-600 hover:bg-teal-700 font-semibold text-white text-xs px-3.5 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow"
+              >
+                🖨️ {exportLoading === 'print' ? t('common.exporting') : 'พิมพ์ / บันทึก PDF'}
               </button>
               <button
                 onClick={() => handleExport('txt')}
