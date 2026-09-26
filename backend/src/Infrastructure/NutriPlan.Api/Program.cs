@@ -8,6 +8,8 @@ using NutriPlan.Application.Services;
 using NutriPlan.Infrastructure.Persistence;
 using NutriPlan.Infrastructure.Persistence.Repositories;
 
+using NutriPlan.Infrastructure.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add Controllers & Swagger
@@ -39,6 +41,7 @@ builder.Services.AddScoped<IMealLogRepository, MealLogRepository>();
 // Application Services — registered against their interfaces (DIP ✅)
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMealPlanService, MealPlanService>();
+builder.Services.AddHttpClient<IFoodRecognitionService, GeminiFoodRecognitionService>();
 
 // JWT Authentication Configuration
 // ✅ Secret loaded from appsettings.json — no hardcoded fallback here.

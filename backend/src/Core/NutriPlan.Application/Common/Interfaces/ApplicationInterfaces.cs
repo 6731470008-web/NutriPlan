@@ -63,3 +63,11 @@ public interface IMealLogRepository
     Task<List<MealLog>> GetByClientIdAsync(Guid clientId, CancellationToken cancellationToken = default);
     Task AddAsync(MealLog mealLog, CancellationToken cancellationToken = default);
 }
+
+// ─── AI Services ──────────────────────────────────────────────────────────────
+
+public interface IFoodRecognitionService
+{
+    Task<FoodAnalysisResultDto> AnalyzeFoodImageAsync(Stream imageStream, string contentType, CancellationToken ct = default);
+}
+

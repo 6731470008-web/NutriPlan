@@ -6,6 +6,7 @@ import { mealPlanService, trackingService, userService } from '@/services/nutriS
 import { MealPlanDto, AdherenceReportDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { UserHeader } from '@/components/UserHeader';
+import { AIFoodScannerModal } from '@/components/AIFoodScannerModal';
 
 interface ClientMetrics {
   bmr: number;
@@ -37,6 +38,7 @@ export default function ClientDashboard() {
   const [clientMetrics, setClientMetrics] = useState<ClientMetrics | null>(null);
   const [nutritionSummary, setNutritionSummary] = useState<NutritionSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -140,9 +142,18 @@ export default function ClientDashboard() {
           {/* Feature 2: Nutrition Analytics Dashboard */}
           {nutritionSummary && clientMetrics && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
-                📊 สรุปโภชนาการเฉลี่ยรายวัน
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                  📊 สรุปโภชนาการเฉลี่ยรายวัน
+                </h2>
+                <button
+                  onClick={() => setIsScannerOpen(true)}
+                  className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2"
+                >
+                  <span>📸</span>
+                  <span>ถ่ายรูปสแกนอาหารด้วย AI</span>
+                </button>
+              </div>
 
               {/* Top Metrics Row: BMR / TDEE / Meals */}
               <div className="grid grid-cols-3 gap-4">
@@ -341,6 +352,12 @@ export default function ClientDashboard() {
           </div>
         </div>
       )}
+
+      {/* AI Food Scanner Modal */}
+      <AIFoodScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+      />
     </div>
   );
 }

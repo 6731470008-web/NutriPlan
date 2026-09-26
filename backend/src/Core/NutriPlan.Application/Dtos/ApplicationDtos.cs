@@ -120,3 +120,25 @@ public record ProgressDto(
     double? WeightDeltaKg,
     double EstimatedDailyCalories
 );
+
+// ─── AI Food Recognition DTOs ─────────────────────────────────────────────────
+
+public record DetectedFoodItemDto(
+    string FoodName,
+    double EstimatedWeightGrams,
+    double Calories,
+    double ProteinGrams,
+    double CarbsGrams,
+    double FatGrams,
+    double ConfidenceScore
+);
+
+public record FoodAnalysisResultDto(
+    string SummaryTitle,
+    double TotalCalories,
+    double TotalProteinGrams,
+    double TotalCarbsGrams,
+    double TotalFatGrams,
+    List<DetectedFoodItemDto> Items
+);
+

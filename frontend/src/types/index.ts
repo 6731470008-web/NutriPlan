@@ -124,3 +124,23 @@ export interface ClientProgressDto {
   targetWeight: number;
   caloriesBurnedThisWeek: number;
 }
+
+export interface DetectedFoodItem {
+  foodName: string;
+  estimatedWeightGrams: number;
+  calories: number;
+  proteinGrams: number;
+  carbsGrams: number;
+  fatGrams: number;
+  confidenceScore: number;
+}
+
+export interface FoodAnalysisResult {
+  summaryTitle: string;
+  totalCalories: number;
+  totalProteinGrams: number;
+  totalCarbsGrams: number;
+  totalFatGrams: number;
+  items: DetectedFoodItem[];
+}
+

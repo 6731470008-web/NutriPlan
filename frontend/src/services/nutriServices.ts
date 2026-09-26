@@ -9,7 +9,8 @@ import {
   CreateMealPlanDto,
   AddMealEntryDto,
   AdherenceReportDto,
-  ClientProgressDto
+  ClientProgressDto,
+  FoodAnalysisResult
 } from '@/types';
 
 // Auth Services (Endpoints 1-3)
@@ -178,6 +179,17 @@ export const trackingService = {
 
   getProgress: async (clientId: string): Promise<ClientProgressDto> => {
     const res = await apiClient.get<ClientProgressDto>(`/tracking/clients/${clientId}/progress`);
+    return res.data;
+  },
+
+  analyzeMealImage: async (file: File): Promise<FoodAnalysisResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await apiClient.post<FoodAnalysisResult>('/tracking/analyze-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
     return res.data;
   }
 };

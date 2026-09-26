@@ -520,15 +520,18 @@ public class TrackingController : ControllerBase
     private readonly IMealLogRepository _mealLogRepository;
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IFoodRecognitionService _foodRecognitionService;
 
     public TrackingController(
         IMealLogRepository mealLogRepository,
         IUserRepository userRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IFoodRecognitionService foodRecognitionService)
     {
         _mealLogRepository = mealLogRepository;
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
+        _foodRecognitionService = foodRecognitionService;
     }
 
     // Endpoint 19: Log Daily Meal
@@ -543,6 +546,21 @@ public class TrackingController : ControllerBase
             log.Id, log.ClientId, log.MealEntryId, log.ConsumedAt,
             log.ActualPortionGrams, log.IsAdhered
         ));
+    }
+
+    // Endpoint 19.5: AI Food Image Recognition Endpoint
+    [HttpPost("analyze-image")]
+    public async Task<ActionResult<FoodAnalysisResultDto>> AnalyzeMealImage([FromForm] IFormFile? file, CancellationToken ct)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("Please upload a valid food image file.");
+
+        if (!file.ContentType.StartsWith("image/"))
+            return BadRequest("File must be an image (JPEG, PNG, WEBP).");
+
+        using var stream = file.OpenReadStream();
+        var result = await _foodRecognitionService.AnalyzeFoodImageAsync(stream, file.ContentType, ct);
+        return Ok(result);
     }
 
     // Endpoint 20: Get Adherence Report
