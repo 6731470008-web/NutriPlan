@@ -126,7 +126,7 @@ export default function ClientDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-3 sm:p-6 md:p-8 overflow-x-hidden w-full max-w-full">
       <UserHeader
         title={t('clientDashboard.title')}
         subtitle={t('clientDashboard.subtitle')}
@@ -135,7 +135,7 @@ export default function ClientDashboard() {
       {isLoading ? (
         <div className="text-center text-slate-400 py-12">{t('clientDashboard.loadingRecords')}</div>
       ) : (
-        <div className="max-w-5xl mx-auto space-y-8">
+        <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 w-full">
 
           {/* Feature 2: Nutrition Analytics Dashboard */}
           {nutritionSummary && clientMetrics && (
@@ -147,21 +147,21 @@ export default function ClientDashboard() {
               </div>
 
               {/* Top Metrics Row: BMR / TDEE / Meals */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-                  <p className="text-[11px] text-slate-400 uppercase font-semibold">BMR</p>
-                  <p className="text-xl font-bold text-blue-400 mt-1">{Math.round(clientMetrics.bmr)}</p>
-                  <p className="text-[10px] text-slate-500">kcal/day</p>
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold">BMR</p>
+                  <p className="text-base sm:text-xl font-bold text-blue-400 mt-1">{Math.round(clientMetrics.bmr)}</p>
+                  <p className="text-[9px] sm:text-[10px] text-slate-500">kcal/day</p>
                 </div>
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-                  <p className="text-[11px] text-slate-400 uppercase font-semibold">TDEE</p>
-                  <p className="text-xl font-bold text-emerald-400 mt-1">{Math.round(clientMetrics.tdee)}</p>
-                  <p className="text-[10px] text-slate-500">kcal/day</p>
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold">TDEE</p>
+                  <p className="text-base sm:text-xl font-bold text-emerald-400 mt-1">{Math.round(clientMetrics.tdee)}</p>
+                  <p className="text-[9px] sm:text-[10px] text-slate-500">kcal/day</p>
                 </div>
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-                  <p className="text-[11px] text-slate-400 uppercase font-semibold">รายการอาหารทั้งหมด</p>
-                  <p className="text-xl font-bold text-amber-400 mt-1">{nutritionSummary.totalMeals}</p>
-                  <p className="text-[10px] text-slate-500">meals</p>
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold truncate">มื้อทั้งหมด</p>
+                  <p className="text-base sm:text-xl font-bold text-amber-400 mt-1">{nutritionSummary.totalMeals}</p>
+                  <p className="text-[9px] sm:text-[10px] text-slate-500">meals</p>
                 </div>
               </div>
 

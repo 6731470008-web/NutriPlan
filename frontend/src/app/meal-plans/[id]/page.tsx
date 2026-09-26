@@ -834,7 +834,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-3 sm:p-6 md:p-8 overflow-x-hidden w-full max-w-full">
       <UserHeader showBack={true} />
 
       {isLoading ? (
@@ -844,9 +844,9 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
           {error ?? t('mealPlanDetail.planNotFound')}
         </div>
       ) : (
-        <div className="space-y-8 max-w-4xl mx-auto">
+        <div className="space-y-6 sm:space-y-8 max-w-4xl mx-auto w-full">
           {/* Header Card with Edit/Delete Meal Plan */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-bold text-emerald-400">{plan.title}</h1>
@@ -1079,7 +1079,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           {/* Daily Schedule breakdown */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-6 md:p-8 space-y-6">
             <div className="flex justify-between items-center pb-4 border-b border-slate-800">
               <div>
                 <h2 className="text-lg font-bold text-slate-200">{t('mealPlanDetail.dailyMenuComposition')}</h2>
@@ -1182,10 +1182,10 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                           {[...displayEntries]
                             .sort((a, b) => (mealTypeOrder[a.mealType] ?? 99) - (mealTypeOrder[b.mealType] ?? 99))
                             .map((entry) => (
-                              <div key={entry.id} className="py-3 flex justify-between items-center text-xs hover:bg-slate-900/40 px-2 rounded-lg transition-colors group">
-                                <div className="flex items-center gap-3">
+                              <div key={entry.id} className="py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2.5 text-xs hover:bg-slate-900/40 px-2 rounded-lg transition-colors group">
+                                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                                   <span
-                                    className={`px-2.5 py-1 rounded border font-semibold ${getMealTypeBadge(
+                                    className={`px-2.5 py-0.5 sm:py-1 rounded border font-semibold text-[11px] sm:text-xs ${getMealTypeBadge(
                                       entry.mealType
                                     )}`}
                                   >
@@ -1195,18 +1195,20 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                                   <span className="text-slate-400">({entry.portionGrams}g)</span>
                                 </div>
 
-                                <div className="flex items-center gap-3 text-slate-300">
-                                  <span className="font-semibold text-emerald-400">{entry.calories.toFixed(1)} kcal</span>
-                                  <span className="text-blue-300">P: {entry.proteinGrams.toFixed(1)}g</span>
-                                  <span className="text-amber-300">C: {entry.carbsGrams.toFixed(1)}g</span>
-                                  <span className="text-rose-300">F: {entry.fatGrams.toFixed(1)}g</span>
+                                <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 text-slate-300 flex-wrap">
+                                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap text-[11px] sm:text-xs">
+                                    <span className="font-semibold text-emerald-400">{entry.calories.toFixed(1)} kcal</span>
+                                    <span className="text-blue-300">P: {entry.proteinGrams.toFixed(1)}g</span>
+                                    <span className="text-amber-300">C: {entry.carbsGrams.toFixed(1)}g</span>
+                                    <span className="text-rose-300">F: {entry.fatGrams.toFixed(1)}g</span>
+                                  </div>
 
-                                  <div className="flex items-center gap-1 ml-2">
+                                  <div className="flex items-center gap-1 ml-auto sm:ml-2">
                                     {/* Feature 1: Meal Logging Button for Client */}
                                     {userRole === 'Client' && (
                                       loggedEntryIds.has(entry.id) ? (
                                         <span
-                                          className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-default"
+                                          className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-default whitespace-nowrap"
                                           title="บันทึกแล้ว / Logged"
                                         >
                                           ✔️ บันทึกแล้ว
@@ -1217,7 +1219,7 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                                           onClick={() => handleLogMeal(entry.id, entry.portionGrams)}
                                           disabled={loggingEntryId === entry.id}
                                           title="กดเพื่อบันทึกว่ากินแล้ว / Log this meal"
-                                          className="bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all hover:scale-105 active:scale-95 flex items-center gap-1 disabled:opacity-50"
+                                          className="bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all hover:scale-105 active:scale-95 flex items-center gap-1 disabled:opacity-50 whitespace-nowrap"
                                         >
                                           {loggingEntryId === entry.id ? '⏳' : '✅'} กินแล้ว
                                         </button>
