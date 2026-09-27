@@ -19,6 +19,10 @@ public interface IAuthService
 {
     Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto, CancellationToken ct = default);
     Task<AuthResponseDto> LoginAsync(LoginRequestDto dto, CancellationToken ct = default);
+    Task<bool> ForgotPasswordAsync(ForgotPasswordRequestDto dto, CancellationToken ct = default);
+    Task<bool> ResetPasswordAsync(ResetPasswordRequestDto dto, CancellationToken ct = default);
+    Task<bool> ChangePasswordAsync(Guid userId, ChangePasswordRequestDto dto, CancellationToken ct = default);
+    Task<object> UpdateUserProfileAsync(Guid userId, UpdateProfileRequestDto dto, CancellationToken ct = default);
 }
 
 // ─── Meal Plan ─────────────────────────────────────────────────────────────────

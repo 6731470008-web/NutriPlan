@@ -21,6 +21,33 @@ public record RegisterRequestDto(
 
 public record LoginRequestDto(string Email, string Password);
 
+public record ForgotPasswordRequestDto(string Email);
+
+public record ResetPasswordRequestDto(
+    string Email,
+    string NewPassword,
+    string? ResetToken = null
+);
+
+public record ChangePasswordRequestDto(
+    string CurrentPassword,
+    string NewPassword
+);
+
+public record UpdateProfileRequestDto(
+    string FullName,
+    int? Age = null,
+    double? WeightKg = null,
+    double? HeightCm = null,
+    ActivityLevel? ActivityLevel = null,
+    Gender? Gender = null,
+    string? HealthConditions = null,
+    string? FoodAllergies = null,
+    DateTime? DateOfBirth = null,
+    string? Specialization = null,
+    string? LicenseNumber = null
+);
+
 public record AddDailyMenuBodyDto(
     int DayNumber,
     double TargetCalories,

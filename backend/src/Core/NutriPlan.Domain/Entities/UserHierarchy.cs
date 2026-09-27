@@ -33,6 +33,14 @@ public abstract class User : Entity
         FullName = fullName.Trim();
         Touch();
     }
+
+    public void ChangePassword(string newPasswordHash)
+    {
+        if (string.IsNullOrWhiteSpace(newPasswordHash))
+            throw new DomainException("Password hash cannot be empty.");
+        PasswordHash = newPasswordHash;
+        Touch();
+    }
 }
 
 public class Nutritionist : User
@@ -52,6 +60,16 @@ public class Nutritionist : User
 
         LicenseNumber = licenseNumber.Trim();
         Specialization = specialization ?? "General Nutrition";
+    }
+
+    public void UpdateNutritionistProfile(string fullName, string? specialization, string? licenseNumber)
+    {
+        UpdateProfile(fullName);
+        if (!string.IsNullOrWhiteSpace(licenseNumber))
+            LicenseNumber = licenseNumber.Trim();
+        if (!string.IsNullOrWhiteSpace(specialization))
+            Specialization = specialization.Trim();
+        Touch();
     }
 
     public void AssignClient(Client client)
@@ -148,6 +166,32 @@ public class Client : User
     {
         HealthConditions = healthConditions?.Trim();
         FoodAllergies = foodAllergies?.Trim();
+        Touch();
+    }
+
+    public void UpdateFullProfile(
+        string fullName,
+        int age,
+        double weightKg,
+        double heightCm,
+        ActivityLevel activityLevel,
+        Gender gender,
+        string? healthConditions,
+        string? foodAllergies,
+        DateTime? dateOfBirth)
+    {
+        UpdateProfile(fullName);
+        Gender = gender;
+        if (dateOfBirth.HasValue)
+        {
+            SetDateOfBirth(dateOfBirth.Value);
+        }
+        else
+        {
+            Age = age;
+        }
+        UpdateBodyMetrics(Age, weightKg, heightCm, activityLevel);
+        UpdateMedicalHistory(healthConditions, foodAllergies);
         Touch();
     }
 

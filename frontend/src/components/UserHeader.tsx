@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { userService } from '@/services/nutriServices';
 import { SubscriptionModal } from '@/components/SubscriptionModal';
-
+import { UserProfileModal } from '@/components/UserProfileModal';
 import { ChatWidget } from '@/components/ChatWidget';
 
 interface UserHeaderProps {
@@ -25,6 +25,7 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
   const [isPro, setIsPro] = useState<boolean>(false);
   const [showSubModal, setShowSubModal] = useState<boolean>(false);
   const [showChatModal, setShowChatModal] = useState<boolean>(false);
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
 
   const checkTier = () => {
     const tier = localStorage.getItem('nutriplan_sub_tier');
@@ -133,16 +134,23 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
           </button>
 
           {userName && (
-            <div className="flex items-center gap-2.5 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl shadow-sm">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="flex items-center gap-2.5 bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-emerald-500/40 px-3 py-1.5 rounded-xl shadow-sm transition-all cursor-pointer text-left group"
+              title={isEn ? 'Edit Profile & Change Password' : 'แก้ไขข้อมูลส่วนตัวและเปลี่ยนรหัสผ่าน'}
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-transform group-hover:scale-105 ${
                 userRole === 'Admin'
                   ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300'
                   : 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400'
               }`}>
                 {userName.charAt(0).toUpperCase()}
               </div>
-              <div className="text-left">
-                <p className="text-xs font-bold text-slate-100 leading-tight">{userName}</p>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-bold text-slate-100 group-hover:text-emerald-300 transition-colors leading-tight">{userName}</p>
+                  <span className="text-[10px] text-slate-500 group-hover:text-slate-300">⚙️</span>
+                </div>
                 {userRole && (
                   <p className={`text-[10px] font-medium leading-none mt-0.5 ${
                     userRole === 'Admin' ? 'text-purple-400 font-bold' : 'text-emerald-400/90'
@@ -151,14 +159,14 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
                   </p>
                 )}
               </div>
-            </div>
+            </button>
           )}
 
           <LanguageSwitcher />
 
           <button
             onClick={handleLogout}
-            className="bg-slate-900 hover:bg-red-950/80 hover:border-red-500/60 text-slate-300 hover:text-red-200 text-xs px-3.5 py-2 rounded-lg border border-slate-700 font-semibold transition-all flex items-center gap-1.5 shadow-sm"
+            className="bg-slate-900 hover:bg-red-950/80 hover:border-red-500/60 text-slate-300 hover:text-red-200 text-xs px-3.5 py-2 rounded-lg border border-slate-700 font-semibold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
             title={t('common.logout')}
           >
             <svg className="w-4 h-4 text-slate-400 group-hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,6 +184,15 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
         <SubscriptionModal
           onClose={() => setShowSubModal(false)}
           onSuccess={checkTier}
+        />
+      )}
+
+      {showProfileModal && (
+        <UserProfileModal
+          onClose={() => setShowProfileModal(false)}
+          onProfileUpdated={(updatedName) => {
+            setUserName(updatedName);
+          }}
         />
       )}
     </>

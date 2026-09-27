@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { authService } from '@/services/nutriServices';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { ForgotPasswordModal } from '@/components/ForgotPasswordModal';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -105,17 +107,8 @@ export default function LoginPage() {
 
       router.push(credentials.route);
     } catch {
-      // Offline / network fallback: use synchronized academic profile
-      localStorage.setItem('nutriplan_jwt_token', `demo-${role.toLowerCase()}-jwt-token`);
-      localStorage.setItem('nutriplan_user_role', role);
-      localStorage.setItem('nutriplan_user_id', credentials.id);
-      localStorage.setItem('nutriplan_user_name', credentials.name);
-      localStorage.setItem('nutriplan_user_email', credentials.email);
-      if (role === 'Nutritionist') {
-        localStorage.setItem('nutriplan_sub_tier', 'pro');
-      }
-
-      router.push(credentials.route);
+      // ✅ Security Fix: No offline bypass — require valid server authentication
+      setError('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่อหรือสถานะบริการหลังบ้าน (Server Connection Error)');
     } finally {
       setIsLoading(false);
     }
@@ -161,9 +154,18 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-slate-300 mb-2">
-              {t('common.password')}
-            </label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs font-semibold uppercase text-slate-300">
+                {t('common.password')}
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(true)}
+                className="text-xs text-emerald-400 hover:text-emerald-300 hover:underline cursor-pointer"
+              >
+                {t('auth.forgotPassword', 'Forgot password?')}
+              </button>
+            </div>
             <input
               type="password"
               required
@@ -217,6 +219,15 @@ export default function LoginPage() {
           </a>
         </p>
       </div>
+
+      {showForgotModal && (
+        <ForgotPasswordModal
+          onClose={() => setShowForgotModal(false)}
+          onSuccess={() => {
+            // Optional callback
+          }}
+        />
+      )}
     </div>
   );
 }

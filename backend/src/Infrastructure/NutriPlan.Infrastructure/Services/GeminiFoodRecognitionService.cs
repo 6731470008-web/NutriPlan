@@ -32,8 +32,8 @@ public class GeminiFoodRecognitionService : IFoodRecognitionService
         if (string.IsNullOrWhiteSpace(apiKey)) apiKey = Environment.GetEnvironmentVariable("Gemini__ApiKey");
         if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "YOUR_GEMINI_API_KEY")
         {
-            // Built-in backend fallback key provided by user (split into chunks to avoid git push secret scanner block)
-            apiKey = "AQ.Ab8RN6JxYtVE5X" + "kwWmU8Ir9vrenexqHXQLoLmU6j9tI0AKWJZw";
+            _logger.LogWarning("Gemini API key is not configured. Set 'Gemini:ApiKey' in appsettings or GEMINI_API_KEY environment variable. Returning mock analysis.");
+            return GenerateMockFoodAnalysis();
         }
 
         if (string.IsNullOrWhiteSpace(apiKey))

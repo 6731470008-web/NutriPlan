@@ -181,7 +181,7 @@ export default function ClientDashboard() {
                       className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
                     >
                       <span>📄</span>
-                      <span>{t('healthReports.exportPdf', 'Export Clinical Report (PDF)')}</span>
+                      <span>{t('healthReports.exportPdfBtn', 'Export Nutrition Report (PDF)')}</span>
                     </button>
                   </div>
 
@@ -318,7 +318,7 @@ export default function ClientDashboard() {
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-400 max-w-xl leading-relaxed">
                     {isEn
-                      ? 'Once an assigned nutritionist accepts your consultation or prescribes a meal plan, your clinical targets (BMR, TDEE, Calories, Protein, Carbs, Fat) will be tailored and displayed here.'
+                      ? 'Once an assigned nutritionist accepts your consultation or sets a meal plan, your personalized nutrition targets (BMR, TDEE, Calories, Protein, Carbs, Fat) will be tailored and displayed here.'
                       : 'เมื่อนักโภชนาการตอบรับการให้คำปรึกษาหรือมอบหมายแผนอาหาร ค่าเป้าหมายแคลอรี่ (TDEE, BMR) และสัดส่วนสารอาหาร (Protein, Carbs, Fat) ที่คำนวณโดยผู้เชี่ยวชาญจะปรากฏที่นี่ทันที'}
                   </p>
                 </div>

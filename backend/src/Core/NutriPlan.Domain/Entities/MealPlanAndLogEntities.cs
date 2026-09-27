@@ -49,6 +49,16 @@ public class MealPlan : Entity
         }
         return total;
     }
+
+    public void UpdateDetails(string title, DateTime startDate, DateTime endDate)
+    {
+        if (string.IsNullOrWhiteSpace(title)) throw new DomainException("Meal plan title is required.");
+        if (endDate < startDate) throw new DomainException("End date cannot be before start date.");
+        Title = title;
+        StartDate = startDate;
+        EndDate = endDate;
+        Touch();
+    }
 }
 
 public class DailyMenu : Entity
@@ -123,6 +133,16 @@ public class DailyMenu : Entity
         }
         return total;
     }
+
+    public void UpdateTargets(double targetCalories, double targetProteinGrams, double targetCarbsGrams, double targetFatGrams)
+    {
+        if (targetCalories <= 0) throw new DomainException("Target calories must be greater than zero.");
+        TargetCalories = targetCalories;
+        TargetProteinGrams = targetProteinGrams >= 0 ? targetProteinGrams : 0;
+        TargetCarbsGrams = targetCarbsGrams >= 0 ? targetCarbsGrams : 0;
+        TargetFatGrams = targetFatGrams >= 0 ? targetFatGrams : 0;
+        Touch();
+    }
 }
 
 public class MealEntry : Entity
@@ -145,6 +165,18 @@ public class MealEntry : Entity
         PortionGrams = portionGrams;
         FoodItemId = foodItem.Id;
         FoodItem = foodItem;
+    }
+
+    public void UpdateEntry(MealType mealType, double portionGrams, FoodItem foodItem)
+    {
+        if (portionGrams <= 0) throw new DomainException("Portion size must be greater than zero.");
+        ArgumentNullException.ThrowIfNull(foodItem);
+
+        MealType = mealType;
+        PortionGrams = portionGrams;
+        FoodItemId = foodItem.Id;
+        FoodItem = foodItem;
+        Touch();
     }
 
     public NutrientProfile CalculateEntryNutrients()

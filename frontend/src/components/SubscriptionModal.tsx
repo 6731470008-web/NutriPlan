@@ -30,10 +30,10 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
     setIsPro(!isPro);
     const msg = !isPro
       ? (isNutritionist
-          ? (isEn ? '🎉 Upgraded to Clinical Pro Specialist Suite!' : '🎉 อัปเกรดเป็นแพ็กเกจ Clinical Pro Suite เรียบร้อยแล้ว!')
+          ? (isEn ? '🎉 Upgraded to Specialist Pro Suite!' : '🎉 อัปเกรดเป็นแพ็กเกจ Advisor Pro Suite เรียบร้อยแล้ว!')
           : (isEn ? '🎉 Upgraded to NutriPlan Pro Wellness Tier!' : '🎉 อัปเกรดเป็นแพ็กเกจ NutriPlan Pro เรียบร้อยแล้ว!'))
       : (isNutritionist
-          ? (isEn ? 'Switched to Standard Practitioner.' : 'เปลี่ยนเป็นแพ็กเกจ Standard Practitioner เรียบร้อยแล้ว')
+          ? (isEn ? 'Switched to Standard Practice.' : 'เปลี่ยนเป็นแพ็กเกจ Standard Practice เรียบร้อยแล้ว')
           : (isEn ? 'Switched to Free Starter Tier.' : 'เปลี่ยนเป็นแพ็กเกจ Free เรียบร้อยแล้ว'));
     setToastMessage(msg);
     setTimeout(() => {
@@ -53,13 +53,13 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
         <div className="flex justify-between items-start pb-4 border-b border-slate-800">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xl">{isNutritionist ? '🩺' : '⭐'}</span>
+              <span className="text-xl">{isNutritionist ? '🥗' : '⭐'}</span>
               <h3 className="text-lg font-bold text-slate-100">
-                {isNutritionist ? t('subscriptions.practitionerTitle', 'Clinical Practice & Specialist Suite') : t('subscriptions.title', 'Membership & Tier Management')}
+                {isNutritionist ? t('subscriptions.practitionerTitle', 'Specialist Nutritionist Practice Suite') : t('subscriptions.title', 'Membership & Tier Management')}
               </h3>
             </div>
             <p className="text-xs text-slate-400 mt-1">
-              {isNutritionist ? t('subscriptions.practitionerSubtitle', 'Empower your dietary practice with automated AI clinical prescribing, unlimited capacity & patient risk alerts') : t('subscriptions.subtitle', 'Unlock advanced clinical features and AI-powered insights')}
+              {isNutritionist ? t('subscriptions.practitionerSubtitle', 'Empower your dietary practice with automated AI meal planning, unlimited clients & progress alerts') : t('subscriptions.subtitle', 'Unlock advanced nutrition tools and AI-powered insights')}
             </p>
           </div>
           <button
@@ -97,19 +97,19 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
               <ul className="text-xs text-slate-400 space-y-2 pt-2 border-t border-slate-800">
                 {isNutritionist ? (
                   <>
-                    <li className="flex items-center gap-2">✓ {t('subscriptions.patientsLimitCount', '3 Active Patients Limit')}</li>
+                    <li className="flex items-center gap-2">✓ {t('subscriptions.patientsLimitCount', '3 Active Clients Limit')}</li>
                     <li className="flex items-center gap-2">✓ {t('subscriptions.manualBuilder', 'Manual Meal Plan Builder')}</li>
                     <li className="flex items-center gap-2">✓ {t('subscriptions.basicAnalytics', 'Basic Progress Analytics')}</li>
-                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.aiPrescriber', 'AI Clinical Diet Prescriber')}</li>
-                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.riskAlertRadar', 'High-Risk Patient Alert Radar')}</li>
-                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.customBrandedPdf', 'Custom Clinic Branded PDF Reports')}</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.aiPrescriber', 'AI Nutrition Plan Generator')}</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.riskAlertRadar', 'Deficit & Adherence Radar')}</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.customBrandedPdf', 'Custom Branded PDF Reports')}</li>
                   </>
                 ) : (
                   <>
                     <li className="flex items-center gap-2">✓ {t('subscriptions.activePlanLimit', '1 Active Meal Plan')}</li>
                     <li className="flex items-center gap-2">✓ {t('subscriptions.dailyCalorieCounter', 'Daily Calorie Counter')}</li>
                     <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.aiScanner', 'AI Food Vision Scanner')}</li>
-                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.clinicalReports', 'PDF Clinical Export')}</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.clinicalReports', 'PDF Health Progress Exports')}</li>
                   </>
                 )}
               </ul>
@@ -135,10 +135,10 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
             <div className="space-y-3">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                  {isNutritionist ? (isEn ? '👑 Clinical Specialist Suite' : '👑 ชุดเครื่องมือคลินิกเฉพาะทาง') : (isEn ? '👑 Full Platform Access' : '👑 เข้าถึงฟีเจอร์เต็มรูปแบบ')}
+                  {isNutritionist ? (isEn ? '👑 Specialist Advisor Suite' : '👑 ชุดเครื่องมือผู้เชี่ยวชาญ') : (isEn ? '👑 Full Platform Access' : '👑 เข้าถึงฟีเจอร์เต็มรูปแบบ')}
                 </span>
                 <h4 className="font-bold text-slate-100 text-base mt-0.5">
-                  {isNutritionist ? t('subscriptions.practitionerProTier', 'Clinical Pro Specialist Suite') : t('subscriptions.proTier', 'Pro Wellness Tier')}
+                  {isNutritionist ? t('subscriptions.practitionerProTier', 'Specialist Pro Suite') : t('subscriptions.proTier', 'Pro Wellness Tier')}
                 </h4>
                 <p className="text-2xl font-black text-amber-400 mt-2">
                   {isNutritionist ? '$49' : '$19'} <span className="text-xs text-slate-400 font-normal">{isEn ? '/ month' : '/ เดือน'}</span>
@@ -148,10 +148,10 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
               <ul className="text-xs text-slate-300 space-y-2 pt-2 border-t border-slate-800">
                 {isNutritionist ? (
                   <>
-                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.unlimitedPatients', 'Unlimited Active Patients Capacity')}</li>
-                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.aiPrescriber', 'AI Clinical Diet Prescriber')}</li>
-                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.riskAlertRadar', 'High-Risk Patient & Deficit Radar')}</li>
-                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.customBrandedPdf', 'Custom Clinic Branded PDF Reports')}</li>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.unlimitedPatients', 'Unlimited Active Clients Capacity')}</li>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.aiPrescriber', 'AI Nutrition Plan Generator')}</li>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.riskAlertRadar', 'Deficit & Adherence Radar')}</li>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.customBrandedPdf', 'Custom Branded PDF Reports')}</li>
                     <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.verifiedGoldBadge', 'Verified Gold Specialist Badge')}</li>
                     <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.templateAuthoring', 'Template Library Publishing')}</li>
                   </>

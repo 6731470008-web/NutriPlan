@@ -252,14 +252,14 @@ export function AiClinicalPrescriberModal({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-slate-100 text-base sm:text-lg">
-                  {t('aiPrescriber.title', 'AI Clinical Diet Prescriber')}
+                  {t('aiPrescriber.title', 'AI Nutrition Plan Generator')}
                 </h3>
                 <span className="bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  {t('aiPrescriber.badge', 'CLINIC PRO')}
+                  {t('aiPrescriber.badge', 'PRO ADVISOR')}
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                {t('aiPrescriber.subtitle', 'Automated clinical protocol engine for')} {client.fullName}
+                {t('aiPrescriber.subtitle', 'Automated nutrition plan engine for')} {client.fullName}
               </p>
             </div>
           </div>
@@ -319,7 +319,7 @@ export function AiClinicalPrescriberModal({
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                {t('aiPrescriber.clinicalFocus', 'Clinical Protocol Focus')}
+                {t('aiPrescriber.clinicalFocus', 'Dietary Focus Protocol')}
               </label>
               <select
                 value={protocolType}
@@ -369,8 +369,8 @@ export function AiClinicalPrescriberModal({
               <span>⚡</span>
               <span>
                 {isGenerating
-                  ? t('aiPrescriber.generatingBtn', 'AI Synthesizing Clinical Protocol...')
-                  : t('aiPrescriber.generateBtn', 'Generate Clinical Protocol (AI Engine)')}
+                  ? t('aiPrescriber.generatingBtn', 'AI Synthesizing Nutrition Plan...')
+                  : t('aiPrescriber.generateBtn', 'Generate Nutrition Plan (AI Engine)')}
               </span>
             </button>
           </div>

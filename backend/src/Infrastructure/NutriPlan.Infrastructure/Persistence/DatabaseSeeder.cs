@@ -63,16 +63,13 @@ public static class DatabaseSeeder
             }
 
             // 2. Ensure Admin User
-            var existingAdmin = await context.Users.OfType<Nutritionist>().FirstOrDefaultAsync(u => u.Email == "admin@admin.com");
+            var existingAdmin = await context.Users.FirstOrDefaultAsync(u => u.Email == "admin@admin.com");
             if (existingAdmin == null)
             {
-                var adminUser = new Nutritionist(
+                var adminUser = new Administrator(
                     email: "admin@admin.com",
                     passwordHash: defaultPasswordHash,
-                    fullName: "ดร. สมชาย ภักดีโภชน (System Admin)",
-                    licenseNumber: "LIC-102938",
-                    specialization: "Clinical Nutrition & System Administration",
-                    role: UserRole.Admin
+                    fullName: "ดร. สมชาย ภักดีโภชน (System Admin)"
                 );
                 await context.Users.AddAsync(adminUser);
                 await context.SaveChangesAsync();

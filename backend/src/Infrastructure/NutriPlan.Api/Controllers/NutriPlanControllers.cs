@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using NutriPlan.Application.Common.Interfaces;
 using NutriPlan.Application.Dtos;
@@ -11,6 +12,7 @@ namespace NutriPlan.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/auth")]
+[EnableRateLimiting("AuthRateLimit")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -43,6 +45,34 @@ public class AuthController : ControllerBase
     {
         return Ok(new { status = "Authenticated", timestamp = DateTime.UtcNow });
     }
+
+    // Endpoint 3.1: Forgot Password (Request Reset)
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto dto)
+    {
+        var result = await _authService.ForgotPasswordAsync(dto);
+        return Ok(new { message = "Email verified successfully.", email = dto.Email, canReset = result });
+    }
+
+    // Endpoint 3.2: Reset Password
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto dto)
+    {
+        var result = await _authService.ResetPasswordAsync(dto);
+        return Ok(new { message = "Password reset successfully." });
+    }
+
+    // Endpoint 3.3: Change Password (Authenticated)
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto dto)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null) return Unauthorized();
+
+        var result = await _authService.ChangePasswordAsync(Guid.Parse(userIdClaim), dto);
+        return Ok(new { message = "Password changed successfully." });
+    }
 }
 
 [ApiController]
@@ -52,11 +82,13 @@ public class UsersController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuthService _authService;
 
-    public UsersController(IUserRepository userRepository, IUnitOfWork unitOfWork)
+    public UsersController(IUserRepository userRepository, IUnitOfWork unitOfWork, IAuthService authService)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
+        _authService = authService;
     }
 
     // Endpoint 4: Get Current Profile
@@ -74,11 +106,31 @@ public class UsersController : ControllerBase
             return Ok(new {
                 id = user.Id, email = user.Email, fullName = user.FullName, role = user.Role.ToString(),
                 age = c.Age, dateOfBirth = c.DateOfBirth?.ToString("yyyy-MM-dd"), weightKg = c.WeightKg, heightCm = c.HeightCm, gender = c.Gender.ToString(),
-                activityLevel = c.ActivityLevel.ToString(), healthConditions = c.HealthConditions, foodAllergies = c.FoodAllergies
+                activityLevel = c.ActivityLevel.ToString(), healthConditions = c.HealthConditions, foodAllergies = c.FoodAllergies,
+                bmr = c.CalculateBMR(), tdee = c.CalculateTDEE()
+            });
+        }
+
+        if (user is Nutritionist n)
+        {
+            return Ok(new {
+                id = user.Id, email = user.Email, fullName = user.FullName, role = user.Role.ToString(),
+                specialization = n.Specialization, licenseNumber = n.LicenseNumber
             });
         }
 
         return Ok(new { id = user.Id, email = user.Email, fullName = user.FullName, role = user.Role.ToString() });
+    }
+
+    // Endpoint 4.1: Update Current User Profile
+    [HttpPut("me/profile")]
+    public async Task<ActionResult<object>> UpdateMyProfile([FromBody] UpdateProfileRequestDto dto)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null) return Unauthorized();
+
+        var result = await _authService.UpdateUserProfileAsync(Guid.Parse(userIdClaim), dto);
+        return Ok(result);
     }
 
     // Endpoint 5: Update Client Body Metrics
@@ -86,6 +138,12 @@ public class UsersController : ControllerBase
     [Authorize(Roles = "Client,Admin")]
     public async Task<IActionResult> UpdateBodyMetrics(Guid id, [FromBody] UpdateBodyMetricsRequestDto dto)
     {
+        // ✅ IDOR Protection: Only allow users to update their own metrics (or Admin)
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var currentRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        if (currentRole != "Admin" && currentUserId != id.ToString())
+            return Forbid();
+
         var user = await _userRepository.GetByIdAsync(id);
         if (user is not Client client) return NotFound("Client not found.");
 
@@ -327,10 +385,14 @@ public class MealPlansController : ControllerBase
         var plan = await _dbContext.MealPlans.FindAsync(id);
         if (plan == null) return NotFound("Meal plan not found.");
 
-        typeof(MealPlan).GetProperty(nameof(MealPlan.Title))?.SetValue(plan, dto.Title);
-        typeof(MealPlan).GetProperty(nameof(MealPlan.StartDate))?.SetValue(plan, dto.StartDate);
-        typeof(MealPlan).GetProperty(nameof(MealPlan.EndDate))?.SetValue(plan, dto.EndDate);
-        plan.Touch();
+        // ✅ IDOR Protection: Only owner, assigned nutritionist, or admin can update
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var currentRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        if (currentRole != "Admin" && currentRole != "Nutritionist" && currentUserId != plan.ClientId.ToString())
+            return Forbid();
+
+        // ✅ Use domain method instead of reflection
+        plan.UpdateDetails(dto.Title, dto.StartDate, dto.EndDate);
 
         await _dbContext.SaveChangesAsync();
         return NoContent();
@@ -346,11 +408,16 @@ public class MealPlansController : ControllerBase
             .ThenInclude(dm => dm.Entries)
             .FirstOrDefaultAsync(p => p.Id == id);
 
-        if (plan != null)
-        {
-            _dbContext.MealPlans.Remove(plan);
-            await _dbContext.SaveChangesAsync();
-        }
+        if (plan == null) return NotFound("Meal plan not found.");
+
+        // ✅ IDOR Protection: Only owner, assigned nutritionist, or admin can delete
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var currentRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        if (currentRole != "Admin" && currentRole != "Nutritionist" && currentUserId != plan.ClientId.ToString())
+            return Forbid();
+
+        _dbContext.MealPlans.Remove(plan);
+        await _dbContext.SaveChangesAsync();
 
         return NoContent();
     }
@@ -417,11 +484,13 @@ public class MealPlansController : ControllerBase
         var menu = await _dbContext.DailyMenus.FindAsync(menuId);
         if (menu == null) return NotFound("Daily menu not found.");
 
-        typeof(DailyMenu).GetProperty(nameof(DailyMenu.TargetCalories))?.SetValue(menu, dto.TargetCalories > 0 ? dto.TargetCalories : 2000);
-        typeof(DailyMenu).GetProperty("TargetProteinGrams")?.SetValue(menu, dto.TargetProteinGrams >= 0 ? dto.TargetProteinGrams : 0);
-        typeof(DailyMenu).GetProperty("TargetCarbsGrams")?.SetValue(menu, dto.TargetCarbsGrams >= 0 ? dto.TargetCarbsGrams : 0);
-        typeof(DailyMenu).GetProperty("TargetFatGrams")?.SetValue(menu, dto.TargetFatGrams >= 0 ? dto.TargetFatGrams : 0);
-        menu.Touch();
+        // ✅ Use domain method instead of reflection
+        menu.UpdateTargets(
+            dto.TargetCalories > 0 ? dto.TargetCalories : 2000,
+            dto.TargetProteinGrams >= 0 ? dto.TargetProteinGrams : 0,
+            dto.TargetCarbsGrams >= 0 ? dto.TargetCarbsGrams : 0,
+            dto.TargetFatGrams >= 0 ? dto.TargetFatGrams : 0
+        );
 
         await _dbContext.SaveChangesAsync();
         return NoContent();
@@ -499,11 +568,12 @@ public class MealEntriesController : ControllerBase
         var food = await _dbContext.FoodItems.FindAsync(dto.FoodItemId);
         if (food == null) return NotFound("Food item not found.");
 
-        typeof(MealEntry).GetProperty(nameof(MealEntry.MealType))?.SetValue(entry, dto.MealType);
-        typeof(MealEntry).GetProperty(nameof(MealEntry.PortionGrams))?.SetValue(entry, dto.PortionGrams > 0 ? dto.PortionGrams : 100);
-        typeof(MealEntry).GetProperty(nameof(MealEntry.FoodItemId))?.SetValue(entry, dto.FoodItemId);
-        typeof(MealEntry).GetProperty(nameof(MealEntry.FoodItem))?.SetValue(entry, food);
-        entry.Touch();
+        // ✅ Use domain method instead of reflection
+        entry.UpdateEntry(
+            dto.MealType,
+            dto.PortionGrams > 0 ? dto.PortionGrams : 100,
+            food
+        );
 
         await _dbContext.SaveChangesAsync();
         return NoContent();
@@ -550,10 +620,15 @@ public class TrackingController : ControllerBase
 
     // Endpoint 19.5: AI Food Image Recognition Endpoint
     [HttpPost("analyze-image")]
+    [RequestSizeLimit(10 * 1024 * 1024)] // ✅ Security Fix: 10MB max upload size
     public async Task<ActionResult<FoodAnalysisResultDto>> AnalyzeMealImage([FromForm] IFormFile? file, CancellationToken ct)
     {
         if (file == null || file.Length == 0)
             return BadRequest("Please upload a valid food image file.");
+
+        // ✅ Security Fix: Enforce file size limit (10 MB)
+        if (file.Length > 10 * 1024 * 1024)
+            return BadRequest("File size exceeds 10 MB limit.");
 
         if (!file.ContentType.StartsWith("image/"))
             return BadRequest("File must be an image (JPEG, PNG, WEBP).");
@@ -602,6 +677,7 @@ public class TrackingController : ControllerBase
 
 [ApiController]
 [Route("api/v1/admin")]
+[Authorize(Roles = "Admin")] // ✅ Security Fix: Admin-only access — was completely open before!
 public class AdminController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
@@ -775,6 +851,7 @@ public class MarketplaceController : ControllerBase
 
     // Endpoint 26: Create Consultation Request
     [HttpPost("consultations")]
+    [Authorize] // ✅ Security Fix: Require authentication to create consultations
     public async Task<ActionResult<ConsultationRecord>> CreateConsultation([FromBody] CreateConsultationRequestDto dto)
     {
         var client = await _userRepository.GetByIdAsync(dto.ClientId);
@@ -828,6 +905,7 @@ public class MarketplaceController : ControllerBase
 
     // Endpoint 29: Update Consultation Status (Accept / Decline)
     [HttpPut("consultations/{id:guid}/status")]
+    [Authorize] // ✅ Security Fix: Require authentication to update consultation status
     public async Task<ActionResult<ConsultationRecord>> UpdateConsultationStatus(Guid id, [FromBody] UpdateConsultationStatusDto dto)
     {
         ConsultationRecord? record;
@@ -1063,6 +1141,7 @@ public class ChatContactDto
 
 [ApiController]
 [Route("api/v1/chat")]
+[Authorize] // ✅ Security Fix: Require authentication for all chat operations
 public class ChatController : ControllerBase
 {
     private static readonly List<ChatMessageRecord> _messages = new()

@@ -18,7 +18,16 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         // TPH Inheritance Mapping
         builder.HasDiscriminator(u => u.Role)
             .HasValue<Client>(NutriPlan.Domain.Enums.UserRole.Client)
-            .HasValue<Nutritionist>(NutriPlan.Domain.Enums.UserRole.Nutritionist);
+            .HasValue<Nutritionist>(NutriPlan.Domain.Enums.UserRole.Nutritionist)
+            .HasValue<Administrator>(NutriPlan.Domain.Enums.UserRole.Admin);
+    }
+}
+
+public class AdministratorConfiguration : IEntityTypeConfiguration<Administrator>
+{
+    public void Configure(EntityTypeBuilder<Administrator> builder)
+    {
+        builder.Ignore(a => a.Department);
     }
 }
 

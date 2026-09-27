@@ -11,6 +11,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IUnitOfWor
     public DbSet<User> Users => Set<User>();
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<Nutritionist> Nutritionists => Set<Nutritionist>();
+    public DbSet<Administrator> Administrators => Set<Administrator>();
     public DbSet<MealPlan> MealPlans => Set<MealPlan>();
     public DbSet<DailyMenu> DailyMenus => Set<DailyMenu>();
     public DbSet<MealEntry> MealEntries => Set<MealEntry>();

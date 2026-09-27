@@ -28,13 +28,62 @@ export const authService = {
   verifySession: async (): Promise<{ status: string }> => {
     const res = await apiClient.get<{ status: string }>('/auth/verify');
     return res.data;
+  },
+
+  forgotPassword: async (email: string): Promise<{ message: string; email: string; canReset: boolean }> => {
+    const res = await apiClient.post('/auth/forgot-password', { email });
+    return res.data;
+  },
+
+  resetPassword: async (email: string, newPassword: string, resetToken?: string): Promise<{ message: string }> => {
+    const res = await apiClient.post('/auth/reset-password', { email, newPassword, resetToken });
+    return res.data;
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string): Promise<{ message: string }> => {
+    const res = await apiClient.post('/auth/change-password', { currentPassword, newPassword });
+    return res.data;
   }
 };
 
 // User & Client Services (Endpoints 4-7)
 export const userService = {
-  getMyProfile: async (): Promise<{ id: string; email: string; fullName: string; role: string }> => {
+  getMyProfile: async (): Promise<{
+    id: string;
+    email: string;
+    fullName: string;
+    role: string;
+    age?: number;
+    dateOfBirth?: string;
+    weightKg?: number;
+    heightCm?: number;
+    gender?: string;
+    activityLevel?: string;
+    healthConditions?: string;
+    foodAllergies?: string;
+    specialization?: string;
+    licenseNumber?: string;
+    bmr?: number;
+    tdee?: number;
+  }> => {
     const res = await apiClient.get('/users/me');
+    return res.data;
+  },
+
+  updateMyProfile: async (data: {
+    fullName: string;
+    age?: number;
+    weightKg?: number;
+    heightCm?: number;
+    activityLevel?: string;
+    gender?: string;
+    healthConditions?: string;
+    foodAllergies?: string;
+    dateOfBirth?: string;
+    specialization?: string;
+    licenseNumber?: string;
+  }): Promise<any> => {
+    const res = await apiClient.put('/users/me/profile', data);
     return res.data;
   },
 
