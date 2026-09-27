@@ -116,8 +116,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-slate-100">{t('auth.registerTitle')}</h1>
-          <p className="text-slate-400 text-xs sm:text-sm mt-1">{t('auth.registerSubtitle')}</p>
+          <h1 className="text-xl font-bold text-slate-100">{t('auth.registerSubtitle')}</h1>
         </div>
 
         {error && (

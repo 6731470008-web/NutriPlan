@@ -123,9 +123,8 @@ export default function LoginPage() {
 
       <div className="max-w-md w-full bg-slate-800/90 backdrop-blur-sm border border-slate-700/80 rounded-2xl p-8 shadow-2xl">
         <div className="flex flex-col items-center text-center mb-8">
-          <NutriPlanLogo variant="stacked" size="lg" showTagline={true} className="mb-4" />
-          <h1 className="text-xl font-bold text-slate-100">{t('auth.loginTitle')}</h1>
-          <p className="text-slate-400 text-xs sm:text-sm mt-1">{t('auth.loginSubtitle')}</p>
+          <NutriPlanLogo variant="stacked" size="lg" showTagline={true} className="mb-3" />
+          <p className="text-slate-400 text-xs sm:text-sm">{t('auth.loginSubtitle')}</p>
         </div>
 
         {error && (
