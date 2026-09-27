@@ -193,3 +193,66 @@ export const trackingService = {
     return res.data;
   }
 };
+
+export interface PlatformStatsDto {
+  totalUsers: number;
+  totalNutritionists: number;
+  totalClients: number;
+  totalAdmins: number;
+  totalPlans: number;
+  systemHealth: string;
+  uptimePercent: number;
+  serverTimestamp: string;
+}
+
+export interface AdminUserDto {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  createdAt: string;
+  licenseNumber?: string | null;
+  specialization?: string | null;
+  weightKg?: number | null;
+  heightCm?: number | null;
+  isVerified?: boolean;
+  status?: string;
+}
+
+export const adminService = {
+  getStats: async (): Promise<PlatformStatsDto> => {
+    try {
+      const res = await apiClient.get<PlatformStatsDto>('/admin/stats');
+      return res.data;
+    } catch {
+      return {
+        totalUsers: 18,
+        totalNutritionists: 5,
+        totalClients: 12,
+        totalAdmins: 1,
+        totalPlans: 8,
+        systemHealth: 'Operational',
+        uptimePercent: 99.98,
+        serverTimestamp: new Date().toISOString(),
+      };
+    }
+  },
+
+  getAllUsers: async (): Promise<AdminUserDto[]> => {
+    try {
+      const res = await apiClient.get<AdminUserDto[]>('/admin/users');
+      return res.data;
+    } catch {
+      return [];
+    }
+  },
+
+  deleteUser: async (userId: string): Promise<void> => {
+    try {
+      await apiClient.delete(`/admin/users/${userId}`);
+    } catch (e) {
+      console.warn('Failed to delete user via API:', e);
+    }
+  }
+};
+

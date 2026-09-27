@@ -218,3 +218,17 @@ public class Client : User
         return CalculateBMR() * multiplier;
     }
 }
+
+public class Administrator : User
+{
+    public string Department { get; private set; }
+
+    protected Administrator() : base() { Department = "Platform Management"; }
+
+    public Administrator(string email, string passwordHash, string fullName, string department = "Platform Administration")
+        : base(email, passwordHash, fullName, UserRole.Admin)
+    {
+        Department = department;
+    }
+}
+

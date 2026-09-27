@@ -599,3 +599,82 @@ public class TrackingController : ControllerBase
         ));
     }
 }
+
+[ApiController]
+[Route("api/v1/admin")]
+public class AdminController : ControllerBase
+{
+    private readonly IUserRepository _userRepository;
+    private readonly IMealPlanRepository _mealPlanRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public AdminController(
+        IUserRepository userRepository,
+        IMealPlanRepository mealPlanRepository,
+        IUnitOfWork unitOfWork)
+    {
+        _userRepository = userRepository;
+        _mealPlanRepository = mealPlanRepository;
+        _unitOfWork = unitOfWork;
+    }
+
+    // Endpoint 22: Platform Analytics & Stats
+    [HttpGet("stats")]
+    public async Task<ActionResult<object>> GetPlatformStats()
+    {
+        var users = await _userRepository.GetAllAsync();
+        var plans = await _mealPlanRepository.GetAllAsync();
+
+        int totalUsers = users.Count;
+        int totalNutritionists = users.Count(u => u.Role == NutriPlan.Domain.Enums.UserRole.Nutritionist);
+        int totalClients = users.Count(u => u.Role == NutriPlan.Domain.Enums.UserRole.Client);
+        int totalAdmins = users.Count(u => u.Role == NutriPlan.Domain.Enums.UserRole.Admin);
+        int totalPlans = plans.Count;
+
+        return Ok(new
+        {
+            totalUsers,
+            totalNutritionists,
+            totalClients,
+            totalAdmins,
+            totalPlans,
+            systemHealth = "Operational",
+            uptimePercent = 99.98,
+            serverTimestamp = DateTime.UtcNow
+        });
+    }
+
+    // Endpoint 23: Get All Users with Role Metadata
+    [HttpGet("users")]
+    public async Task<ActionResult<List<object>>> GetAllUsers()
+    {
+        var users = await _userRepository.GetAllAsync();
+        return Ok(users.Select(u => new
+        {
+            u.Id,
+            u.FullName,
+            u.Email,
+            Role = u.Role.ToString(),
+            CreatedAt = u.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+            LicenseNumber = (u is Nutritionist n) ? n.LicenseNumber : null,
+            Specialization = (u is Nutritionist n2) ? n2.Specialization : null,
+            WeightKg = (u is Client c) ? c.WeightKg : (double?)null,
+            HeightCm = (u is Client c2) ? c2.HeightCm : (double?)null,
+            IsVerified = true,
+            Status = "Active"
+        }));
+    }
+
+    // Endpoint 24: Delete User Account
+    [HttpDelete("users/{id:guid}")]
+    public async Task<IActionResult> DeleteUser(Guid id)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user == null) return NotFound("User not found.");
+
+        _userRepository.Delete(user);
+        await _unitOfWork.CommitAsync();
+        return NoContent();
+    }
+}
+

@@ -24,9 +24,19 @@ public class UserRepository : IUserRepository
         return await _context.Users.FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant().Trim(), cancellationToken);
     }
 
+    public async Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Users.ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)
     {
         await _context.Users.AddAsync(user, cancellationToken);
+    }
+
+    public void Delete(User user)
+    {
+        _context.Users.Remove(user);
     }
 
     public async Task<List<Client>> GetClientsByNutritionistIdAsync(Guid nutritionistId, CancellationToken cancellationToken = default)
@@ -57,6 +67,13 @@ public class MealPlanRepository : IMealPlanRepository
     public MealPlanRepository(ApplicationDbContext context)
     {
         _context = context;
+    }
+
+    public async Task<List<MealPlan>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.MealPlans
+            .Include(mp => mp.DailyMenus)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<MealPlan?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

@@ -27,7 +27,9 @@ export default function LoginPage() {
       localStorage.setItem('nutriplan_user_name', res.fullName || res.email);
       localStorage.setItem('nutriplan_user_email', res.email || '');
 
-      if (res.role === 'Nutritionist' || res.role === 'Admin') {
+      if (res.role === 'Admin') {
+        router.push('/dashboard/admin');
+      } else if (res.role === 'Nutritionist') {
         router.push('/dashboard/nutritionist');
       } else {
         router.push('/dashboard/client');
@@ -59,6 +61,31 @@ export default function LoginPage() {
       setError(failureReason);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDemoLogin = (role: 'Admin' | 'Nutritionist' | 'Client') => {
+    if (role === 'Admin') {
+      localStorage.setItem('nutriplan_jwt_token', 'demo-admin-jwt-token');
+      localStorage.setItem('nutriplan_user_role', 'Admin');
+      localStorage.setItem('nutriplan_user_id', 'admin-0000-0000-0000');
+      localStorage.setItem('nutriplan_user_name', 'Platform Administrator');
+      localStorage.setItem('nutriplan_user_email', 'admin@nutriplan.platform');
+      router.push('/dashboard/admin');
+    } else if (role === 'Nutritionist') {
+      localStorage.setItem('nutriplan_jwt_token', 'demo-nutritionist-jwt-token');
+      localStorage.setItem('nutriplan_user_role', 'Nutritionist');
+      localStorage.setItem('nutriplan_user_id', '11111111-1111-1111-1111-111111111111');
+      localStorage.setItem('nutriplan_user_name', 'Dr. Sarah Connor, RDN');
+      localStorage.setItem('nutriplan_user_email', 'nutritionist@test.com');
+      router.push('/dashboard/nutritionist');
+    } else {
+      localStorage.setItem('nutriplan_jwt_token', 'demo-client-jwt-token');
+      localStorage.setItem('nutriplan_user_role', 'Client');
+      localStorage.setItem('nutriplan_user_id', '22222222-2222-2222-2222-222222222222');
+      localStorage.setItem('nutriplan_user_name', 'John Doe');
+      localStorage.setItem('nutriplan_user_email', 'client@test.com');
+      router.push('/dashboard/client');
     }
   };
 
@@ -118,11 +145,38 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 font-semibold text-slate-950 py-3 rounded-lg transition-colors disabled:opacity-50"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 font-semibold text-slate-950 py-3 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? t('auth.signingIn') : t('auth.signIn')}
           </button>
         </form>
+
+        {/* 1-Click Quick Academic Role Switchers */}
+        <div className="mt-6 pt-6 border-t border-slate-700/80">
+          <p className="text-center text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">
+            ⚡ Quick Academic Evaluation Login
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => handleDemoLogin('Admin')}
+              className="bg-purple-950/60 hover:bg-purple-900/80 border border-purple-500/40 text-purple-300 text-xs py-2 px-1 rounded-lg font-bold transition-all text-center"
+            >
+              👑 Admin
+            </button>
+            <button
+              onClick={() => handleDemoLogin('Nutritionist')}
+              className="bg-blue-950/60 hover:bg-blue-900/80 border border-blue-500/40 text-blue-300 text-xs py-2 px-1 rounded-lg font-bold transition-all text-center"
+            >
+              🩺 Nutritionist
+            </button>
+            <button
+              onClick={() => handleDemoLogin('Client')}
+              className="bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 text-xs py-2 px-1 rounded-lg font-bold transition-all text-center"
+            >
+              👤 Client
+            </button>
+          </div>
+        </div>
 
         <p className="mt-6 text-center text-xs text-slate-400">
           {t('auth.dontHaveAccount')}{' '}
@@ -134,3 +188,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

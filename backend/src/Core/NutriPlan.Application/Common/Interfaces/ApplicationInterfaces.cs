@@ -37,7 +37,9 @@ public interface IUserRepository
 {
     Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
+    Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default);
     Task AddAsync(User user, CancellationToken cancellationToken = default);
+    void Delete(User user);
     Task<List<Client>> GetClientsByNutritionistIdAsync(Guid nutritionistId, CancellationToken cancellationToken = default);
     Task<List<Client>> GetUnassignedClientsAsync(CancellationToken cancellationToken = default);
 }
@@ -46,6 +48,7 @@ public interface IMealPlanRepository
 {
     Task<MealPlan?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<MealPlan?> GetByIdWithMenuAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<List<MealPlan>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<List<MealPlan>> GetByClientIdAsync(Guid clientId, CancellationToken cancellationToken = default);
     Task AddAsync(MealPlan mealPlan, CancellationToken cancellationToken = default);
     void Update(MealPlan mealPlan);

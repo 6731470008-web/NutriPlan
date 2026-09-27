@@ -59,14 +59,20 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
       router.push(backHref);
     } else {
       const role = localStorage.getItem('nutriplan_user_role');
-      router.push(role === 'Client' ? '/dashboard/client' : '/dashboard/nutritionist');
+      if (role === 'Admin') {
+        router.push('/dashboard/admin');
+      } else if (role === 'Client') {
+        router.push('/dashboard/client');
+      } else {
+        router.push('/dashboard/nutritionist');
+      }
     }
   };
 
   const getRoleLabel = (role: string) => {
     if (role === 'Nutritionist') return t('auth.nutritionistRole', 'Nutritionist');
     if (role === 'Client') return t('auth.clientRole', 'Client');
-    if (role === 'Admin') return 'Admin';
+    if (role === 'Admin') return 'Platform Admin';
     return role;
   };
 
@@ -92,13 +98,19 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
       <div className="flex items-center gap-3 flex-wrap justify-end">
         {userName && (
           <div className="flex items-center gap-2.5 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl shadow-sm">
-            <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold text-xs">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+              userRole === 'Admin'
+                ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300'
+                : 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400'
+            }`}>
               {userName.charAt(0).toUpperCase()}
             </div>
             <div className="text-left">
               <p className="text-xs font-bold text-slate-100 leading-tight">{userName}</p>
               {userRole && (
-                <p className="text-[10px] text-emerald-400/90 font-medium leading-none mt-0.5">
+                <p className={`text-[10px] font-medium leading-none mt-0.5 ${
+                  userRole === 'Admin' ? 'text-purple-400 font-bold' : 'text-emerald-400/90'
+                }`}>
                   {getRoleLabel(userRole)}
                 </p>
               )}
