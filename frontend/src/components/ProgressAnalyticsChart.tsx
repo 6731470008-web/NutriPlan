@@ -517,7 +517,7 @@ export function ProgressAnalyticsChart({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 text-center">
               <p className="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                {t('analytics.targetCalLabel', 'Target / TDEE')}
+                {t('analytics.targetCalLabel', isEn ? 'Daily Target' : 'เป้าหมายพลังงานต่อวัน')}
               </p>
               <p className="text-xl sm:text-2xl font-black text-blue-400 mt-1">{tdee} <span className="text-xs font-normal text-slate-400">kcal</span></p>
               <p className="text-[10px] text-slate-500 mt-1">{isEn ? 'Daily maintenance' : 'พลังงานเผาผลาญต่อวัน'}</p>
@@ -685,7 +685,7 @@ export function ProgressAnalyticsChart({
               <div className="text-2xl mb-1">⚖️</div>
               <h4 className="font-bold text-sm text-slate-100">{isEn ? 'Deficit Master' : 'คุมสมดุลพลังงาน'}</h4>
               <p className="text-xs mt-1 text-slate-400">
-                {avgDeficit > 0 ? (isEn ? '✅ Maintained calorie deficit' : '✅ รักษาการขาดดุลพลังงานสม่ำเสมอ') : (isEn ? 'Maintain deficit' : 'คุมแคลอรี่ต่ำกว่า TDEE')}
+                {avgDeficit > 0 ? (isEn ? '✅ Maintained calorie deficit' : '✅ รักษาการขาดดุลพลังงานสม่ำเสมอ') : (isEn ? 'Maintain target' : 'คุมแคลอรี่ตามเป้าหมาย')}
               </p>
             </div>
 

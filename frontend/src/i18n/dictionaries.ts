@@ -215,7 +215,7 @@ export const dictionaries = {
       projectedDate: 'Projected Target Date',
       deficitLabel: 'Calorie Deficit',
       surplusLabel: 'Calorie Surplus',
-      targetCalLabel: 'Target / TDEE',
+      targetCalLabel: 'Daily Calorie Target',
       actualCalLabel: 'Actual Intake',
     },
     adminDashboard: {
@@ -666,7 +666,7 @@ export const dictionaries = {
       projectedDate: 'วันที่คาดว่าจะถึงเป้าหมาย',
       deficitLabel: 'พลังงานขาดดุล (Deficit)',
       surplusLabel: 'พลังงานเกินดุล (Surplus)',
-      targetCalLabel: 'เป้าหมาย / TDEE',
+      targetCalLabel: 'เป้าหมายพลังงานต่อวัน',
       actualCalLabel: 'พลังงานที่กินจริง',
     },
     adminDashboard: {

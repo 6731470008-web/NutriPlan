@@ -44,17 +44,6 @@ export function UserProfileModal({ onClose, onProfileUpdated }: UserProfileModal
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  // Real-time Calculated BMR / TDEE
-  const heightM = heightCm / 100;
-  const bmi = heightM > 0 ? +(weightKg / (heightM * heightM)).toFixed(1) : 22.8;
-  const baseBmr = (10 * weightKg) + (6.25 * heightCm) - (5 * age);
-  const calculatedBmr = Math.round(gender === 'Male' ? baseBmr + 5 : baseBmr - 161);
-  const actMultiplier = activityLevel === 'Sedentary' ? 1.2
-    : activityLevel === 'LightlyActive' ? 1.375
-    : activityLevel === 'ModeratelyActive' ? 1.55
-    : activityLevel === 'VeryActive' ? 1.725
-    : activityLevel === 'ExtraActive' ? 1.9 : 1.55;
-  const calculatedTdee = Math.round(calculatedBmr * actMultiplier);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -395,21 +384,6 @@ export function UserProfileModal({ onClose, onProfileUpdated }: UserProfileModal
                     </div>
                   </div>
 
-                  {/* Calculated Live Metrics Preview Card */}
-                  <div className="bg-slate-950 border border-emerald-500/20 rounded-2xl p-3.5 grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <p className="text-[10px] text-slate-400 uppercase font-semibold">BMI</p>
-                      <p className="text-base font-bold text-emerald-400 mt-0.5">{bmi} <span className="text-[10px] font-normal text-slate-500">kg/m²</span></p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-400 uppercase font-semibold">BMR</p>
-                      <p className="text-base font-bold text-blue-400 mt-0.5">{calculatedBmr} <span className="text-[10px] font-normal text-slate-500">kcal</span></p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-400 uppercase font-semibold">TDEE</p>
-                      <p className="text-base font-bold text-amber-400 mt-0.5">{calculatedTdee} <span className="text-[10px] font-normal text-slate-500">kcal</span></p>
-                    </div>
-                  </div>
 
                   {/* Health Conditions & Food Allergies */}
                   <div className="space-y-3 pt-1">

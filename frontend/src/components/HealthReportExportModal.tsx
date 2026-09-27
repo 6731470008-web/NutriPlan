@@ -195,12 +195,12 @@ export function HealthReportExportModal({
                   <p className="font-bold text-emerald-700 text-sm">{bmi} kg/m²</p>
                 </div>
                 <div>
-                  <p className="text-slate-400 text-[10px]">{isEn ? 'Basal Metabolic Rate (BMR)' : 'อัตราเผาผลาญพื้นฐาน (BMR)'}</p>
-                  <p className="font-bold text-slate-900 text-sm">{Math.round(bmr)} kcal/day</p>
+                  <p className="text-slate-400 text-[10px]">{isEn ? 'Weight Status' : 'เกณฑ์น้ำหนัก'}</p>
+                  <p className="font-bold text-slate-900 text-sm">{bmi < 18.5 ? (isEn ? 'Underweight' : 'น้ำหนักน้อย') : bmi <= 24.9 ? (isEn ? 'Normal / Healthy' : 'สมส่วน / สุขภาพดี') : (isEn ? 'Above Normal' : 'เกินเกณฑ์')}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400 text-[10px]">{isEn ? 'Total Daily Energy (TDEE)' : 'พลังงานที่ใช้ต่อวัน (TDEE)'}</p>
-                  <p className="font-bold text-blue-700 text-sm">{Math.round(tdee)} kcal/day</p>
+                  <p className="text-slate-400 text-[10px]">{isEn ? 'Daily Energy Target' : 'เป้าหมายพลังงานต่อวัน'}</p>
+                  <p className="font-bold text-blue-700 text-sm">{Math.round(tdee - 350)} kcal/day</p>
                 </div>
               </div>
             </div>
