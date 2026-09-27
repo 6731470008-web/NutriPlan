@@ -269,6 +269,7 @@ export interface MarketplaceNutritionistDto {
   bio: string;
   availability: string;
   isVerified: boolean;
+  isPro?: boolean;
 }
 
 export interface ConsultationRequestDto {
@@ -316,7 +317,8 @@ export const marketplaceService = {
         activeClientsCount: 14,
         bio: 'Board-certified sports dietitian specializing in muscle hypertrophy, athletic conditioning, and nutrient timing.',
         availability: 'Available for New Clients',
-        isVerified: true
+        isVerified: true,
+        isPro: true
       },
       {
         id: '11111111-1111-1111-1111-111111111112',
@@ -329,7 +331,8 @@ export const marketplaceService = {
         activeClientsCount: 22,
         bio: 'Clinical nutritionist with 12+ years expertise in glycemic management, insulin resistance, and metabolic rehabilitation.',
         availability: 'Available for New Clients',
-        isVerified: true
+        isVerified: true,
+        isPro: true
       },
       {
         id: '11111111-1111-1111-1111-111111111113',
@@ -342,7 +345,8 @@ export const marketplaceService = {
         activeClientsCount: 9,
         bio: 'Specialist in ketogenic adaptation, intermittent fasting protocols, and stubborn fat loss through metabolic flexibility.',
         availability: 'Available for New Clients',
-        isVerified: true
+        isVerified: true,
+        isPro: false
       }
     ];
   },

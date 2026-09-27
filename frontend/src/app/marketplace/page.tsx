@@ -45,7 +45,7 @@ export default function MarketplacePage() {
   }, [nutritionists]);
 
   const filteredNutritionists = useMemo(() => {
-    return nutritionists.filter(n => {
+    const filtered = nutritionists.filter(n => {
       const matchQuery =
         n.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         n.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -54,6 +54,15 @@ export default function MarketplacePage() {
       const matchSpecialty = selectedSpecialty === 'All' || n.specialization === selectedSpecialty;
 
       return matchQuery && matchSpecialty;
+    });
+
+    // Priority Sort: Clinical Pro Specialists first, then by highest rating
+    return filtered.sort((a, b) => {
+      const aPro = Boolean(a.isPro);
+      const bPro = Boolean(b.isPro);
+      if (aPro && !bPro) return -1;
+      if (!aPro && bPro) return 1;
+      return b.rating - a.rating;
     });
   }, [nutritionists, searchQuery, selectedSpecialty]);
 
@@ -166,70 +175,132 @@ export default function MarketplacePage() {
         {isLoading ? (
           <div className="text-center text-slate-400 py-16">{t('common.loading', 'Loading specialists...')}</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredNutritionists.map((nutri) => (
-              <div
-                key={nutri.id}
-                className="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-6 flex flex-col justify-between space-y-4 shadow-xl hover:shadow-2xl transition-all group"
-              >
-                <div className="space-y-3">
-                  {/* Top Avatar & Verified Badge */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-blue-500 text-slate-950 font-black text-lg flex items-center justify-center shadow-md">
-                        {nutri.fullName.charAt(0)}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+            {filteredNutritionists.map((nutri) => {
+              const isPro = Boolean(nutri.isPro);
+              return (
+                <div
+                  key={nutri.id}
+                  className={`relative rounded-2xl p-6 flex flex-col justify-between space-y-4 shadow-xl transition-all group ${
+                    isPro
+                      ? 'bg-gradient-to-b from-amber-950/25 via-slate-900 to-slate-900 border-2 border-amber-500/50 hover:border-amber-400 ring-1 ring-amber-500/20 hover:shadow-amber-500/10 hover:shadow-2xl'
+                      : 'bg-slate-900 border border-slate-800 hover:border-emerald-500/50 hover:shadow-2xl'
+                  }`}
+                >
+                  {/* Pro Badge on Top of Card */}
+                  {isPro && (
+                    <div className="absolute -top-3 left-6 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 font-black text-[10px] tracking-wider uppercase px-3 py-0.5 rounded-full shadow-md flex items-center gap-1">
+                      <span>👑</span>
+                      <span>{isEn ? 'Clinical Pro Specialist' : 'ผู้เชี่ยวชาญระดับคลินิกโปร (PRO)'}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    {/* Top Avatar & Verified Badge */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-12 h-12 rounded-2xl font-black text-lg flex items-center justify-center shadow-md ${
+                            isPro
+                              ? 'bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 text-slate-950 ring-2 ring-amber-400/40'
+                              : 'bg-gradient-to-br from-emerald-400 to-blue-500 text-slate-950'
+                          }`}
+                        >
+                          {nutri.fullName.charAt(0)}
+                        </div>
+                        <div>
+                          <h3
+                            className={`font-bold text-base transition-colors ${
+                              isPro
+                                ? 'text-slate-100 group-hover:text-amber-400'
+                                : 'text-slate-100 group-hover:text-emerald-400'
+                            }`}
+                          >
+                            {nutri.fullName}
+                          </h3>
+                          <p
+                            className={`text-[11px] font-medium flex items-center gap-1 ${
+                              isPro ? 'text-amber-400 font-semibold' : 'text-emerald-400'
+                            }`}
+                          >
+                            <span>{isPro ? '🥇' : '🛡️'}</span>
+                            <span>
+                              {isPro
+                                ? isEn
+                                  ? 'Verified Gold Specialist'
+                                  : 'ผู้เชี่ยวชาญ Gold ที่ได้รับการรับรอง'
+                                : t('marketplace.verifiedSpecialist', 'Verified Specialist')}
+                            </span>
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-bold text-slate-100 text-base group-hover:text-emerald-400 transition-colors">
-                          {nutri.fullName}
-                        </h3>
-                        <p className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
-                          <span>🛡️</span>
-                          <span>{t('marketplace.verifiedSpecialist', 'Verified Specialist')}</span>
-                        </p>
+
+                      <div
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs ${
+                          isPro
+                            ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                            : 'bg-amber-500/10 border border-amber-500/30 text-amber-400'
+                        }`}
+                      >
+                        <span>★</span>
+                        <span>{nutri.rating}</span>
+                        <span className="text-[10px] text-slate-500 font-normal">({nutri.reviewCount})</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-full text-amber-400 font-bold text-xs">
-                      <span>★</span>
-                      <span>{nutri.rating}</span>
-                      <span className="text-[10px] text-slate-500 font-normal">({nutri.reviewCount})</span>
+                    {/* Specialization & License Badge */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold border ${
+                          isPro
+                            ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                            : 'bg-blue-500/15 text-blue-300 border-blue-500/30'
+                        }`}
+                      >
+                        {nutri.specialization}
+                      </span>
+                      <span className="text-[10px] bg-slate-950 text-slate-400 font-mono px-2 py-0.5 rounded-md border border-slate-800">
+                        {nutri.licenseNumber}
+                      </span>
                     </div>
+
+                    {/* Bio */}
+                    <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
+                      {nutri.bio}
+                    </p>
                   </div>
 
-                  {/* Specialization & License Badge */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] bg-blue-500/15 text-blue-300 border border-blue-500/30 px-2.5 py-0.5 rounded-full font-semibold">
-                      {nutri.specialization}
-                    </span>
-                    <span className="text-[10px] bg-slate-950 text-slate-400 font-mono px-2 py-0.5 rounded-md border border-slate-800">
-                      {nutri.licenseNumber}
-                    </span>
-                  </div>
+                  {/* Bottom Stats & Action */}
+                  <div className="space-y-4 pt-4 border-t border-slate-800/80">
+                    <div className="flex justify-between items-center text-xs text-slate-400">
+                      <span>
+                        👥 {t('marketplace.activeClients', 'Active Patients')}:{' '}
+                        <strong className="text-slate-200">{nutri.activeClientsCount}</strong>
+                      </span>
+                      <span
+                        className={`text-[11px] font-medium ${
+                          isPro ? 'text-amber-400' : 'text-emerald-400'
+                        }`}
+                      >
+                        ● {isEn ? 'Accepting Clients' : 'เปิดรับผู้รับบริการ'}
+                      </span>
+                    </div>
 
-                  {/* Bio */}
-                  <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
-                    {nutri.bio}
-                  </p>
+                    <button
+                      onClick={() => handleOpenRequestModal(nutri)}
+                      className={`w-full font-bold py-2.5 rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02] ${
+                        isPro
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 shadow-amber-500/20'
+                          : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
+                      }`}
+                    >
+                      <span>📅</span>
+                      <span>{t('marketplace.requestConsultation', 'Request Consultation')}</span>
+                    </button>
+                  </div>
                 </div>
-
-                {/* Bottom Stats & Action */}
-                <div className="space-y-4 pt-4 border-t border-slate-800/80">
-                  <div className="flex justify-between items-center text-xs text-slate-400">
-                    <span>👥 {t('marketplace.activeClients', 'Active Patients')}: <strong className="text-slate-200">{nutri.activeClientsCount}</strong></span>
-                    <span className="text-emerald-400 text-[11px] font-medium">● {isEn ? 'Accepting Clients' : 'เปิดรับผู้รับบริการ'}</span>
-                  </div>
-
-                  <button
-                    onClick={() => handleOpenRequestModal(nutri)}
-                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02]"
-                  >
-                    <span>📅</span>
-                    <span>{t('marketplace.requestConsultation', 'Request Consultation')}</span>
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

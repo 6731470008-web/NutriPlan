@@ -763,8 +763,12 @@ public class MarketplaceController : ControllerBase
             ActiveClientsCount = n.AssignedClients.Count,
             Bio = $"Licensed clinical nutritionist specializing in {n.Specialization}. Passionate about evidence-based nutrition science and patient adherence.",
             Availability = "Available for New Clients",
-            IsVerified = true
-        }).ToList();
+            IsVerified = true,
+            IsPro = n.Id.ToString().StartsWith("11111111") || n.FullName.Contains("Sarah") || n.FullName.Contains("Watson")
+        })
+        .OrderByDescending(n => n.IsPro)
+        .ThenByDescending(n => n.Rating)
+        .ToList();
 
         return Ok(result);
     }
