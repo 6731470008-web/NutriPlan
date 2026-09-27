@@ -713,25 +713,7 @@ public class ConsultationRecord
 [Route("api/v1/marketplace")]
 public class MarketplaceController : ControllerBase
 {
-    private static readonly List<ConsultationRecord> _consultations = new()
-    {
-        new ConsultationRecord
-        {
-            Id = Guid.Parse("33333333-3333-3333-3333-333333333331"),
-            ClientId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-            ClientName = "John Doe",
-            ClientEmail = "client@test.com",
-            ClientWeightKg = 78.5,
-            ClientHeightCm = 178,
-            NutritionistId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-            NutritionistName = "Dr. Sarah Connor, RDN",
-            GoalType = "Weight Loss & Fat Reduction",
-            TargetWeightKg = 72.0,
-            Notes = "Looking for a sustainable deficit meal plan with high protein options.",
-            Status = "Pending",
-            CreatedAt = DateTime.UtcNow.AddHours(-4)
-        }
-    };
+    private static readonly List<ConsultationRecord> _consultations = new();
 
     private static readonly object _lock = new();
 

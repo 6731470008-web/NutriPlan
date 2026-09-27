@@ -381,34 +381,18 @@ export const marketplaceService = {
   getNutritionistConsultations: async (nutritionistId: string): Promise<ConsultationRequestDto[]> => {
     try {
       const res = await apiClient.get<ConsultationRequestDto[]>(`/marketplace/consultations/nutritionist/${nutritionistId}`);
-      if (res.data && res.data.length > 0) return res.data;
+      if (res.data) return res.data;
     } catch (e) {
       console.warn('API error fetching nutritionist consultations:', e);
     }
 
-    return [
-      {
-        id: '33333333-3333-3333-3333-333333333331',
-        clientId: '22222222-2222-2222-2222-222222222222',
-        clientName: 'John Doe',
-        clientEmail: 'client@test.com',
-        clientWeightKg: 78.5,
-        clientHeightCm: 178,
-        nutritionistId: nutritionistId,
-        nutritionistName: 'Dr. Sarah Connor, RDN',
-        goalType: 'Weight Loss & Fat Reduction',
-        targetWeightKg: 72.0,
-        notes: 'Looking for a sustainable deficit meal plan with high protein options.',
-        status: 'Pending',
-        createdAt: new Date(Date.now() - 3600000 * 4).toISOString()
-      }
-    ];
+    return [];
   },
 
   getClientConsultations: async (clientId: string): Promise<ConsultationRequestDto[]> => {
     try {
       const res = await apiClient.get<ConsultationRequestDto[]>(`/marketplace/consultations/client/${clientId}`);
-      if (res.data && res.data.length > 0) return res.data;
+      if (res.data) return res.data;
     } catch (e) {
       console.warn('API error fetching client consultations:', e);
     }
@@ -419,21 +403,7 @@ export const marketplaceService = {
       try { return JSON.parse(local); } catch { }
     }
 
-    return [
-      {
-        id: '33333333-3333-3333-3333-333333333331',
-        clientId: clientId,
-        clientName: 'John Doe',
-        clientEmail: 'client@test.com',
-        nutritionistId: '11111111-1111-1111-1111-111111111111',
-        nutritionistName: 'Dr. Sarah Connor, RDN',
-        goalType: 'Weight Loss & Fat Reduction',
-        targetWeightKg: 72.0,
-        notes: 'Looking for a sustainable deficit meal plan with high protein options.',
-        status: 'Pending',
-        createdAt: new Date(Date.now() - 3600000 * 4).toISOString()
-      }
-    ];
+    return [];
   },
 
   updateConsultationStatus: async (id: string, status: 'Accepted' | 'Declined'): Promise<void> => {
