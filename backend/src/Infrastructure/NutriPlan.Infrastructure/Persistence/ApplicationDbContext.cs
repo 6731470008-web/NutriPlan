@@ -17,6 +17,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IUnitOfWor
     public DbSet<MealEntry> MealEntries => Set<MealEntry>();
     public DbSet<FoodItem> FoodItems => Set<FoodItem>();
     public DbSet<MealLog> MealLogs => Set<MealLog>();
+    public DbSet<UserFitnessConnection> UserFitnessConnections => Set<UserFitnessConnection>();
+    public DbSet<DailyActivityLog> DailyActivityLogs => Set<DailyActivityLog>();
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 

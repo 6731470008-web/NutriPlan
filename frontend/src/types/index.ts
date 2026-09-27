@@ -144,3 +144,62 @@ export interface FoodAnalysisResult {
   items: DetectedFoodItem[];
 }
 
+export interface FitnessConnectionDto {
+  id: string;
+  userId: string;
+  aggregatorProvider: string;
+  aggregatorUserId: string;
+  deviceProvider: string;
+  isActive: boolean;
+  lastSyncAt?: string;
+}
+
+export interface WidgetSessionResponseDto {
+  status: string;
+  url: string;
+  sessionId: string;
+}
+
+export interface DailyActivitySummaryDto {
+  id: string;
+  userId: string;
+  date: string;
+  steps: number;
+  activeCaloriesBurned: number;
+  totalCaloriesBurned: number;
+  averageHeartRate?: number;
+  restingHeartRate?: number;
+  sleepHours?: number;
+  distanceMeters?: number;
+  sourceDevice: string;
+  updatedAt?: string;
+}
+
+export interface MockSyncRequestDto {
+  date: string;
+  steps: number;
+  activeCaloriesBurned: number;
+  totalCaloriesBurned: number;
+  averageHeartRate?: number;
+  restingHeartRate?: number;
+  sleepHours?: number;
+  distanceMeters?: number;
+  sourceDevice?: string;
+}
+
+export interface OAuthUrlResponseDto {
+  provider: string;
+  url: string;
+  isConfigured: boolean;
+  note?: string;
+}
+
+export interface ManualSyncResponseDto {
+  success: boolean;
+  message: string;
+  syncedActivitiesCount: number;
+  latestActivity?: DailyActivitySummaryDto;
+}
+
+
+

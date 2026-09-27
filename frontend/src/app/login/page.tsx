@@ -6,6 +6,7 @@ import { authService } from '@/services/nutriServices';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ForgotPasswordModal } from '@/components/ForgotPasswordModal';
+import { NutriPlanLogo } from '@/components/NutriPlanLogo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -120,10 +121,11 @@ export default function LoginPage() {
         <LanguageSwitcher />
       </div>
 
-      <div className="max-w-md w-full bg-slate-800 border border-slate-700 rounded-xl p-8 shadow-2xl">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-emerald-400">{t('auth.loginTitle')}</h1>
-          <p className="text-slate-400 text-sm mt-1">{t('auth.loginSubtitle')}</p>
+      <div className="max-w-md w-full bg-slate-800/90 backdrop-blur-sm border border-slate-700/80 rounded-2xl p-8 shadow-2xl">
+        <div className="flex flex-col items-center text-center mb-8">
+          <NutriPlanLogo variant="stacked" size="lg" showTagline={true} className="mb-4" />
+          <h1 className="text-xl font-bold text-slate-100">{t('auth.loginTitle')}</h1>
+          <p className="text-slate-400 text-xs sm:text-sm mt-1">{t('auth.loginSubtitle')}</p>
         </div>
 
         {error && (

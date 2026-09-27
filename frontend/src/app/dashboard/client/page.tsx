@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { mealPlanService, trackingService, userService, marketplaceService, ConsultationRequestDto } from '@/services/nutriServices';
-import { MealPlanDto, AdherenceReportDto } from '@/types';
+import { mealPlanService, trackingService, userService, marketplaceService, ConsultationRequestDto, fitnessService } from '@/services/nutriServices';
+import { MealPlanDto, AdherenceReportDto, DailyActivitySummaryDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { UserHeader } from '@/components/UserHeader';
 import { ProgressAnalyticsChart } from '@/components/ProgressAnalyticsChart';
 import { HealthReportExportModal } from '@/components/HealthReportExportModal';
+import { FitnessDevicesModal } from '@/components/FitnessDevicesModal';
+
 
 interface ClientMetrics {
   bmr: number;
@@ -44,11 +46,14 @@ export default function ClientDashboard() {
   const [clientName, setClientName] = useState<string>('');
   const [clientEmail, setClientEmail] = useState<string>('');
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showFitnessModal, setShowFitnessModal] = useState(false);
+  const [fitnessActivity, setFitnessActivity] = useState<DailyActivitySummaryDto | null>(null);
+  const [fitnessConnectionCount, setFitnessConnectionCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      const storedClientId = localStorage.getItem('nutriplan_user_id');
+
+  const fetchDashboardData = useCallback(async () => {
+    const storedClientId = localStorage.getItem('nutriplan_user_id');
       if (!storedClientId) {
         router.push('/login');
         return;
@@ -131,15 +136,54 @@ export default function ClientDashboard() {
         } catch {
           // Ignore client metrics fetch errors
         }
+
+        // Feature: Fetch Fitness Tracker data (Smartwatch / Aggregator)
+        try {
+          const [connList, actList] = await Promise.all([
+            fitnessService.getConnections(),
+            fitnessService.getDailySummary()
+          ]);
+          setFitnessConnectionCount(connList.filter(c => c.isActive).length);
+          if (actList && actList.length > 0) {
+            setFitnessActivity(actList[0]);
+          } else {
+            setFitnessActivity(null);
+          }
+        } catch {
+          // Ignore fitness fetch errors
+        }
       } catch (err: unknown) {
         console.error(err);
       } finally {
         setIsLoading(false);
       }
+
+  }, [router]);
+
+  useEffect(() => {
+    const handleUrlAuthCode = async () => {
+      if (typeof window === 'undefined') return;
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const scope = params.get('scope');
+
+      if (code) {
+        const isStrava = scope ? scope.includes('activity') || scope.includes('read') : true;
+        const provider = isStrava ? 'strava' : 'fitbit';
+
+        try {
+          await fitnessService.handleOAuthCallback(provider, code, window.location.origin + '/dashboard/client');
+          window.history.replaceState({}, document.title, window.location.pathname);
+          await fetchDashboardData();
+        } catch (err) {
+          console.error('OAuth exchange error', err);
+        }
+      }
     };
 
+    handleUrlAuthCode();
     fetchDashboardData();
-  }, [router]);
+  }, [fetchDashboardData]);
 
   const getProgressColor = (percent: number) => {
     if (percent > 110) return 'bg-red-500';
@@ -176,13 +220,25 @@ export default function ClientDashboard() {
                     <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
                       📊 {t('clientDashboard.dailyNutritionSummary', 'Daily Nutrition Summary')}
                     </h2>
-                    <button
-                      onClick={() => setShowReportModal(true)}
-                      className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-                    >
-                      <span>📄</span>
-                      <span>{t('healthReports.exportPdfBtn', 'Export Nutrition Report (PDF)')}</span>
-                    </button>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={() => setShowFitnessModal(true)}
+                        className="bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                      >
+                        <span>⌚</span>
+                        <span>{fitnessConnectionCount > 0 ? (isEn ? 'Connected Devices' : 'อุปกรณ์ที่เชื่อมต่อ') : (isEn ? 'Connect Watch' : 'เชื่อมต่อนาฬิกา')}</span>
+                        {fitnessConnectionCount > 0 && (
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setShowReportModal(true)}
+                        className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                      >
+                        <span>📄</span>
+                        <span>{t('healthReports.exportPdfBtn', 'Export Nutrition Report (PDF)')}</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Top Metrics Row: BMR / TDEE / Meals */}
@@ -192,10 +248,17 @@ export default function ClientDashboard() {
                       <p className="text-base sm:text-xl font-bold text-blue-400 mt-1">{Math.round(clientMetrics.bmr)}</p>
                       <p className="text-[9px] sm:text-[10px] text-slate-500">kcal/day</p>
                     </div>
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
-                      <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold">TDEE</p>
-                      <p className="text-base sm:text-xl font-bold text-emerald-400 mt-1">{Math.round(clientMetrics.tdee)}</p>
-                      <p className="text-[9px] sm:text-[10px] text-slate-500">kcal/day</p>
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center relative">
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold flex items-center justify-center gap-1">
+                        <span>TDEE</span>
+                        {fitnessActivity && <span className="text-[8px] bg-cyan-500/20 text-cyan-300 px-1 py-0.2 rounded font-bold">Dynamic</span>}
+                      </p>
+                      <p className="text-base sm:text-xl font-bold text-emerald-400 mt-1">
+                        {fitnessActivity ? Math.round(clientMetrics.tdee + fitnessActivity.activeCaloriesBurned) : Math.round(clientMetrics.tdee)}
+                      </p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-500">
+                        {fitnessActivity ? `kcal (+${Math.round(fitnessActivity.activeCaloriesBurned)} burn)` : 'kcal/day'}
+                      </p>
                     </div>
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
                       <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold truncate">{t('clientDashboard.totalMeals', 'Total Meals')}</p>
@@ -203,6 +266,81 @@ export default function ClientDashboard() {
                       <p className="text-[9px] sm:text-[10px] text-slate-500">{t('clientDashboard.meals', 'meals')}</p>
                     </div>
                   </div>
+
+                  {/* Smartwatch Live Activity Card */}
+                  {fitnessActivity ? (
+                    <div className="bg-gradient-to-r from-slate-900 via-slate-900/95 to-cyan-950/30 border border-cyan-500/30 rounded-xl p-4 sm:p-5 relative overflow-hidden shadow-lg shadow-cyan-950/20">
+                      <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-xl">⌚</span>
+                          <div>
+                            <h3 className="text-xs sm:text-sm font-bold text-slate-100 flex items-center gap-2">
+                              {isEn ? 'Smartwatch Activity (Live Sync)' : 'ข้อมูลกิจกรรมจากนาฬิกาออกกำลังกาย'}
+                              <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold">
+                                {fitnessActivity.sourceDevice || 'Garmin / Apple Watch'}
+                              </span>
+                            </h3>
+                            <p className="text-[11px] text-slate-400">
+                              {isEn ? 'Date' : 'วันที่'}: {fitnessActivity.date} • {isEn ? 'Calorie budget dynamically increased by real workout expenditure' : 'โควตาพลังงานปรับเพิ่มอัตโนมัติตามแคลอรี่ที่ออกกำลังกายจริง'}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setShowFitnessModal(true)}
+                          className="text-xs text-cyan-400 hover:text-cyan-300 underline font-medium"
+                        >
+                          {isEn ? 'Manage / Sync →' : 'จัดการ / ซิงก์ →'}
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 pt-1">
+                        <div className="bg-slate-950/70 border border-slate-800/80 rounded-lg p-2.5 text-center">
+                          <p className="text-[10px] text-slate-400 uppercase font-semibold">👟 {isEn ? 'Steps' : 'ก้าวเดิน'}</p>
+                          <p className="text-sm sm:text-base font-bold text-emerald-400 mt-0.5">{fitnessActivity.steps.toLocaleString()}</p>
+                          <p className="text-[9px] text-slate-500">{((fitnessActivity.steps / 10000) * 100).toFixed(0)}% {isEn ? 'of 10k goal' : 'ของเป้าหมาย'}</p>
+                        </div>
+
+                        <div className="bg-slate-950/70 border border-slate-800/80 rounded-lg p-2.5 text-center">
+                          <p className="text-[10px] text-slate-400 uppercase font-semibold">🔥 {isEn ? 'Active Burn' : 'พลังงานเผาผลาญ'}</p>
+                          <p className="text-sm sm:text-base font-bold text-amber-400 mt-0.5">+{Math.round(fitnessActivity.activeCaloriesBurned)}</p>
+                          <p className="text-[9px] text-slate-500">kcal burned</p>
+                        </div>
+
+                        <div className="bg-slate-950/70 border border-slate-800/80 rounded-lg p-2.5 text-center">
+                          <p className="text-[10px] text-slate-400 uppercase font-semibold">❤️ {isEn ? 'Heart Rate' : 'ชีพจรเฉลี่ย'}</p>
+                          <p className="text-sm sm:text-base font-bold text-rose-400 mt-0.5">{fitnessActivity.averageHeartRate || 72}</p>
+                          <p className="text-[9px] text-slate-500">bpm</p>
+                        </div>
+
+                        <div className="bg-slate-950/70 border border-slate-800/80 rounded-lg p-2.5 text-center">
+                          <p className="text-[10px] text-slate-400 uppercase font-semibold">🌙 {isEn ? 'Sleep Time' : 'การนอนหลับ'}</p>
+                          <p className="text-sm sm:text-base font-bold text-indigo-400 mt-0.5">{fitnessActivity.sleepHours || 7.5} h</p>
+                          <p className="text-[9px] text-slate-500">{isEn ? 'optimal recovery' : 'การฟื้นฟูร่างกาย'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-slate-900/60 border border-dashed border-slate-800 hover:border-slate-700 rounded-xl p-3 sm:p-4 flex items-center justify-between flex-wrap gap-2 transition-all">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">⌚</span>
+                        <div>
+                          <p className="text-xs font-bold text-slate-200">
+                            {isEn ? 'Connect your Smartwatch (Garmin, Apple Watch, Fitbit)' : 'เชื่อมต่อนาฬิกาออกกำลังกายของคุณ (Garmin, Apple Watch, Fitbit)'}
+                          </p>
+                          <p className="text-[11px] text-slate-400">
+                            {isEn ? 'Automatically sync calories burned and daily steps to dynamically adapt your meal plan goals.' : 'นำแคลอรี่ที่ออกกำลังกายจริงมาคำนวณ TDEE ประจำวัน เพื่อการดูแลโภชนาการที่แม่นยำยิ่งขึ้น'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowFitnessModal(true)}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 transition-all"
+                      >
+                        + {isEn ? 'Connect Device' : 'เชื่อมต่ออุปกรณ์'}
+                      </button>
+                    </div>
+                  )}
+
 
                   {/* Macro Progress Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -521,6 +659,14 @@ export default function ClientDashboard() {
           plans={plans}
           nutritionistName={consultations.find(c => c.status === 'Accepted')?.nutritionistName || 'Dr. Sarah Connor, RDN'}
           onClose={() => setShowReportModal(false)}
+        />
+      )}
+
+      {showFitnessModal && (
+        <FitnessDevicesModal
+          isOpen={showFitnessModal}
+          onClose={() => setShowFitnessModal(false)}
+          onDataSynced={fetchDashboardData}
         />
       )}
 

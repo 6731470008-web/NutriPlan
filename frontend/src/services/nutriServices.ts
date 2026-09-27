@@ -10,7 +10,13 @@ import {
   AddMealEntryDto,
   AdherenceReportDto,
   ClientProgressDto,
-  FoodAnalysisResult
+  FoodAnalysisResult,
+  FitnessConnectionDto,
+  WidgetSessionResponseDto,
+  DailyActivitySummaryDto,
+  MockSyncRequestDto,
+  OAuthUrlResponseDto,
+  ManualSyncResponseDto
 } from '@/types';
 
 // Auth Services (Endpoints 1-3)
@@ -945,6 +951,54 @@ export const chatService = {
     } catch { }
   }
 };
+
+// Fitness & Smartwatch Integration Services
+export const fitnessService = {
+  generateWidgetSession: async (providers?: string[]): Promise<WidgetSessionResponseDto> => {
+    const res = await apiClient.post<WidgetSessionResponseDto>('/fitness/widget-session', { providers });
+    return res.data;
+  },
+
+  getConnections: async (): Promise<FitnessConnectionDto[]> => {
+    const res = await apiClient.get<FitnessConnectionDto[]>('/fitness/connections');
+    return res.data;
+  },
+
+  disconnect: async (connectionId: string): Promise<{ message: string }> => {
+    const res = await apiClient.delete<{ message: string }>(`/fitness/connections/${connectionId}`);
+    return res.data;
+  },
+
+  getDailySummary: async (fromDate?: string, toDate?: string): Promise<DailyActivitySummaryDto[]> => {
+    const params = new URLSearchParams();
+    if (fromDate) params.append('fromDate', fromDate);
+    if (toDate) params.append('toDate', toDate);
+    const res = await apiClient.get<DailyActivitySummaryDto[]>(`/fitness/daily-summary?${params.toString()}`);
+    return res.data;
+  },
+
+  mockSync: async (data: MockSyncRequestDto): Promise<DailyActivitySummaryDto> => {
+    const res = await apiClient.post<DailyActivitySummaryDto>('/fitness/mock-sync', data);
+    return res.data;
+  },
+
+  getOAuthUrl: async (provider: 'strava' | 'fitbit', redirectUri: string): Promise<OAuthUrlResponseDto> => {
+    const res = await apiClient.get<OAuthUrlResponseDto>(`/fitness/oauth-url/${provider}?redirectUri=${encodeURIComponent(redirectUri)}`);
+    return res.data;
+  },
+
+  handleOAuthCallback: async (provider: 'strava' | 'fitbit', code: string, redirectUri?: string): Promise<ManualSyncResponseDto> => {
+    const res = await apiClient.post<ManualSyncResponseDto>(`/fitness/oauth-callback/${provider}`, { code, redirectUri });
+    return res.data;
+  },
+
+  triggerSync: async (provider: 'strava' | 'fitbit'): Promise<ManualSyncResponseDto> => {
+    const res = await apiClient.post<ManualSyncResponseDto>(`/fitness/sync/${provider}`);
+    return res.data;
+  }
+};
+
+
 
 
 

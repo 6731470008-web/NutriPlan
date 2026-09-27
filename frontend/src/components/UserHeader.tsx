@@ -8,6 +8,7 @@ import { userService } from '@/services/nutriServices';
 import { SubscriptionModal } from '@/components/SubscriptionModal';
 import { UserProfileModal } from '@/components/UserProfileModal';
 import { ChatWidget } from '@/components/ChatWidget';
+import { NutriPlanLogo } from '@/components/NutriPlanLogo';
 
 interface UserHeaderProps {
   title?: string;
@@ -93,7 +94,13 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
   return (
     <>
       <header className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-800 mb-8 gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
+          <NutriPlanLogo variant="compact" size="sm" linkToHome={true} />
+
+          {(showBack || title) && (
+            <div className="h-6 w-px bg-slate-800 hidden sm:block" />
+          )}
+
           {showBack && (
             <button
               onClick={handleBack}
@@ -104,8 +111,8 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
           )}
           {title && (
             <div>
-              <h1 className="text-2xl font-bold text-emerald-400">{title}</h1>
-              {subtitle && <p className="text-slate-400 text-sm mt-0.5">{subtitle}</p>}
+              <h1 className="text-xl sm:text-2xl font-bold text-emerald-400">{title}</h1>
+              {subtitle && <p className="text-slate-400 text-xs sm:text-sm mt-0.5">{subtitle}</p>}
             </div>
           )}
         </div>

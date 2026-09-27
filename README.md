@@ -86,6 +86,13 @@
 * **Adherence Tracking:** ติดตามการรับประทานอาหารจริงเปรียบเทียบกับเป้าหมาย พร้อมคำนวณคะแนนความต่อเนื่อง (% Adherence Score)
 * **Automated Shopping List:** รวมรายการและปริมาณวัตถุดิบที่ต้องซื้อจากแผนอาหารทั้งหมด และส่งออกเอกสารได้หลายฟอร์แมต
 
+### ⌚ 6. ระบบเชื่อมต่อนาฬิกาและอุปกรณ์ออกกำลังกาย (Smartwatch & Fitness Wearables via Terra Aggregator)
+* **รองรับอุปกรณ์ยอดนิยมทุกค่าย:** เชื่อมต่อและซิงก์ข้อมูลจาก **Garmin, Apple Watch, Fitbit, Samsung Health, Oura Ring, Whoop, Polar, Withings** ผ่านมาตรฐาน Unified Health Aggregator
+* **Dynamic Real-Time TDEE:** นำแคลอรี่ที่เผาผลาญจริงจากการออกกำลังกาย (Active Calories Burned) มาปรับคำนวณโควตาพลังงานประจำวันอัตโนมัติ
+* **Biometrics Tracking:** ซิงก์ก้าวเดิน (Steps), อัตราการเต้นของหัวใจ (Heart Rate), และชั่วโมงการนอนหลับ (Sleep Recovery) แสดงผลควบคู่กับสถิติสารอาหารบนแดชบอร์ด
+* **Built-in Sandbox & Interactive Simulator:** มีระบบจำลองการซิงก์ข้อมูลในตัวเพื่อทดสอบระบบได้ทันทีโดยไม่ต้องรออนุมัติสิทธิ์อุปกรณ์กายภาพจริง
+
+
 ---
 
 ## 🏗️ สถาปัตยกรรมระบบ (System Architecture)
@@ -275,6 +282,13 @@ The database is freshly initialized and production-ready. You can sign in using 
 * **BMR & TDEE Scientific Engine:** Calculates baseline metabolic rates via **Mifflin-St Jeor** and **Harris-Benedict** equations adjusted for fitness goals.
 * **Adherence Tracking & Analytics:** Real-time adherence scoring comparing planned vs. consumed nutrients.
 * **Automated Shopping List Aggregator:** Aggregates required ingredients across all planned meals with multi-format export support.
+
+### ⌚ 6. Smartwatch & Fitness Wearables Integration (Terra Aggregator Engine)
+* **Universal Multi-Brand Ecosystem:** Seamlessly syncs health data across **Garmin, Apple Watch, Fitbit, Samsung Health, Oura Ring, Whoop, Polar, and Withings** through a standardized Unified Health API.
+* **Dynamic Real-Time TDEE:** Integrates actual daily calories burned from workouts to dynamically recalculate daily energy allowances and deficit/surplus goals.
+* **Biometric Telemetry:** Live tracking of step counts, active burn, heart rate, and sleep recovery alongside meal nutrition charts.
+* **Built-in Sandbox & Interactive Simulator:** Full interactive simulation suite enabling complete end-to-end demonstrations without requiring immediate physical hardware authorizations.
+
 
 ---
 

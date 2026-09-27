@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" width="100%" height="100%" fill="none">
+  <defs>
+    <!-- Background subtle gradient for standalone display if needed -->
+    <linearGradient id="np-logo-primary-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="35%" stop-color="#10b981" />
+      <stop offset="75%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#6ee7b7" />
+    </linearGradient>
+
+    <linearGradient id="np-logo-leaf-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a7f3d0" />
+      <stop offset="50%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <!-- Typography Gradient for Nutri -->
+    <linearGradient id="np-text-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#e2e8f0" />
+    </linearGradient>
+
+    <!-- Soft Glow -->
+    <filter id="np-logo-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#10b981" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Left Icon Mark -->
+  <g transform="translate(10, 8)" filter="url(#np-logo-glow)">
+    <!-- Base Squircle -->
+    <rect width="84" height="84" rx="22" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+    
+    <!-- Inner ambient circle -->
+    <circle cx="42" cy="42" r="28" fill="#10b981" opacity="0.1" />
+
+    <!-- Scaled N + Leaf Monogram -->
+    <g transform="translate(12, 11) scale(0.68)">
+      <!-- Left Vertical Bar -->
+      <rect x="18" y="24" width="12" height="46" rx="6" fill="url(#np-logo-primary-grad)" />
+
+      <!-- Diagonal Wave -->
+      <path
+        d="M24 28 C26 28 30 30 34 36 L56 68 C58 71 62 71 63 68 L63 32 C63 27.58 59.42 24 55 24 C50.58 24 47 27.58 47 32 L47 50 L34 30 C31 26 27 25 24 26 Z"
+        fill="url(#np-logo-primary-grad)"
+      />
+
+      <!-- Right Vertical Bar -->
+      <rect x="52" y="28" width="12" height="42" rx="6" fill="url(#np-logo-primary-grad)" />
+
+      <!-- Leaf Crown -->
+      <path
+        d="M58 26 C58 12 74 8 76 8 C76 10 76 26 62 30 C60 30.5 58 28.5 58 26 Z"
+        fill="url(#np-logo-leaf-grad)"
+      />
+      <path
+        d="M59 25 C64 20 70 15 75 10"
+        stroke="#ffffff"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        opacity="0.6"
+      />
+
+      <!-- Target Sparkle -->
+      <circle cx="24" cy="16" r="3.5" fill="#6ee7b7" />
+      <circle cx="24" cy="16" r="1.5" fill="#ffffff" />
+    </g>
+  </g>
+
+  <!-- Brand Typography -->
+  <g transform="translate(112, 54)">
+    <!-- "Nutri" in bold crisp white -->
+    <text
+      x="0"
+      y="0"
+      font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+      font-size="38"
+      font-weight="800"
+      letter-spacing="-0.5"
+      fill="url(#np-text-grad)"
+    >Nutri<tspan fill="url(#np-logo-primary-grad)">Plan</tspan></text>
+
+    <!-- Tagline: Subtitle -->
+    <text
+      x="2"
+      y="22"
+      font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+      font-size="11"
+      font-weight="600"
+      letter-spacing="2.5"
+      fill="#94a3b8"
+    >NUTRITION &amp; MEAL PLANNING</text>
+  </g>
+</svg>

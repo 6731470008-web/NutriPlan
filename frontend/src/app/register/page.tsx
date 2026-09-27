@@ -6,6 +6,7 @@ import { authService } from '@/services/nutriServices';
 import { UserRole, ActivityLevel, Gender } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { NutriPlanLogo } from '@/components/NutriPlanLogo';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -100,7 +101,7 @@ export default function RegisterPage() {
         <LanguageSwitcher />
       </div>
 
-      <div className="max-w-lg w-full bg-slate-800 border border-slate-700 rounded-xl p-8 shadow-2xl">
+      <div className="max-w-lg w-full bg-slate-800/90 backdrop-blur-sm border border-slate-700/80 rounded-2xl p-8 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <a
             href="/login"
@@ -111,11 +112,12 @@ export default function RegisterPage() {
             </svg>
             {t('auth.backToLogin')}
           </a>
+          <NutriPlanLogo variant="compact" size="xs" />
         </div>
 
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-emerald-400">{t('auth.registerTitle')}</h1>
-          <p className="text-slate-400 text-sm mt-1">{t('auth.registerSubtitle')}</p>
+          <h1 className="text-2xl font-bold text-slate-100">{t('auth.registerTitle')}</h1>
+          <p className="text-slate-400 text-xs sm:text-sm mt-1">{t('auth.registerSubtitle')}</p>
         </div>
 
         {error && (

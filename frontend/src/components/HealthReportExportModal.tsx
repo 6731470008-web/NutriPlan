@@ -5,6 +5,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MealPlanDto, AdherenceReportDto } from '@/types';
+import { NutriPlanLogo } from '@/components/NutriPlanLogo';
 
 interface HealthReportProps {
   patientName: string;
@@ -148,11 +149,8 @@ export function HealthReportExportModal({
             {/* Document Letterhead */}
             <div className="flex justify-between items-start border-b-2 border-emerald-600 pb-4">
               <div>
-                <h1 className="text-2xl font-black text-emerald-800 tracking-tight flex items-center gap-2">
-                  <span>🥗</span>
-                  <span>NutriPlan Platform</span>
-                </h1>
-                <p className="text-[11px] text-slate-500 font-medium">
+                <NutriPlanLogo variant="compact" size="md" theme="light" />
+                <p className="text-[11px] text-slate-500 font-medium mt-1">
                   {isEn ? 'Personal Nutrition & Wellness Management Platform' : 'ระบบวางแผนโภชนาการและดูแลสุขภาพส่วนบุคคล'}
                 </p>
               </div>

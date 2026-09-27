@@ -23,7 +23,47 @@ public static class DatabaseSeeder
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS ""Gender"" integer NOT NULL DEFAULT 0;
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS ""HealthConditions"" text NULL;
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS ""FoodAllergies"" text NULL;
+
+                CREATE TABLE IF NOT EXISTS user_fitness_connections (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""UserId"" uuid NOT NULL,
+                    ""AggregatorProvider"" character varying(50) NOT NULL,
+                    ""AggregatorUserId"" character varying(150),
+                    ""DeviceProvider"" character varying(50) NOT NULL,
+                    ""IsActive"" boolean NOT NULL,
+                    ""LastSyncAt"" timestamp with time zone,
+                    ""AccessToken"" text NULL,
+                    ""RefreshToken"" text NULL,
+                    ""ExpiresAt"" timestamp with time zone NULL,
+                    ""CreatedAt"" timestamp with time zone NOT NULL,
+                    ""UpdatedAt"" timestamp with time zone
+                );
+                ALTER TABLE user_fitness_connections ADD COLUMN IF NOT EXISTS ""AccessToken"" text NULL;
+                ALTER TABLE user_fitness_connections ADD COLUMN IF NOT EXISTS ""RefreshToken"" text NULL;
+                ALTER TABLE user_fitness_connections ADD COLUMN IF NOT EXISTS ""ExpiresAt"" timestamp with time zone NULL;
+                CREATE INDEX IF NOT EXISTS ""IX_user_fitness_connections_UserId"" ON user_fitness_connections (""UserId"");
+                CREATE INDEX IF NOT EXISTS ""IX_user_fitness_connections_AggregatorUserId"" ON user_fitness_connections (""AggregatorUserId"");
+
+
+                CREATE TABLE IF NOT EXISTS daily_activity_logs (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""UserId"" uuid NOT NULL,
+                    ""Date"" date NOT NULL,
+                    ""Steps"" integer NOT NULL,
+                    ""ActiveCaloriesBurned"" numeric(10,2) NOT NULL,
+                    ""TotalCaloriesBurned"" numeric(10,2) NOT NULL,
+                    ""AverageHeartRate"" integer,
+                    ""RestingHeartRate"" integer,
+                    ""SleepHours"" numeric(5,2),
+                    ""DistanceMeters"" numeric(12,2),
+                    ""SourceDevice"" character varying(100) NOT NULL,
+                    ""RawDataJson"" text,
+                    ""CreatedAt"" timestamp with time zone NOT NULL,
+                    ""UpdatedAt"" timestamp with time zone
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS ""IX_daily_activity_logs_UserId_Date"" ON daily_activity_logs (""UserId"", ""Date"");
             ");
+
 
             // 1. Ensure Food Items exist first so meal plans can attach to them
             var chickenItem = await context.FoodItems.FirstOrDefaultAsync(f => f.Name.Contains("อกไก่ย่าง"))

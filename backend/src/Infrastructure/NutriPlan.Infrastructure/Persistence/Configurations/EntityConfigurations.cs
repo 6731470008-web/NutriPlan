@@ -163,3 +163,36 @@ public class MealLogConfiguration : IEntityTypeConfiguration<MealLog>
         builder.HasKey(ml => ml.Id);
     }
 }
+
+public class UserFitnessConnectionConfiguration : IEntityTypeConfiguration<UserFitnessConnection>
+{
+    public void Configure(EntityTypeBuilder<UserFitnessConnection> builder)
+    {
+        builder.ToTable("user_fitness_connections");
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.UserId).IsRequired();
+        builder.Property(c => c.AggregatorProvider).HasMaxLength(50).IsRequired();
+        builder.Property(c => c.AggregatorUserId).HasMaxLength(150);
+        builder.Property(c => c.DeviceProvider).HasMaxLength(50).IsRequired();
+        builder.HasIndex(c => c.UserId);
+        builder.HasIndex(c => c.AggregatorUserId);
+    }
+}
+
+public class DailyActivityLogConfiguration : IEntityTypeConfiguration<DailyActivityLog>
+{
+    public void Configure(EntityTypeBuilder<DailyActivityLog> builder)
+    {
+        builder.ToTable("daily_activity_logs");
+        builder.HasKey(a => a.Id);
+        builder.Property(a => a.UserId).IsRequired();
+        builder.Property(a => a.ActiveCaloriesBurned).HasPrecision(10, 2);
+        builder.Property(a => a.TotalCaloriesBurned).HasPrecision(10, 2);
+        builder.Property(a => a.SleepHours).HasPrecision(5, 2);
+        builder.Property(a => a.DistanceMeters).HasPrecision(12, 2);
+        builder.Property(a => a.SourceDevice).HasMaxLength(100);
+
+        // Unique composite index: one log per user per calendar date
+        builder.HasIndex(a => new { a.UserId, a.Date }).IsUnique();
+    }
+}

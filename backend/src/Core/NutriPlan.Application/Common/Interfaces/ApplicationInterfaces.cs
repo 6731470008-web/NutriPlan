@@ -71,6 +71,41 @@ public interface IMealLogRepository
     Task AddAsync(MealLog mealLog, CancellationToken cancellationToken = default);
 }
 
+// ─── Fitness Integration ───────────────────────────────────────────────────
+
+public interface IFitnessConnectionRepository
+{
+    Task<UserFitnessConnection?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<List<UserFitnessConnection>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<UserFitnessConnection?> GetByAggregatorUserIdAsync(string aggregatorUserId, CancellationToken cancellationToken = default);
+    Task AddAsync(UserFitnessConnection connection, CancellationToken cancellationToken = default);
+    void Update(UserFitnessConnection connection);
+    void Delete(UserFitnessConnection connection);
+}
+
+public interface IDailyActivityRepository
+{
+    Task<DailyActivityLog?> GetByUserAndDateAsync(Guid userId, DateOnly date, CancellationToken cancellationToken = default);
+    Task<List<DailyActivityLog>> GetByUserIdAsync(Guid userId, DateOnly? fromDate = null, DateOnly? toDate = null, CancellationToken cancellationToken = default);
+    Task AddAsync(DailyActivityLog activityLog, CancellationToken cancellationToken = default);
+    void Update(DailyActivityLog activityLog);
+}
+
+public interface IFitnessService
+{
+    Task<WidgetSessionResponseDto> GenerateWidgetSessionAsync(Guid userId, GenerateWidgetSessionRequestDto? request = null, CancellationToken ct = default);
+    Task<List<FitnessConnectionResponseDto>> GetUserConnectionsAsync(Guid userId, CancellationToken ct = default);
+    Task<bool> DisconnectAsync(Guid userId, Guid connectionId, CancellationToken ct = default);
+    Task<List<DailyActivitySummaryDto>> GetDailyActivitiesAsync(Guid userId, DateOnly? fromDate = null, DateOnly? toDate = null, CancellationToken ct = default);
+    Task<DailyActivitySummaryDto> MockSyncActivityAsync(Guid userId, MockSyncRequestDto dto, CancellationToken ct = default);
+    Task<bool> ProcessTerraWebhookAsync(string payloadJson, string? signatureHeader = null, CancellationToken ct = default);
+
+    // Free Direct Open API Bridges (Strava & Fitbit)
+    Task<OAuthUrlResponseDto> GetOAuthUrlAsync(Guid userId, string provider, string redirectUri, CancellationToken ct = default);
+    Task<ManualSyncResponseDto> HandleOAuthCallbackAsync(Guid userId, string provider, string code, string? redirectUri = null, CancellationToken ct = default);
+    Task<ManualSyncResponseDto> TriggerDeviceSyncAsync(Guid userId, string provider, CancellationToken ct = default);
+}
+
 // ─── AI Services ──────────────────────────────────────────────────────────────
 
 public interface IFoodRecognitionService

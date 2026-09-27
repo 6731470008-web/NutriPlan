@@ -49,11 +49,14 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IMealPlanRepository, MealPlanRepository>();
 builder.Services.AddScoped<IFoodItemRepository, FoodItemRepository>();
 builder.Services.AddScoped<IMealLogRepository, MealLogRepository>();
+builder.Services.AddScoped<IFitnessConnectionRepository, FitnessConnectionRepository>();
+builder.Services.AddScoped<IDailyActivityRepository, DailyActivityRepository>();
 
 // Application Services — registered against their interfaces (DIP ✅)
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMealPlanService, MealPlanService>();
 builder.Services.AddHttpClient<IFoodRecognitionService, GeminiFoodRecognitionService>();
+builder.Services.AddHttpClient<IFitnessService, FitnessService>();
 
 // JWT Authentication Configuration
 // ✅ Secret loaded from appsettings.json or environment variable — no hardcoded fallback.

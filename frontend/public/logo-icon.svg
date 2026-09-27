@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" fill="none">
+  <defs>
+    <!-- Background subtle glow -->
+    <linearGradient id="np-bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <!-- Main Vibrant Nutrition Gradient -->
+    <linearGradient id="np-primary-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="35%" stop-color="#10b981" />
+      <stop offset="75%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#6ee7b7" />
+    </linearGradient>
+
+    <!-- Leaf Accent Gradient -->
+    <linearGradient id="np-leaf-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a7f3d0" />
+      <stop offset="50%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <!-- Energy Flow Accent -->
+    <linearGradient id="np-energy-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2dd4bf" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Soft Drop Shadow -->
+    <filter id="np-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#10b981" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Modern Rounded Icon Base (Squircle) -->
+  <rect width="128" height="128" rx="32" fill="url(#np-bg-grad)" stroke="#1e293b" stroke-width="2" />
+  
+  <!-- Subtle Internal Radial Aura -->
+  <circle cx="64" cy="64" r="44" fill="#10b981" opacity="0.08" />
+
+  <!-- Iconic Monogram "N" + Nutrition Leaf Symbol -->
+  <g filter="url(#np-glow)" transform="translate(6, 4)">
+    <!-- Left Stem: Solid Pillar representing Stability & Health foundation -->
+    <path
+      d="M32 94 V44 C32 37.37 37.37 32 44 32 C47.5 32 50.5 33.6 52.5 36.2 L74 65 V94 C74 96.2 72.2 98 70 98 H36 C33.8 98 32 96.2 32 94 Z"
+      fill="url(#np-primary-grad)"
+      opacity="0.25"
+    />
+
+    <!-- Main Dynamic Flowing "N" Ribbon -->
+    <!-- Left vertical bar with smooth curve -->
+    <rect x="33" y="38" width="14" height="52" rx="7" fill="url(#np-primary-grad)" />
+
+    <!-- Diagonal Dynamic Connector -->
+    <path
+      d="M39 42 C41 42 45 44 49 50 L77 88 C79 91 83 91 85 88 L85 46 C85 41.58 81.42 38 77 38 C72.58 38 69 41.58 69 46 L69 68 L49 41 C46 37 42 36 39 37 Z"
+      fill="url(#np-primary-grad)"
+    />
+
+    <!-- Right Pillar with Leaf Morph -->
+    <rect x="71" y="44" width="14" height="46" rx="7" fill="url(#np-primary-grad)" />
+
+    <!-- Organic Sprouting Leaf crowning the top right of the "N" -->
+    <path
+      d="M78 40 C78 24 96 20 98 20 C98 22 98 40 82 44 C80 44.5 78 42.5 78 40 Z"
+      fill="url(#np-leaf-grad)"
+    />
+
+    <!-- Center leaf vein line -->
+    <path
+      d="M79 39 C85 34 92 28 97 22"
+      stroke="#ffffff"
+      stroke-width="1.75"
+      stroke-linecap="round"
+      opacity="0.6"
+    />
+
+    <!-- Sparkling Nutrition Health Dot (Balanced Target) -->
+    <circle cx="40" cy="30" r="4.5" fill="#6ee7b7" />
+    <circle cx="40" cy="30" r="2" fill="#ffffff" />
+  </g>
+</svg>

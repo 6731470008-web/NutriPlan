@@ -22,6 +22,14 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "NutriPlan - Academic Nutrition System",
   description: "Personalized Meal Planning and Nutritional Tracking Platform",
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/logo-icon.svg',
+  },
 };
 
 export default function RootLayout({

@@ -284,3 +284,93 @@ public class MealLogRepository : IMealLogRepository
         await _context.MealLogs.AddAsync(mealLog, cancellationToken);
     }
 }
+
+public class FitnessConnectionRepository : IFitnessConnectionRepository
+{
+    private readonly ApplicationDbContext _context;
+
+    public FitnessConnectionRepository(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<UserFitnessConnection?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.UserFitnessConnections.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+    }
+
+    public async Task<List<UserFitnessConnection>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.UserFitnessConnections
+            .Where(c => c.UserId == userId)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<UserFitnessConnection?> GetByAggregatorUserIdAsync(string aggregatorUserId, CancellationToken cancellationToken = default)
+    {
+        return await _context.UserFitnessConnections
+            .FirstOrDefaultAsync(c => c.AggregatorUserId == aggregatorUserId, cancellationToken);
+    }
+
+    public async Task AddAsync(UserFitnessConnection connection, CancellationToken cancellationToken = default)
+    {
+        await _context.UserFitnessConnections.AddAsync(connection, cancellationToken);
+    }
+
+    public void Update(UserFitnessConnection connection)
+    {
+        _context.UserFitnessConnections.Update(connection);
+    }
+
+    public void Delete(UserFitnessConnection connection)
+    {
+        _context.UserFitnessConnections.Remove(connection);
+    }
+}
+
+public class DailyActivityRepository : IDailyActivityRepository
+{
+    private readonly ApplicationDbContext _context;
+
+    public DailyActivityRepository(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<DailyActivityLog?> GetByUserAndDateAsync(Guid userId, DateOnly date, CancellationToken cancellationToken = default)
+    {
+        return await _context.DailyActivityLogs
+            .FirstOrDefaultAsync(a => a.UserId == userId && a.Date == date, cancellationToken);
+    }
+
+    public async Task<List<DailyActivityLog>> GetByUserIdAsync(Guid userId, DateOnly? fromDate = null, DateOnly? toDate = null, CancellationToken cancellationToken = default)
+    {
+        var query = _context.DailyActivityLogs.Where(a => a.UserId == userId);
+
+        if (fromDate.HasValue)
+        {
+            query = query.Where(a => a.Date >= fromDate.Value);
+        }
+
+        if (toDate.HasValue)
+        {
+            query = query.Where(a => a.Date <= toDate.Value);
+        }
+
+        return await query
+            .OrderByDescending(a => a.Date)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(DailyActivityLog activityLog, CancellationToken cancellationToken = default)
+    {
+        await _context.DailyActivityLogs.AddAsync(activityLog, cancellationToken);
+    }
+
+    public void Update(DailyActivityLog activityLog)
+    {
+        _context.DailyActivityLogs.Update(activityLog);
+    }
+}
+
