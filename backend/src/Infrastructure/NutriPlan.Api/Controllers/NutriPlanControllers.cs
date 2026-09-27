@@ -861,4 +861,156 @@ public class MarketplaceController : ControllerBase
     }
 }
 
+public class CloneTemplateRequestDto
+{
+    public Guid ClientId { get; set; }
+    public string? CustomTitle { get; set; }
+    public DateTime StartDate { get; set; } = DateTime.UtcNow;
+    public DateTime EndDate { get; set; } = DateTime.UtcNow.AddDays(14);
+}
+
+public class TemplatePlanSummaryDto
+{
+    public string Id { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Category { get; set; } = "";
+    public string Description { get; set; } = "";
+    public int DaysCount { get; set; } = 7;
+    public double TargetCalories { get; set; } = 2000;
+    public double TargetProtein { get; set; } = 150;
+    public double TargetCarbs { get; set; } = 200;
+    public double TargetFat { get; set; } = 65;
+    public string DietType { get; set; } = "Balanced";
+    public string SuitableFor { get; set; } = "General Population";
+    public List<string> HighlightFoods { get; set; } = new();
+}
+
+[ApiController]
+[Route("api/v1/templates")]
+public class MealPlanTemplateController : ControllerBase
+{
+    private static readonly List<TemplatePlanSummaryDto> _templates = new()
+    {
+        new TemplatePlanSummaryDto
+        {
+            Id = "tpl-clean-14",
+            Title = "14-Day Metabolic Clean Eating & Reset",
+            Category = "Weight Loss & Clean Eating",
+            Description = "A whole-foods balanced deficit plan focusing on lean poultry, complex tubers, and essential fatty acids for optimal insulin sensitivity.",
+            DaysCount = 14,
+            TargetCalories = 1850,
+            TargetProtein = 140,
+            TargetCarbs = 180,
+            TargetFat = 55,
+            DietType = "Balanced Deficit",
+            SuitableFor = "Weight Loss, Insulin Reset, Healthy Digestion",
+            HighlightFoods = new List<string> { "Grilled Chicken Breast", "Steamed Brown Rice", "Avocado", "Wild Salmon", "Broccoli" }
+        },
+        new TemplatePlanSummaryDto
+        {
+            Id = "tpl-hypertrophy-4w",
+            Title = "High-Protein Hypertrophy & Athletic Bulking",
+            Category = "Muscle Gain & Performance",
+            Description = "Optimized for athletic recovery and lean mass accrual with strategic carbohydrate timing around workout windows.",
+            DaysCount = 28,
+            TargetCalories = 2750,
+            TargetProtein = 190,
+            TargetCarbs = 320,
+            TargetFat = 75,
+            DietType = "High Protein Surplus",
+            SuitableFor = "Bodybuilders, Athletes, Hardgainers",
+            HighlightFoods = new List<string> { "Lean Beef Tenderloin", "Oatmeal with Whey", "Sweet Potatoes", "Greek Yogurt", "Almonds" }
+        },
+        new TemplatePlanSummaryDto
+        {
+            Id = "tpl-keto-fast",
+            Title = "Ketogenic Fat Adaptation & Fasting Protocol",
+            Category = "Ketogenic & Low Carb",
+            Description = "Strict ketogenic macronutrient split (70% Fat, 25% Protein, 5% Net Carbs) to stimulate endogenous ketone production.",
+            DaysCount = 14,
+            TargetCalories = 1950,
+            TargetProtein = 120,
+            TargetCarbs = 25,
+            TargetFat = 150,
+            DietType = "Ketogenic",
+            SuitableFor = "Stubborn Fat Loss, Mental Clarity, Fasting Practitioners",
+            HighlightFoods = new List<string> { "Ribeye Steak", "Hass Avocado", "MCT Oil / Olive Oil", "Egg Whites & Whole Eggs", "Spinach Salad" }
+        },
+        new TemplatePlanSummaryDto
+        {
+            Id = "tpl-diabetic-glycemic",
+            Title = "Clinical Glycemic Control & Diabetic Care",
+            Category = "Clinical Nutrition",
+            Description = "Designed by certified dietitians to prevent postprandial glucose spikes using high-fiber legumes and low-GI carbohydrates.",
+            DaysCount = 14,
+            TargetCalories = 1900,
+            TargetProtein = 135,
+            TargetCarbs = 160,
+            TargetFat = 60,
+            DietType = "Low Glycemic Index",
+            SuitableFor = "Pre-Diabetes, Type 2 Diabetes, Metabolic Syndrome",
+            HighlightFoods = new List<string> { "Steamed Edamame", "Quinoa Bowl", "Grilled White Fish", "Lentil Soup", "Chia Seeds" }
+        }
+    };
+
+    private readonly IMealPlanRepository _mealPlanRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public MealPlanTemplateController(
+        IMealPlanRepository mealPlanRepository,
+        IUserRepository userRepository,
+        IUnitOfWork unitOfWork)
+    {
+        _mealPlanRepository = mealPlanRepository;
+        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
+    }
+
+    // Endpoint 30: Get Reusable Plan Templates
+    [HttpGet]
+    public ActionResult<List<TemplatePlanSummaryDto>> GetTemplates()
+    {
+        return Ok(_templates);
+    }
+
+    // Endpoint 31: Clone Template into Client Meal Plan
+    [HttpPost("{templateId}/clone")]
+    public async Task<ActionResult<object>> CloneTemplate(string templateId, [FromBody] CloneTemplateRequestDto dto)
+    {
+        var template = _templates.FirstOrDefault(t => t.Id == templateId);
+        if (template == null) return NotFound("Template not found.");
+
+        var client = await _userRepository.GetByIdAsync(dto.ClientId);
+        if (client is not Client c) return NotFound("Client not found.");
+
+        var plan = new MealPlan(
+            dto.ClientId,
+            dto.CustomTitle ?? $"{template.Title} (Prescribed)",
+            DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc),
+            DateTime.SpecifyKind(dto.EndDate, DateTimeKind.Utc)
+        );
+
+        // Populate daily menus for the template duration
+        for (int day = 1; day <= Math.Min(template.DaysCount, 14); day++)
+        {
+            var menu = new DailyMenu(day, template.TargetCalories, template.TargetProtein, template.TargetCarbs, template.TargetFat);
+            plan.AddDailyMenu(menu);
+        }
+
+        await _mealPlanRepository.AddAsync(plan);
+        await _unitOfWork.CommitAsync();
+
+        return Ok(new
+        {
+            id = plan.Id,
+            title = plan.Title,
+            clientId = plan.ClientId,
+            days = plan.DailyMenus.Count,
+            message = "Template successfully cloned into active client meal plan!"
+        });
+    }
+}
+
+
 

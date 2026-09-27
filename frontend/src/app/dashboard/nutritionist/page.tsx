@@ -334,10 +334,17 @@ export default function NutritionistDashboard() {
 
           {/* Section 1: Assigned Client Roster */}
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <h2 className="text-lg font-semibold text-slate-200">
                 {t('nutritionistDashboard.assignedRoster')} ({clients.length})
               </h2>
+              <button
+                onClick={() => router.push('/templates')}
+                className="bg-teal-500/15 hover:bg-teal-500/25 text-teal-300 border border-teal-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+              >
+                <span>📚</span>
+                <span>{t('templates.browseTemplates', 'Template Library')} →</span>
+              </button>
             </div>
 
             {clients.length === 0 ? (
