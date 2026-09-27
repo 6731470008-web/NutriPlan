@@ -7,6 +7,7 @@ import { MealPlanDto, AdherenceReportDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { UserHeader } from '@/components/UserHeader';
 import { ProgressAnalyticsChart } from '@/components/ProgressAnalyticsChart';
+import { HealthReportExportModal } from '@/components/HealthReportExportModal';
 
 interface ClientMetrics {
   bmr: number;
@@ -40,11 +41,18 @@ export default function ClientDashboard() {
   const [clientMetrics, setClientMetrics] = useState<ClientMetrics | null>(null);
   const [nutritionSummary, setNutritionSummary] = useState<NutritionSummary | null>(null);
   const [consultations, setConsultations] = useState<ConsultationRequestDto[]>([]);
+  const [clientName, setClientName] = useState('Jane Doe');
+  const [clientEmail, setClientEmail] = useState('jane.client@nutriplan.local');
+  const [showReportModal, setShowReportModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       const storedClientId = localStorage.getItem('nutriplan_user_id') || '22222222-2222-2222-2222-222222222222';
+      const storedName = localStorage.getItem('nutriplan_user_name');
+      const storedEmail = localStorage.getItem('nutriplan_user_email');
+      if (storedName) setClientName(storedName);
+      if (storedEmail) setClientEmail(storedEmail);
       setClientId(storedClientId);
 
       try {
@@ -60,8 +68,10 @@ export default function ClientDashboard() {
 
         // Feature 2: Fetch client metrics for TDEE/BMR display
         try {
-          const clientData = await userService.getClientById(clientId);
+          const clientData = await userService.getClientById(storedClientId);
           if (clientData) {
+            if (clientData.fullName) setClientName(clientData.fullName);
+            if (clientData.email) setClientEmail(clientData.email);
             setClientMetrics({
               bmr: clientData.bmr,
               tdee: clientData.tdee,
@@ -143,10 +153,17 @@ export default function ClientDashboard() {
           {/* Feature 2: Nutrition Analytics Dashboard */}
           {nutritionSummary && clientMetrics && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
                   📊 {t('clientDashboard.dailyNutritionSummary', 'Daily Nutrition Summary')}
                 </h2>
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>📄</span>
+                  <span>{t('healthReports.exportPdf', 'Export Clinical Report (PDF)')}</span>
+                </button>
               </div>
 
               {/* Top Metrics Row: BMR / TDEE / Meals */}
@@ -398,6 +415,22 @@ export default function ClientDashboard() {
             </div>
           </div>
         </div>
+      )}
+      
+      {showReportModal && (
+        <HealthReportExportModal
+          patientName={clientName}
+          patientEmail={clientEmail}
+          age={clientMetrics?.age || 26}
+          weightKg={clientMetrics?.weightKg || 70}
+          heightCm={clientMetrics?.heightCm || 175}
+          tdee={clientMetrics?.tdee || 2100}
+          bmr={clientMetrics?.bmr || 1650}
+          adherence={adherence}
+          plans={plans}
+          nutritionistName={consultations.find(c => c.status === 'Accepted')?.nutritionistName || 'Dr. Sarah Connor, RDN'}
+          onClose={() => setShowReportModal(false)}
+        />
       )}
 
     </div>

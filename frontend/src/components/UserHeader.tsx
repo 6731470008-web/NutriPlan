@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { userService } from '@/services/nutriServices';
+import { SubscriptionModal } from '@/components/SubscriptionModal';
 
 interface UserHeaderProps {
   title?: string;
@@ -18,8 +19,16 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
   const { t } = useLanguage();
   const [userName, setUserName] = useState<string>('');
   const [userRole, setUserRole] = useState<string>('');
+  const [isPro, setIsPro] = useState<boolean>(false);
+  const [showSubModal, setShowSubModal] = useState<boolean>(false);
+
+  const checkTier = () => {
+    const tier = localStorage.getItem('nutriplan_sub_tier');
+    setIsPro(tier === 'pro');
+  };
 
   useEffect(() => {
+    checkTier();
     const loadUserInfo = async () => {
       let storedName = localStorage.getItem('nutriplan_user_name');
       let storedRole = localStorage.getItem('nutriplan_user_role');
@@ -77,60 +86,81 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
   };
 
   return (
-    <header className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-800 mb-8 gap-4">
-      <div className="flex items-center gap-4">
-        {showBack && (
+    <>
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-800 mb-8 gap-4">
+        <div className="flex items-center gap-4">
+          {showBack && (
+            <button
+              onClick={handleBack}
+              className="text-xs font-semibold text-slate-300 hover:text-emerald-400 bg-slate-900 border border-slate-700 hover:border-emerald-500/50 px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
+            >
+              ← {t('common.backToDashboard')}
+            </button>
+          )}
+          {title && (
+            <div>
+              <h1 className="text-2xl font-bold text-emerald-400">{title}</h1>
+              {subtitle && <p className="text-slate-400 text-sm mt-0.5">{subtitle}</p>}
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap justify-end">
+          {/* Membership Tier Button */}
           <button
-            onClick={handleBack}
-            className="text-xs font-semibold text-slate-300 hover:text-emerald-400 bg-slate-900 border border-slate-700 hover:border-emerald-500/50 px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
+            onClick={() => setShowSubModal(true)}
+            className={`text-xs px-3 py-1.5 rounded-xl font-bold border transition-all flex items-center gap-1.5 shadow-sm ${
+              isPro
+                ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border-amber-500/40 hover:border-amber-400'
+                : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border-slate-700'
+            }`}
           >
-            ← {t('common.backToDashboard')}
+            <span>{isPro ? '⭐ PRO' : '⚡ Free Plan'}</span>
           </button>
-        )}
-        {title && (
-          <div>
-            <h1 className="text-2xl font-bold text-emerald-400">{title}</h1>
-            {subtitle && <p className="text-slate-400 text-sm mt-0.5">{subtitle}</p>}
-          </div>
-        )}
-      </div>
 
-      <div className="flex items-center gap-3 flex-wrap justify-end">
-        {userName && (
-          <div className="flex items-center gap-2.5 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl shadow-sm">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-              userRole === 'Admin'
-                ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300'
-                : 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400'
-            }`}>
-              {userName.charAt(0).toUpperCase()}
+          {userName && (
+            <div className="flex items-center gap-2.5 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl shadow-sm">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                userRole === 'Admin'
+                  ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300'
+                  : 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400'
+              }`}>
+                {userName.charAt(0).toUpperCase()}
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-bold text-slate-100 leading-tight">{userName}</p>
+                {userRole && (
+                  <p className={`text-[10px] font-medium leading-none mt-0.5 ${
+                    userRole === 'Admin' ? 'text-purple-400 font-bold' : 'text-emerald-400/90'
+                  }`}>
+                    {getRoleLabel(userRole)}
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="text-left">
-              <p className="text-xs font-bold text-slate-100 leading-tight">{userName}</p>
-              {userRole && (
-                <p className={`text-[10px] font-medium leading-none mt-0.5 ${
-                  userRole === 'Admin' ? 'text-purple-400 font-bold' : 'text-emerald-400/90'
-                }`}>
-                  {getRoleLabel(userRole)}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
+          )}
 
-        <LanguageSwitcher />
+          <LanguageSwitcher />
 
-        <button
-          onClick={handleLogout}
-          className="bg-slate-900 hover:bg-red-950/80 hover:border-red-500/60 text-slate-300 hover:text-red-200 text-xs px-3.5 py-2 rounded-lg border border-slate-700 font-semibold transition-all flex items-center gap-1.5 shadow-sm"
-          title={t('common.logout')}
-        >
-          <svg className="w-4 h-4 text-slate-400 group-hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          {t('common.logout')}
-        </button>
-      </div>
-    </header>
+          <button
+            onClick={handleLogout}
+            className="bg-slate-900 hover:bg-red-950/80 hover:border-red-500/60 text-slate-300 hover:text-red-200 text-xs px-3.5 py-2 rounded-lg border border-slate-700 font-semibold transition-all flex items-center gap-1.5 shadow-sm"
+            title={t('common.logout')}
+          >
+            <svg className="w-4 h-4 text-slate-400 group-hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            {t('common.logout')}
+          </button>
+        </div>
+      </header>
+
+      {showSubModal && (
+        <SubscriptionModal
+          onClose={() => setShowSubModal(false)}
+          onSuccess={checkTier}
+        />
+      )}
+    </>
   );
 }

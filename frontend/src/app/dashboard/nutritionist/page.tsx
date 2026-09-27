@@ -7,6 +7,7 @@ import { MealPlanDto, AdherenceReportDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { UserHeader } from '@/components/UserHeader';
 import { ProgressAnalyticsChart } from '@/components/ProgressAnalyticsChart';
+import { HealthReportExportModal } from '@/components/HealthReportExportModal';
 
 interface ClientItem {
   id: string;
@@ -62,6 +63,8 @@ export default function NutritionistDashboard() {
   }
   const [clientAnalyticsMap, setClientAnalyticsMap] = useState<Record<string, ClientAnalytics>>({});
   const [showAnalyticsForClient, setShowAnalyticsForClient] = useState<string | null>(null);
+  const [reportClient, setReportClient] = useState<ClientItem | null>(null);
+  const [nutritionistName, setNutritionistName] = useState('Dr. Sarah Connor, RDN');
 
   const fetchDashboardData = useCallback(async () => {
     const nutritionistId = localStorage.getItem('nutriplan_user_id');
@@ -465,6 +468,13 @@ export default function NutritionistDashboard() {
                         >
                           📊
                         </button>
+                        <button
+                          onClick={() => setReportClient(client)}
+                          title={t('healthReports.exportPdf', 'Export Clinical Report (PDF)')}
+                          className="px-3 py-2.5 rounded-lg text-xs font-semibold transition-all border bg-slate-800 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/20"
+                        >
+                          📄
+                        </button>
                       </div>
 
                       {/* Features 3-6: Inline Client Analytics Panel */}
@@ -602,6 +612,14 @@ export default function NutritionistDashboard() {
                                 readOnly={false}
                               />
                             </div>
+
+                            <button
+                              onClick={() => setReportClient(client)}
+                              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-2 mt-2"
+                            >
+                              <span>📄</span>
+                              <span>{t('healthReports.exportPdf', 'Export Clinical Nutritional Progress Report (PDF)')}</span>
+                            </button>
                           </div>
                         );
                       })()}
@@ -719,6 +737,22 @@ export default function NutritionistDashboard() {
             </form>
           </div>
         </div>
+      )}
+
+      {reportClient && (
+        <HealthReportExportModal
+          patientName={reportClient.fullName}
+          patientEmail={reportClient.email}
+          age={reportClient.age || 28}
+          weightKg={reportClient.weightKg}
+          heightCm={reportClient.heightCm || 175}
+          tdee={clientAnalyticsMap[reportClient.id]?.tdee || 2100}
+          bmr={clientAnalyticsMap[reportClient.id]?.bmr || 1650}
+          adherence={clientAnalyticsMap[reportClient.id]?.adherence}
+          plans={clientPlansMap[reportClient.id] || []}
+          nutritionistName={nutritionistName}
+          onClose={() => setReportClient(null)}
+        />
       )}
     </div>
   );
