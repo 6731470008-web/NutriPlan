@@ -6,6 +6,7 @@ import { mealPlanService, trackingService, userService } from '@/services/nutriS
 import { MealPlanDto, AdherenceReportDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { UserHeader } from '@/components/UserHeader';
+import { ProgressAnalyticsChart } from '@/components/ProgressAnalyticsChart';
 
 interface ClientMetrics {
   bmr: number;
@@ -32,6 +33,7 @@ interface NutritionSummary {
 export default function ClientDashboard() {
   const router = useRouter();
   const { t } = useLanguage();
+  const [clientId, setClientId] = useState<string>('');
   const [plans, setPlans] = useState<MealPlanDto[]>([]);
   const [adherence, setAdherence] = useState<AdherenceReportDto | null>(null);
   const [clientMetrics, setClientMetrics] = useState<ClientMetrics | null>(null);
@@ -40,11 +42,12 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      const clientId = localStorage.getItem('nutriplan_user_id');
-      if (!clientId) {
+      const storedClientId = localStorage.getItem('nutriplan_user_id');
+      if (!storedClientId) {
         router.push('/login');
         return;
       }
+      setClientId(storedClientId);
 
       try {
         const [planData, adherenceData] = await Promise.all([
@@ -260,6 +263,17 @@ export default function ClientDashboard() {
                 })()}
               </div>
             </div>
+          )}
+
+          {/* Interactive Progress & Analytics Chart */}
+          {clientId && (
+            <ProgressAnalyticsChart
+              clientId={clientId}
+              initialWeight={clientMetrics?.weightKg || 70}
+              heightCm={clientMetrics?.heightCm || 175}
+              tdee={clientMetrics?.tdee || 2000}
+              plans={plans}
+            />
           )}
 
           {/* Main Content Grid */}

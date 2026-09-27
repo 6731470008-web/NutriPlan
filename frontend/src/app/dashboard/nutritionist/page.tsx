@@ -6,6 +6,7 @@ import { userService, mealPlanService, trackingService } from '@/services/nutriS
 import { MealPlanDto, AdherenceReportDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { UserHeader } from '@/components/UserHeader';
+import { ProgressAnalyticsChart } from '@/components/ProgressAnalyticsChart';
 
 interface ClientItem {
   id: string;
@@ -470,6 +471,18 @@ export default function NutritionistDashboard() {
                                   );
                                 })}
                               </div>
+                            </div>
+
+                            {/* Detailed Interactive Progress & Weight History Chart */}
+                            <div className="pt-2">
+                              <ProgressAnalyticsChart
+                                clientId={client.id}
+                                initialWeight={client.weightKg}
+                                heightCm={client.heightCm}
+                                tdee={a.tdee}
+                                plans={clientPlansMap[client.id] || []}
+                                readOnly={false}
+                              />
                             </div>
                           </div>
                         );
