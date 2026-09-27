@@ -7,6 +7,8 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { userService } from '@/services/nutriServices';
 import { SubscriptionModal } from '@/components/SubscriptionModal';
 
+import { ChatWidget } from '@/components/ChatWidget';
+
 interface UserHeaderProps {
   title?: string;
   subtitle?: string;
@@ -16,11 +18,13 @@ interface UserHeaderProps {
 
 export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderProps) {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isEn = language === 'en';
   const [userName, setUserName] = useState<string>('');
   const [userRole, setUserRole] = useState<string>('');
   const [isPro, setIsPro] = useState<boolean>(false);
   const [showSubModal, setShowSubModal] = useState<boolean>(false);
+  const [showChatModal, setShowChatModal] = useState<boolean>(false);
 
   const checkTier = () => {
     const tier = localStorage.getItem('nutriplan_sub_tier');
@@ -118,6 +122,16 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
             <span>{isPro ? '⭐ PRO' : '⚡ Free Plan'}</span>
           </button>
 
+          {/* Quick Chat Open Button */}
+          <button
+            onClick={() => setShowChatModal(prev => !prev)}
+            className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+            title={isEn ? 'Direct In-App Chat' : 'พูดคุย / ปรึกษาผู้เชี่ยวชาญ'}
+          >
+            <span>💬</span>
+            <span>{isEn ? 'Chat' : 'แชท/ติดต่อ'}</span>
+          </button>
+
           {userName && (
             <div className="flex items-center gap-2.5 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl shadow-sm">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
@@ -154,6 +168,9 @@ export function UserHeader({ title, subtitle, showBack, backHref }: UserHeaderPr
           </button>
         </div>
       </header>
+
+      {/* Floating Global Chat Widget */}
+      <ChatWidget isFloating={true} />
 
       {showSubModal && (
         <SubscriptionModal

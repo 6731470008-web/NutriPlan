@@ -1016,5 +1016,283 @@ public class MealPlanTemplateController : ControllerBase
     }
 }
 
+// ─── Direct In-App Chat & Messaging ──────────────────────────────────────────
+
+public class ChatMessageRecord
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string SenderId { get; set; } = "";
+    public string SenderName { get; set; } = "";
+    public string SenderRole { get; set; } = "Client";
+    public string ReceiverId { get; set; } = "";
+    public string ReceiverName { get; set; } = "";
+    public string Message { get; set; } = "";
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public bool IsRead { get; set; } = false;
+    public string? AttachmentUrl { get; set; }
+}
+
+public class SendMessageRequestDto
+{
+    public string SenderId { get; set; } = "";
+    public string SenderName { get; set; } = "";
+    public string SenderRole { get; set; } = "Client";
+    public string ReceiverId { get; set; } = "";
+    public string ReceiverName { get; set; } = "";
+    public string Message { get; set; } = "";
+    public string? AttachmentUrl { get; set; }
+}
+
+public class MarkReadRequestDto
+{
+    public string SenderId { get; set; } = "";
+    public string ReceiverId { get; set; } = "";
+}
+
+public class ChatContactDto
+{
+    public string ContactId { get; set; } = "";
+    public string ContactName { get; set; } = "";
+    public string ContactRole { get; set; } = "";
+    public string? Specialization { get; set; }
+    public string LastMessage { get; set; } = "";
+    public DateTime LastMessageTime { get; set; }
+    public int UnreadCount { get; set; } = 0;
+    public bool IsOnline { get; set; } = true;
+}
+
+[ApiController]
+[Route("api/v1/chat")]
+public class ChatController : ControllerBase
+{
+    private static readonly List<ChatMessageRecord> _messages = new()
+    {
+        new ChatMessageRecord
+        {
+            Id = Guid.NewGuid(),
+            SenderId = "11111111-1111-1111-1111-111111111111",
+            SenderName = "Dr. Sarah Connor, RDN",
+            SenderRole = "Nutritionist",
+            ReceiverId = "22222222-2222-2222-2222-222222222222",
+            ReceiverName = "สมศักดิ์ สุขภาพดี (John Doe)",
+            Message = "สวัสดีค่ะคุณสมศักดิ์ หมอได้จัดทำแผนอาหาร 14 วัน (High-Protein Metabolic Plan) ให้เรียบร้อยแล้วนะคะ หากมีคำถามเกี่ยวกับสัดส่วนหรือต้องการปรับเปลี่ยนเมนูสามารถแจ้งได้เลยค่ะ 🥗",
+            Timestamp = DateTime.UtcNow.AddHours(-4),
+            IsRead = true
+        },
+        new ChatMessageRecord
+        {
+            Id = Guid.NewGuid(),
+            SenderId = "22222222-2222-2222-2222-222222222222",
+            SenderName = "สมศักดิ์ สุขภาพดี (John Doe)",
+            SenderRole = "Client",
+            ReceiverId = "11111111-1111-1111-1111-111111111111",
+            ReceiverName = "Dr. Sarah Connor, RDN",
+            Message = "ขอบคุณมากครับคุณหมอ ตอนนี้มื้อกลางวันผมทานอกไก่ย่างกับข้าวกล้องตามแผน รู้สึกอิ่มนานและมีพลังงานดีมากครับ! 💪",
+            Timestamp = DateTime.UtcNow.AddHours(-3),
+            IsRead = true
+        },
+        new ChatMessageRecord
+        {
+            Id = Guid.NewGuid(),
+            SenderId = "11111111-1111-1111-1111-111111111111",
+            SenderName = "Dr. Sarah Connor, RDN",
+            SenderRole = "Nutritionist",
+            ReceiverId = "22222222-2222-2222-2222-222222222222",
+            ReceiverName = "สมศักดิ์ สุขภาพดี (John Doe)",
+            Message = "ยอดเยี่ยมมากค่ะ อย่าลืมดื่มน้ำสะอาดวันละ 2.5-3 ลิตร และใช้ AI กล้องช่วยสแกนบันทึกอาหารต่อเนื่องนะคะ 💧",
+            Timestamp = DateTime.UtcNow.AddMinutes(-45),
+            IsRead = false
+        },
+        new ChatMessageRecord
+        {
+            Id = Guid.NewGuid(),
+            SenderId = "admin-0000-0000-0000",
+            SenderName = "ดร. สมชาย ภักดีโภชน (System Admin)",
+            SenderRole = "Admin",
+            ReceiverId = "22222222-2222-2222-2222-222222222222",
+            ReceiverName = "สมศักดิ์ สุขภาพดี (John Doe)",
+            Message = "ยินดีต้อนรับสู่ระบบ NutriPlan! หากคุณมีข้อสงสัยเกี่ยวกับการใช้งานระบบ หรือต้องการความช่วยเหลือ สามารถส่งข้อความคุยกับทีมผู้ดูแลระบบได้ที่นี่ครับ 🛡️",
+            Timestamp = DateTime.UtcNow.AddHours(-12),
+            IsRead = true
+        },
+        new ChatMessageRecord
+        {
+            Id = Guid.NewGuid(),
+            SenderId = "admin-0000-0000-0000",
+            SenderName = "ดร. สมชาย ภักดีโภชน (System Admin)",
+            SenderRole = "Admin",
+            ReceiverId = "11111111-1111-1111-1111-111111111111",
+            ReceiverName = "Dr. Sarah Connor, RDN",
+            Message = "สวัสดีครับ ดร. ซาร่าห์ ยินดีต้อนรับสู่คลินิกโภชนาการ NutriPlan ระบบพร้อมรองรับการดูแลคนไข้และเปิดรับเคสจาก Marketplace เรียบร้อยครับ 🩺",
+            Timestamp = DateTime.UtcNow.AddHours(-24),
+            IsRead = true
+        }
+    };
+
+    private static readonly object _chatLock = new();
+    private readonly IUserRepository _userRepository;
+
+    public ChatController(IUserRepository userRepository)
+    {
+        _userRepository = userRepository;
+    }
+
+    // Endpoint 32: Get Contacts / Threads for Current User
+    [HttpGet("contacts")]
+    public async Task<ActionResult<List<ChatContactDto>>> GetContacts([FromQuery] string userId)
+    {
+        var users = await _userRepository.GetAllAsync();
+        var contacts = new List<ChatContactDto>();
+
+        // 1. Always add System Admin contact
+        if (!userId.Equals("admin-0000-0000-0000", StringComparison.OrdinalIgnoreCase) && !userId.Contains("admin"))
+        {
+            contacts.Add(new ChatContactDto
+            {
+                ContactId = "admin-0000-0000-0000",
+                ContactName = "ดร. สมชาย ภักดีโภชน (System Admin)",
+                ContactRole = "Admin",
+                Specialization = "Platform & Clinical Operations Support",
+                IsOnline = true
+            });
+        }
+
+        // 2. Add Dr. Sarah Connor contact
+        if (!userId.Equals("11111111-1111-1111-1111-111111111111", StringComparison.OrdinalIgnoreCase))
+        {
+            contacts.Add(new ChatContactDto
+            {
+                ContactId = "11111111-1111-1111-1111-111111111111",
+                ContactName = "Dr. Sarah Connor, RDN",
+                ContactRole = "Nutritionist",
+                Specialization = "Sports & Hypertrophy Specialist",
+                IsOnline = true
+            });
+        }
+
+        // 3. Add John Doe contact
+        if (!userId.Equals("22222222-2222-2222-2222-222222222222", StringComparison.OrdinalIgnoreCase))
+        {
+            contacts.Add(new ChatContactDto
+            {
+                ContactId = "22222222-2222-2222-2222-222222222222",
+                ContactName = "สมศักดิ์ สุขภาพดี (John Doe)",
+                ContactRole = "Client",
+                Specialization = "Goal: Weight Loss & Muscle Gain",
+                IsOnline = true
+            });
+        }
+
+        // 4. Add other registered users from DB
+        foreach (var u in users)
+        {
+            var uIdStr = u.Id.ToString();
+            if (uIdStr.Equals(userId, StringComparison.OrdinalIgnoreCase) || contacts.Any(c => c.ContactId.Equals(uIdStr, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            contacts.Add(new ChatContactDto
+            {
+                ContactId = uIdStr,
+                ContactName = u.FullName,
+                ContactRole = u.Role.ToString(),
+                Specialization = (u is Nutritionist n) ? n.Specialization : "NutriPlan Member",
+                IsOnline = true
+            });
+        }
+
+        // Attach last message and unread count
+        lock (_chatLock)
+        {
+            foreach (var contact in contacts)
+            {
+                var threadMsgs = _messages.Where(m =>
+                    (m.SenderId.Equals(userId, StringComparison.OrdinalIgnoreCase) && m.ReceiverId.Equals(contact.ContactId, StringComparison.OrdinalIgnoreCase)) ||
+                    (m.SenderId.Equals(contact.ContactId, StringComparison.OrdinalIgnoreCase) && m.ReceiverId.Equals(userId, StringComparison.OrdinalIgnoreCase))
+                ).OrderByDescending(m => m.Timestamp).ToList();
+
+                if (threadMsgs.Count > 0)
+                {
+                    contact.LastMessage = threadMsgs[0].Message;
+                    contact.LastMessageTime = threadMsgs[0].Timestamp;
+                    contact.UnreadCount = threadMsgs.Count(m => m.ReceiverId.Equals(userId, StringComparison.OrdinalIgnoreCase) && !m.IsRead);
+                }
+                else
+                {
+                    contact.LastMessage = "เริ่มการสนทนาใหม่...";
+                    contact.LastMessageTime = DateTime.UtcNow.AddMinutes(-10);
+                }
+            }
+        }
+
+        return Ok(contacts.OrderByDescending(c => c.UnreadCount).ThenByDescending(c => c.LastMessageTime).ToList());
+    }
+
+    // Endpoint 33: Get Messages History Between Two Users
+    [HttpGet("messages")]
+    public ActionResult<List<ChatMessageRecord>> GetMessages([FromQuery] string user1, [FromQuery] string user2)
+    {
+        lock (_chatLock)
+        {
+            var msgs = _messages.Where(m =>
+                (m.SenderId.Equals(user1, StringComparison.OrdinalIgnoreCase) && m.ReceiverId.Equals(user2, StringComparison.OrdinalIgnoreCase)) ||
+                (m.SenderId.Equals(user2, StringComparison.OrdinalIgnoreCase) && m.ReceiverId.Equals(user1, StringComparison.OrdinalIgnoreCase))
+            ).OrderBy(m => m.Timestamp).ToList();
+
+            return Ok(msgs);
+        }
+    }
+
+    // Endpoint 34: Send a New Message
+    [HttpPost("send")]
+    public ActionResult<ChatMessageRecord> SendMessage([FromBody] SendMessageRequestDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Message))
+            return BadRequest("Message cannot be empty.");
+
+        var record = new ChatMessageRecord
+        {
+            Id = Guid.NewGuid(),
+            SenderId = dto.SenderId,
+            SenderName = dto.SenderName,
+            SenderRole = dto.SenderRole,
+            ReceiverId = dto.ReceiverId,
+            ReceiverName = dto.ReceiverName,
+            Message = dto.Message.Trim(),
+            Timestamp = DateTime.UtcNow,
+            IsRead = false,
+            AttachmentUrl = dto.AttachmentUrl
+        };
+
+        lock (_chatLock)
+        {
+            _messages.Add(record);
+        }
+
+        return Ok(record);
+    }
+
+    // Endpoint 35: Mark Messages in Thread as Read
+    [HttpPut("mark-read")]
+    public IActionResult MarkAsRead([FromBody] MarkReadRequestDto dto)
+    {
+        lock (_chatLock)
+        {
+            var unread = _messages.Where(m =>
+                m.SenderId.Equals(dto.SenderId, StringComparison.OrdinalIgnoreCase) &&
+                m.ReceiverId.Equals(dto.ReceiverId, StringComparison.OrdinalIgnoreCase) &&
+                !m.IsRead
+            ).ToList();
+
+            foreach (var msg in unread)
+            {
+                msg.IsRead = true;
+            }
+        }
+
+        return NoContent();
+    }
+}
+
+
 
 
