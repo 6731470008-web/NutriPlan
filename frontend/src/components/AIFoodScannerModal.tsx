@@ -33,7 +33,7 @@ export const AIFoodScannerModal: React.FC<AIFoodScannerModalProps> = ({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setError('กรุณาเลือกไฟล์รูปภาพเท่านั้น (JPG, PNG, WEBP)');
+      setError(t('aiScanner.invalidImage', 'Please select an image file only (JPG, PNG, WEBP)'));
       return;
     }
 
@@ -190,14 +190,14 @@ const analyzeDirectlyWithGemini = async (file: File): Promise<FoodAnalysisResult
       }
     } catch (err: unknown) {
       console.error(err);
-      setError('ไม่สามารถวิเคราะห์ภาพได้ กรุณาลองใหม่อีกครั้ง');
+      setError(err instanceof Error ? err.message : t('aiScanner.analyzing', 'Failed to analyze food image.'));
     } finally {
       setIsAnalyzing(false);
     }
   };
 
   const handleConfirmLog = () => {
-    setSuccessMessage('🎉 บันทึกมื้ออาหารจากภาพถ่ายเรียบร้อยแล้ว!');
+    setSuccessMessage(t('aiScanner.successLog', '🎉 Meal logged successfully from photo!'));
     if (analysisResult) {
       onSelectResult?.(analysisResult);
     }
@@ -226,8 +226,12 @@ const analyzeDirectlyWithGemini = async (file: File): Promise<FoodAnalysisResult
           <div className="flex items-center gap-2">
             <span className="text-2xl">📸</span>
             <div>
-              <h3 className="font-bold text-lg text-emerald-400">สแกนอาหารด้วย AI</h3>
-              <p className="text-xs text-slate-400">ถ่ายภาพมื้ออาหารเพื่อคำนวณสารอาหารอัตโนมัติ</p>
+              <h3 className="font-bold text-lg text-emerald-400">
+                {t('aiScanner.title', 'AI Food Vision Scanner')}
+              </h3>
+              <p className="text-xs text-slate-400">
+                {t('aiScanner.subtitle', 'Take or upload a meal photo to calculate nutrients automatically')}
+              </p>
             </div>
           </div>
           <button
@@ -256,8 +260,12 @@ const analyzeDirectlyWithGemini = async (file: File): Promise<FoodAnalysisResult
           {!previewUrl ? (
             <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl cursor-pointer bg-slate-850/50 hover:bg-slate-800/50 transition-all text-center p-4">
               <span className="text-4xl mb-2">📷</span>
-              <span className="text-sm font-medium text-slate-200">คลิกเพื่อเลือกรูป หรือ ถ่ายภาพอาหาร</span>
-              <span className="text-xs text-slate-400 mt-1">รองรับ JPG, PNG, WEBP</span>
+              <span className="text-sm font-medium text-slate-200">
+                {t('aiScanner.uploadPrompt', 'Click to select an image or take a photo of your meal')}
+              </span>
+              <span className="text-xs text-slate-400 mt-1">
+                {t('aiScanner.supportedFormats', 'Supports JPG, PNG, WEBP')}
+              </span>
               <input
                 type="file"
                 accept="image/*"
@@ -277,7 +285,7 @@ const analyzeDirectlyWithGemini = async (file: File): Promise<FoodAnalysisResult
                 onClick={() => { setSelectedFile(null); setPreviewUrl(null); setAnalysisResult(null); }}
                 className="absolute top-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-slate-200 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 backdrop-blur-sm"
               >
-                🔄 เปลี่ยนรูป
+                {t('aiScanner.changePhoto', '🔄 Change Photo')}
               </button>
             </div>
           )}
@@ -289,7 +297,7 @@ const analyzeDirectlyWithGemini = async (file: File): Promise<FoodAnalysisResult
               className="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
             >
               <span>🤖</span>
-              <span>เริ่มวิเคราะห์สารอาหารด้วย AI</span>
+              <span>{t('aiScanner.analyzeBtn', 'Start AI Nutrition Analysis')}</span>
             </button>
           )}
 
@@ -298,7 +306,7 @@ const analyzeDirectlyWithGemini = async (file: File): Promise<FoodAnalysisResult
             <div className="p-6 border border-emerald-500/20 bg-emerald-500/5 rounded-xl text-center space-y-3">
               <div className="inline-block animate-spin text-3xl">🔮</div>
               <p className="text-sm font-medium text-emerald-300">
-                AI กำลังจำแนกประเภทและประเมินแคลอรีสารอาหาร...
+                {t('aiScanner.analyzing', 'AI is recognizing dish components and estimating macronutrients...')}
               </p>
               <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                 <div className="bg-emerald-500 h-full animate-pulse w-3/4 rounded-full"></div>
@@ -320,15 +328,15 @@ const analyzeDirectlyWithGemini = async (file: File): Promise<FoodAnalysisResult
                 {/* Macro Pills */}
                 <div className="grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="p-2 bg-slate-900 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 block">โปรตีน</span>
+                    <span className="text-slate-400 block">{t('nutritionistDashboard.protein', 'Protein')}</span>
                     <span className="font-bold text-emerald-400">{analysisResult.totalProteinGrams}g</span>
                   </div>
                   <div className="p-2 bg-slate-900 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 block">คาร์โบไฮเดรต</span>
+                    <span className="text-slate-400 block">{t('nutritionistDashboard.carbs', 'Carbs')}</span>
                     <span className="font-bold text-amber-400">{analysisResult.totalCarbsGrams}g</span>
                   </div>
                   <div className="p-2 bg-slate-900 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 block">ไขมัน</span>
+                    <span className="text-slate-400 block">{t('nutritionistDashboard.fat', 'Fat')}</span>
                     <span className="font-bold text-rose-400">{analysisResult.totalFatGrams}g</span>
                   </div>
                 </div>
@@ -336,7 +344,9 @@ const analyzeDirectlyWithGemini = async (file: File): Promise<FoodAnalysisResult
                 {/* Detected Items Breakdown */}
                 {analysisResult.items && analysisResult.items.length > 0 && (
                   <div className="pt-2">
-                    <span className="text-xs font-semibold text-slate-400 block mb-2">องค์ประกอบในจาน:</span>
+                    <span className="text-xs font-semibold text-slate-400 block mb-2">
+                      {t('aiScanner.ingredients', 'Plate Components:')}
+                    </span>
                     <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                       {analysisResult.items.map((item, idx) => (
                         <div key={idx} className="flex items-center justify-between text-xs p-2 bg-slate-900/60 rounded-lg border border-slate-800">
@@ -359,7 +369,7 @@ const analyzeDirectlyWithGemini = async (file: File): Promise<FoodAnalysisResult
                 onClick={handleConfirmLog}
                 className="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg transition-all"
               >
-                ✅ ยืนยันบันทึกมื้ออาหารนี้
+                {t('aiScanner.confirmLogBtn', '✅ Confirm & Log Meal Entry')}
               </button>
             </div>
           )}

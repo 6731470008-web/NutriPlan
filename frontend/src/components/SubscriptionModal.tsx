@@ -97,19 +97,19 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
               <ul className="text-xs text-slate-400 space-y-2 pt-2 border-t border-slate-800">
                 {isNutritionist ? (
                   <>
-                    <li className="flex items-center gap-2">✓ 3 Active Patients Limit</li>
-                    <li className="flex items-center gap-2">✓ Manual Meal Plan Builder</li>
-                    <li className="flex items-center gap-2">✓ Basic Progress Analytics</li>
-                    <li className="flex items-center gap-2 text-slate-600">✕ AI Clinical Diet Prescriber</li>
-                    <li className="flex items-center gap-2 text-slate-600">✕ High-Risk Patient Alert Radar</li>
-                    <li className="flex items-center gap-2 text-slate-600">✕ Custom Branded Clinic Reports</li>
+                    <li className="flex items-center gap-2">✓ {t('subscriptions.patientsLimitCount', '3 Active Patients Limit')}</li>
+                    <li className="flex items-center gap-2">✓ {t('subscriptions.manualBuilder', 'Manual Meal Plan Builder')}</li>
+                    <li className="flex items-center gap-2">✓ {t('subscriptions.basicAnalytics', 'Basic Progress Analytics')}</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.aiPrescriber', 'AI Clinical Diet Prescriber')}</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.riskAlertRadar', 'High-Risk Patient Alert Radar')}</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.customBrandedPdf', 'Custom Clinic Branded PDF Reports')}</li>
                   </>
                 ) : (
                   <>
-                    <li className="flex items-center gap-2">✓ 1 Active Meal Plan</li>
-                    <li className="flex items-center gap-2">✓ Daily Calorie Counter</li>
-                    <li className="flex items-center gap-2 text-slate-600">✕ AI Food Vision Scanner</li>
-                    <li className="flex items-center gap-2 text-slate-600">✕ PDF Clinical Export</li>
+                    <li className="flex items-center gap-2">✓ {t('subscriptions.activePlanLimit', '1 Active Meal Plan')}</li>
+                    <li className="flex items-center gap-2">✓ {t('subscriptions.dailyCalorieCounter', 'Daily Calorie Counter')}</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.aiScanner', 'AI Food Vision Scanner')}</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ {t('subscriptions.clinicalReports', 'PDF Clinical Export')}</li>
                   </>
                 )}
               </ul>
@@ -129,19 +129,19 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
               : 'bg-slate-900 border-amber-500/30 hover:border-amber-500/60'
           }`}>
             <div className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-[10px] px-2.5 py-0.5 rounded-full shadow-md uppercase">
-              RECOMMENDED
+              {t('subscriptions.recommended', 'RECOMMENDED')}
             </div>
 
             <div className="space-y-3">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                  {isNutritionist ? '👑 Clinical Specialist Suite' : '👑 Full Platform Access'}
+                  {isNutritionist ? (isEn ? '👑 Clinical Specialist Suite' : '👑 ชุดเครื่องมือคลินิกเฉพาะทาง') : (isEn ? '👑 Full Platform Access' : '👑 เข้าถึงฟีเจอร์เต็มรูปแบบ')}
                 </span>
                 <h4 className="font-bold text-slate-100 text-base mt-0.5">
                   {isNutritionist ? t('subscriptions.practitionerProTier', 'Clinical Pro Specialist Suite') : t('subscriptions.proTier', 'Pro Wellness Tier')}
                 </h4>
                 <p className="text-2xl font-black text-amber-400 mt-2">
-                  {isNutritionist ? '$49' : '$19'} <span className="text-xs text-slate-400 font-normal">/ month</span>
+                  {isNutritionist ? '$49' : '$19'} <span className="text-xs text-slate-400 font-normal">{isEn ? '/ month' : '/ เดือน'}</span>
                 </p>
               </div>
 
@@ -168,7 +168,7 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
 
             {isPro ? (
               <span className="text-center text-xs font-bold text-amber-400 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                ✨ Active Pro Subscriber
+                {t('subscriptions.activeProSubscriber', '✨ Active Pro Subscriber')}
               </span>
             ) : (
               <button
@@ -187,7 +187,7 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
             onClick={handleToggleTier}
             className="text-xs text-slate-400 hover:text-slate-200 underline"
           >
-            {isPro ? 'Switch to Free Tier' : 'Simulate Pro Activation'}
+            {isPro ? t('subscriptions.switchToFree', 'Switch to Free Tier') : t('subscriptions.simulatePro', 'Simulate Pro Activation')}
           </button>
           <button
             onClick={onClose}

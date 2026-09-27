@@ -55,9 +55,9 @@ export function AiClinicalPrescriberModal({
   const defaultTdee = client.tdee || 2100;
   const [targetCalories, setTargetCalories] = useState<number>(Math.round(defaultTdee - 350));
   const [protocolType, setProtocolType] = useState<string>(
-    client.healthConditions?.toLowerCase().includes('diabet')
+    client.healthConditions?.toLowerCase().includes('diabet') || client.healthConditions?.includes('เบาหวาน')
       ? 'Low Glycemic & Insulin Sensitivity'
-      : client.healthConditions?.toLowerCase().includes('hyperten')
+      : client.healthConditions?.toLowerCase().includes('hyperten') || client.healthConditions?.includes('ความดัน')
       ? 'DASH & Cardio-Metabolic Protocol'
       : 'Evidence-Based Balanced Deficit'
   );
@@ -66,6 +66,9 @@ export function AiClinicalPrescriberModal({
   const [isDeploying, setIsDeploying] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState<GeneratedDailyPlan[] | null>(null);
   const [clinicalRationale, setClinicalRationale] = useState<string>('');
+
+  const dayNamesEn = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const dayNamesTh = ['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์', 'วันอาทิตย์'];
 
   const handleGenerateAiPlan = () => {
     setIsGenerating(true);
@@ -80,12 +83,45 @@ export function AiClinicalPrescriberModal({
       const fGrams = Math.round((targetCalories * fRatio) / 9);
 
       const days: GeneratedDailyPlan[] = [];
-      const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
       for (let i = 0; i < Math.min(durationDays, 7); i++) {
+        const dayLabel = isEn ? dayNamesEn[i] : dayNamesTh[i];
+        
+        const breakfastName = isEn
+          ? (protocolType.includes('Low Glycemic') ? 'Steel-Cut Oats with Chia, Cinnamon & Whey Isolate' : 'Poached Organic Eggs on Sprouted Rye with Avocado')
+          : (protocolType.includes('Low Glycemic') ? 'ข้าวโอ๊ตอบเมล็ดเจีย ชินนามอน และเวย์โปรตีนไอโซเลท' : 'ไข่ดาวน้ำออร์แกนิกบนขนมปังข้าวไรย์งอกพร้อมอโวคาโด');
+        
+        const breakfastNotes = isEn
+          ? 'Low Glycemic Load to prevent postprandial glucose spiking.'
+          : 'ดัชนีน้ำตาลต่ำ ป้องกันภาวะน้ำตาลในเลือดพุ่งสูงหลังอาหาร';
+
+        const lunchName = isEn
+          ? 'Grilled Herb Chicken Breast with Quinoa & Steamed Broccoli'
+          : 'อกไก่ย่างสมุนไพร ควินัว และบรอกโคลีนึ่ง';
+
+        const lunchNotes = isEn
+          ? 'High-leucine lean protein paired with prebiotic cruciferous fibers.'
+          : 'โปรตีนลีนกรดอะมิโนลิวซีนสูง เสริมใยอาหารพรีไบโอติกจากผักตระกูลกะหล่ำ';
+
+        const dinnerName = isEn
+          ? 'Wild Salmon Fillet with Asparagus & Baked Sweet Potato'
+          : 'สเต๊กปลาแซลมอนธรรมชาติ หน่อไม้ฝรั่ง และมันหวานอบ';
+
+        const dinnerNotes = isEn
+          ? 'Rich in anti-inflammatory EPA/DHA Omega-3 for cardiovascular support.'
+          : 'อุดมด้วยกรดไขมันโอเมก้า 3 (EPA/DHA) ต้านการอักเสบและบำรุงหัวใจ';
+
+        const snackName = isEn
+          ? 'Greek Yogurt (0% Fat) with Blueberries & Flaxseed'
+          : 'กรีกโยเกิร์ตไขมัน 0% พร้อมบลูเบอร์รี่สดและเมล็ดแฟลกซ์';
+
+        const snackNotes = isEn
+          ? 'Probiotic support for gut microbiome balance.'
+          : 'จุลินทรีย์โพรไบโอติกช่วยปรับสมดุลระบบทางเดินอาหารและจุลชีพในลำไส้';
+
         days.push({
           dayNumber: i + 1,
-          dayName: dayNames[i],
+          dayName: dayLabel,
           targetCalories,
           targetProtein: pGrams,
           targetCarbs: cGrams,
@@ -94,54 +130,60 @@ export function AiClinicalPrescriberModal({
           meals: [
             {
               mealType: 'Breakfast',
-              name: protocolType.includes('Low Glycemic')
-                ? 'Steel-Cut Oats with Chia, Cinnamon & Whey Isolate'
-                : 'Poached Organic Eggs on Sprouted Rye with Avocado',
-              portion: '1 bowl / 350g',
+              name: breakfastName,
+              portion: isEn ? '1 bowl / 350g' : '1 ชาม / 350 กรัม',
               calories: Math.round(targetCalories * 0.28),
               protein: Math.round(pGrams * 0.28),
               carbs: Math.round(cGrams * 0.30),
               fat: Math.round(fGrams * 0.25),
-              therapeuticNotes: 'Low Glycemic Load to prevent postprandial glucose spiking.'
+              therapeuticNotes: breakfastNotes
             },
             {
               mealType: 'Lunch',
-              name: 'Grilled Herb Chicken Breast with Quinoa & Steamed Broccoli',
-              portion: '1 bowl / 420g',
+              name: lunchName,
+              portion: isEn ? '1 bowl / 420g' : '1 จาน / 420 กรัม',
               calories: Math.round(targetCalories * 0.38),
               protein: Math.round(pGrams * 0.42),
               carbs: Math.round(cGrams * 0.38),
               fat: Math.round(fGrams * 0.30),
-              therapeuticNotes: 'High-leucine lean protein paired with prebiotic cruciferous fibers.'
+              therapeuticNotes: lunchNotes
             },
             {
               mealType: 'Dinner',
-              name: 'Wild Salmon Fillet with Asparagus & Baked Sweet Potato',
-              portion: '1 plate / 380g',
+              name: dinnerName,
+              portion: isEn ? '1 plate / 380g' : '1 จาน / 380 กรัม',
               calories: Math.round(targetCalories * 0.24),
               protein: Math.round(pGrams * 0.25),
               carbs: Math.round(cGrams * 0.22),
               fat: Math.round(fGrams * 0.35),
-              therapeuticNotes: 'Rich in anti-inflammatory EPA/DHA Omega-3 for cardiovascular support.'
+              therapeuticNotes: dinnerNotes
             },
             {
               mealType: 'Snack',
-              name: 'Greek Yogurt (0% Fat) with Blueberries & Flaxseed',
-              portion: '1 cup / 180g',
+              name: snackName,
+              portion: isEn ? '1 cup / 180g' : '1 ถ้วย / 180 กรัม',
               calories: Math.round(targetCalories * 0.10),
               protein: Math.round(pGrams * 0.05),
               carbs: Math.round(cGrams * 0.10),
               fat: Math.round(fGrams * 0.10),
-              therapeuticNotes: 'Probiotic support for gut microbiome balance.'
+              therapeuticNotes: snackNotes
             }
           ]
         });
       }
 
       setGeneratedPlan(days);
-      setClinicalRationale(
-        `Prescription protocol optimized for ${client.fullName} (Age ${client.age || 28}, ${client.weightKg}kg). Addresses ${client.healthConditions || 'metabolic optimization'} with strict exclusion of ${client.foodAllergies || 'known allergens'}. Caloric target prescribed at ${targetCalories} kcal with balanced macro ratio.`
-      );
+
+      if (isEn) {
+        setClinicalRationale(
+          `Prescription protocol optimized for ${client.fullName} (Age ${client.age || 28}, ${client.weightKg}kg). Addresses ${client.healthConditions || 'metabolic optimization'} with strict exclusion of ${client.foodAllergies || 'known allergens'}. Caloric target prescribed at ${targetCalories} kcal with balanced macro ratio.`
+        );
+      } else {
+        setClinicalRationale(
+          `โปรโตคอลโภชนบำบัดออกแบบเฉพาะสำหรับคุณ ${client.fullName} (อายุ ${client.age || 28} ปี, ${client.weightKg} กก.) สอดรับกับภาวะสุขภาพ: ${client.healthConditions || 'การปรับสมดุลระบบเผาผลาญ'} พร้อมหลีกเลี่ยงสารก่อภูมิแพ้: ${client.foodAllergies || 'ไม่มี'} โดยกำหนดพลังงานเป้าหมายที่ ${targetCalories} kcal พร้อมสัดส่วนสารอาหารหลักที่เหมาะสม`
+        );
+      }
+
       setIsGenerating(false);
     }, 1200);
   };
@@ -185,10 +227,17 @@ export function AiClinicalPrescriberModal({
       onClose();
     } catch (err) {
       console.error('Failed to deploy AI plan:', err);
-      alert('Failed to deploy plan. Please verify backend connection.');
+      alert(isEn ? 'Failed to deploy plan. Please verify backend connection.' : 'สั่งจ่ายแผนอาหารไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ');
     } finally {
       setIsDeploying(false);
     }
+  };
+
+  const getMealTypeLabel = (mealType: string) => {
+    if (mealType === 'Breakfast') return t('aiPrescriber.breakfast', 'Breakfast');
+    if (mealType === 'Lunch') return t('aiPrescriber.lunch', 'Lunch');
+    if (mealType === 'Dinner') return t('aiPrescriber.dinner', 'Dinner');
+    return t('aiPrescriber.snack', 'Snack');
   };
 
   return (
@@ -203,14 +252,14 @@ export function AiClinicalPrescriberModal({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-slate-100 text-base sm:text-lg">
-                  AI Clinical Diet Prescriber
+                  {t('aiPrescriber.title', 'AI Clinical Diet Prescriber')}
                 </h3>
                 <span className="bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  CLINIC PRO
+                  {t('aiPrescriber.badge', 'CLINIC PRO')}
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Automated clinical protocol engine for {client.fullName}
+                {t('aiPrescriber.subtitle', 'Automated clinical protocol engine for')} {client.fullName}
               </p>
             </div>
           </div>
@@ -224,24 +273,32 @@ export function AiClinicalPrescriberModal({
           {/* Patient Diagnostic Banner */}
           <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div>
-              <p className="text-slate-400 text-[10px] uppercase font-semibold">Patient</p>
+              <p className="text-slate-400 text-[10px] uppercase font-semibold">
+                {t('aiPrescriber.patient', 'Patient')}
+              </p>
               <p className="font-bold text-slate-100 mt-0.5">{client.fullName}</p>
               <p className="text-[10px] text-slate-500">{client.weightKg} kg / {client.heightCm || 175} cm</p>
             </div>
             <div>
-              <p className="text-slate-400 text-[10px] uppercase font-semibold">Diagnosis / Condition</p>
+              <p className="text-slate-400 text-[10px] uppercase font-semibold">
+                {t('aiPrescriber.diagnosis', 'Diagnosis / Condition')}
+              </p>
               <p className="font-bold text-emerald-400 mt-0.5 truncate">
-                🩺 {client.healthConditions || 'None Specified'}
+                🩺 {client.healthConditions || t('aiPrescriber.noneSpecified', 'None Specified')}
               </p>
             </div>
             <div>
-              <p className="text-slate-400 text-[10px] uppercase font-semibold">Allergies / Exclusions</p>
+              <p className="text-slate-400 text-[10px] uppercase font-semibold">
+                {t('aiPrescriber.allergies', 'Allergies / Exclusions')}
+              </p>
               <p className="font-bold text-amber-400 mt-0.5 truncate">
-                ⚠️ {client.foodAllergies || 'None'}
+                ⚠️ {client.foodAllergies || t('aiPrescriber.none', 'None')}
               </p>
             </div>
             <div>
-              <p className="text-slate-400 text-[10px] uppercase font-semibold">Metabolic Baseline</p>
+              <p className="text-slate-400 text-[10px] uppercase font-semibold">
+                {t('aiPrescriber.metabolicBaseline', 'Metabolic Baseline')}
+              </p>
               <p className="font-bold text-blue-400 mt-0.5">TDEE: {Math.round(defaultTdee)} kcal</p>
             </div>
           </div>
@@ -250,7 +307,7 @@ export function AiClinicalPrescriberModal({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Target Daily Energy (kcal)
+                {t('aiPrescriber.targetEnergy', 'Target Daily Energy (kcal)')}
               </label>
               <input
                 type="number"
@@ -262,33 +319,43 @@ export function AiClinicalPrescriberModal({
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Clinical Protocol Focus
+                {t('aiPrescriber.clinicalFocus', 'Clinical Protocol Focus')}
               </label>
               <select
                 value={protocolType}
                 onChange={(e) => setProtocolType(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-purple-500"
               >
-                <option value="Low Glycemic & Insulin Sensitivity">Low Glycemic & Insulin Sensitivity</option>
-                <option value="DASH & Cardio-Metabolic Protocol">DASH & Cardio-Metabolic Protocol</option>
-                <option value="Evidence-Based Balanced Deficit">Evidence-Based Balanced Deficit</option>
-                <option value="Lean Mass Hypertrophy Protocol">Lean Mass Hypertrophy Protocol</option>
-                <option value="High-Protein Ketogenic Care">High-Protein Ketogenic Care</option>
+                <option value="Low Glycemic & Insulin Sensitivity">
+                  {t('aiPrescriber.lowGlycemicProtocol', 'Low Glycemic & Insulin Sensitivity')}
+                </option>
+                <option value="DASH & Cardio-Metabolic Protocol">
+                  {t('aiPrescriber.dashProtocol', 'DASH & Cardio-Metabolic Protocol')}
+                </option>
+                <option value="Evidence-Based Balanced Deficit">
+                  {t('aiPrescriber.balancedProtocol', 'Evidence-Based Balanced Deficit')}
+                </option>
+                <option value="Lean Mass Hypertrophy Protocol">
+                  {t('aiPrescriber.hypertrophyProtocol', 'Lean Mass Hypertrophy Protocol')}
+                </option>
+                <option value="High-Protein Ketogenic Care">
+                  {t('aiPrescriber.ketoProtocol', 'High-Protein Ketogenic Care')}
+                </option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Duration (Days)
+                {t('aiPrescriber.durationDays', 'Duration (Days)')}
               </label>
               <select
                 value={durationDays}
                 onChange={(e) => setDurationDays(parseInt(e.target.value) || 7)}
                 className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-purple-500"
               >
-                <option value={7}>7 Days (Weekly Protocol)</option>
-                <option value={14}>14 Days (Bi-weekly Program)</option>
-                <option value={30}>30 Days (Full Month Care)</option>
+                <option value={7}>{t('aiPrescriber.sevenDays', '7 Days (Weekly Protocol)')}</option>
+                <option value={14}>{t('aiPrescriber.fourteenDays', '14 Days (Bi-weekly Program)')}</option>
+                <option value={30}>{t('aiPrescriber.thirtyDays', '30 Days (Full Month Care)')}</option>
               </select>
             </div>
           </div>
@@ -300,7 +367,11 @@ export function AiClinicalPrescriberModal({
               className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-3 px-8 rounded-2xl text-sm shadow-xl transition-all flex items-center gap-2 disabled:opacity-50"
             >
               <span>⚡</span>
-              <span>{isGenerating ? 'AI Synthesizing Clinical Protocol...' : 'Generate Clinical Protocol (AI Engine)'}</span>
+              <span>
+                {isGenerating
+                  ? t('aiPrescriber.generatingBtn', 'AI Synthesizing Clinical Protocol...')
+                  : t('aiPrescriber.generateBtn', 'Generate Clinical Protocol (AI Engine)')}
+              </span>
             </button>
           </div>
 
@@ -310,21 +381,25 @@ export function AiClinicalPrescriberModal({
               <div className="bg-purple-950/30 border border-purple-500/30 rounded-2xl p-4 text-xs space-y-2">
                 <div className="flex items-center gap-2 font-bold text-purple-300 uppercase tracking-wider">
                   <span>🧠</span>
-                  <span>Clinical Prescription Rationale</span>
+                  <span>{t('aiPrescriber.rationaleTitle', 'Clinical Prescription Rationale')}</span>
                 </div>
                 <p className="text-slate-300 leading-relaxed">{clinicalRationale}</p>
               </div>
 
               <h4 className="font-bold text-slate-200 text-sm flex items-center gap-2">
                 <span>📋</span>
-                <span>Prescribed Daily Menus Preview ({generatedPlan.length} Days)</span>
+                <span>
+                  {t('aiPrescriber.menusPreview', 'Prescribed Daily Menus Preview')} ({generatedPlan.length} {isEn ? 'Days' : 'วัน'})
+                </span>
               </h4>
 
               <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
                 {generatedPlan.map((d) => (
                   <div key={d.dayNumber} className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-xs">
                     <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                      <span className="font-bold text-emerald-400">Day {d.dayNumber} ({d.dayName})</span>
+                      <span className="font-bold text-emerald-400">
+                        {t('aiPrescriber.day', 'Day')} {d.dayNumber} ({d.dayName})
+                      </span>
                       <span className="text-slate-400">
                         🔥 {d.targetCalories} kcal | 💪 {d.targetProtein}g P | 🌾 {d.targetCarbs}g C | 🥑 {d.targetFat}g F
                       </span>
@@ -334,7 +409,7 @@ export function AiClinicalPrescriberModal({
                       {d.meals.map((m, idx) => (
                         <div key={idx} className="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800/80 space-y-1">
                           <div className="flex justify-between items-center">
-                            <span className="font-semibold text-purple-300">{m.mealType}</span>
+                            <span className="font-semibold text-purple-300">{getMealTypeLabel(m.mealType)}</span>
                             <span className="text-slate-400 text-[11px]">{m.calories} kcal</span>
                           </div>
                           <p className="font-medium text-slate-200">{m.name}</p>
@@ -365,7 +440,11 @@ export function AiClinicalPrescriberModal({
               className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
             >
               <span>💾</span>
-              <span>{isDeploying ? 'Deploying to Client...' : 'Prescribe & Deploy Directly to Client'}</span>
+              <span>
+                {isDeploying
+                  ? t('aiPrescriber.deployingBtn', 'Deploying to Client...')
+                  : t('aiPrescriber.deployBtn', 'Prescribe & Deploy Directly to Client')}
+              </span>
             </button>
           )}
         </div>

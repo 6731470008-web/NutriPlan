@@ -123,10 +123,14 @@ export function HealthReportExportModal({
                   <span>🌿</span>
                   <span>NutriPlan Platform</span>
                 </h1>
-                <p className="text-[11px] text-slate-500 font-medium">Clinical Nutrition & Metabolic Health Management System</p>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  {isEn ? 'Clinical Nutrition & Metabolic Health Management System' : 'ระบบบริหารจัดการเวชศาสตร์โภชนาการและสุขภาพเมตาบอลิก'}
+                </p>
               </div>
               <div className="text-right text-[11px] text-slate-500">
-                <p className="font-bold text-slate-800 uppercase tracking-wider">Clinical Progress Document</p>
+                <p className="font-bold text-slate-800 uppercase tracking-wider">
+                  {isEn ? 'Clinical Progress Document' : 'เอกสารรายงานความก้าวหน้าทางคลินิก'}
+                </p>
                 <p>Ref: NP-{Math.floor(100000 + Math.random() * 900000)}</p>
                 <p>{new Date().toLocaleDateString(isEn ? 'en-US' : 'th-TH', { dateStyle: 'long' })}</p>
               </div>
@@ -139,34 +143,34 @@ export function HealthReportExportModal({
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div>
-                  <p className="text-slate-400 text-[10px]">Patient Name</p>
+                  <p className="text-slate-400 text-[10px]">{isEn ? 'Patient Name' : 'ชื่อผู้รับบริการ'}</p>
                   <p className="font-bold text-slate-900">{patientName}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400 text-[10px]">Email</p>
+                  <p className="text-slate-400 text-[10px]">{isEn ? 'Email' : 'อีเมล'}</p>
                   <p className="font-medium text-slate-700 truncate">{patientEmail}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400 text-[10px]">Age / Gender</p>
-                  <p className="font-bold text-slate-900">{age} yrs / Adult</p>
+                  <p className="text-slate-400 text-[10px]">{isEn ? 'Age / Group' : 'อายุ / วัย'}</p>
+                  <p className="font-bold text-slate-900">{age} {isEn ? 'yrs / Adult' : 'ปี / วัยผู้ใหญ่'}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400 text-[10px]">Body Metrics</p>
+                  <p className="text-slate-400 text-[10px]">{isEn ? 'Body Metrics' : 'สัดส่วนร่างกาย'}</p>
                   <p className="font-bold text-slate-900">{weightKg} kg / {heightCm} cm</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3 text-xs mt-3 pt-2.5 border-t border-slate-200">
                 <div>
-                  <p className="text-slate-400 text-[10px]">BMI Score</p>
+                  <p className="text-slate-400 text-[10px]">{isEn ? 'BMI Score' : 'ดัชนีมวลกาย (BMI)'}</p>
                   <p className="font-bold text-emerald-700 text-sm">{bmi} kg/m²</p>
                 </div>
                 <div>
-                  <p className="text-slate-400 text-[10px]">Basal Metabolic Rate (BMR)</p>
+                  <p className="text-slate-400 text-[10px]">{isEn ? 'Basal Metabolic Rate (BMR)' : 'อัตราเผาผลาญพื้นฐาน (BMR)'}</p>
                   <p className="font-bold text-slate-900 text-sm">{Math.round(bmr)} kcal/day</p>
                 </div>
                 <div>
-                  <p className="text-slate-400 text-[10px]">Total Daily Energy (TDEE)</p>
+                  <p className="text-slate-400 text-[10px]">{isEn ? 'Total Daily Energy (TDEE)' : 'พลังงานที่ใช้ต่อวัน (TDEE)'}</p>
                   <p className="font-bold text-blue-700 text-sm">{Math.round(tdee)} kcal/day</p>
                 </div>
               </div>
@@ -175,21 +179,33 @@ export function HealthReportExportModal({
             {/* Program Adherence & Compliance */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-center">
-                <p className="text-[10px] uppercase font-bold text-emerald-800">Compliance Rate</p>
+                <p className="text-[10px] uppercase font-bold text-emerald-800">
+                  {isEn ? 'Compliance Rate' : 'อัตราการปฏิบัติตามแผน'}
+                </p>
                 <p className="text-2xl font-black text-emerald-600 mt-1">{complianceRate}%</p>
-                <p className="text-[10px] text-emerald-700 font-semibold">Excellent Adherence</p>
+                <p className="text-[10px] text-emerald-700 font-semibold">
+                  {complianceRate >= 85 ? (isEn ? 'Excellent Adherence' : 'ความสม่ำเสมอยอดเยี่ยม') : (isEn ? 'Moderate Adherence' : 'ความสม่ำเสมอปานกลาง')}
+                </p>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-center">
-                <p className="text-[10px] uppercase font-bold text-blue-800">Active Prescriptions</p>
+                <p className="text-[10px] uppercase font-bold text-blue-800">
+                  {isEn ? 'Active Prescriptions' : 'แผนอาหารที่ได้รับ'}
+                </p>
                 <p className="text-2xl font-black text-blue-600 mt-1">{plans.length || 1}</p>
-                <p className="text-[10px] text-blue-700 font-semibold">Meal Programs Active</p>
+                <p className="text-[10px] text-blue-700 font-semibold">
+                  {isEn ? 'Meal Programs Active' : 'โปรแกรมอาหารที่ใช้งาน'}
+                </p>
               </div>
 
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-center">
-                <p className="text-[10px] uppercase font-bold text-amber-800">Target Deficit</p>
+                <p className="text-[10px] uppercase font-bold text-amber-800">
+                  {isEn ? 'Target Deficit' : 'การจำกัดพลังงาน'}
+                </p>
                 <p className="text-2xl font-black text-amber-600 mt-1">-450 kcal</p>
-                <p className="text-[10px] text-amber-700 font-semibold">~0.45 kg/wk Fat Loss</p>
+                <p className="text-[10px] text-amber-700 font-semibold">
+                  {isEn ? '~0.45 kg/wk Fat Loss' : '~0.45 กก./สัปดาห์ (ลดไขมัน)'}
+                </p>
               </div>
             </div>
 
@@ -201,36 +217,36 @@ export function HealthReportExportModal({
               <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
                 <thead className="bg-slate-100 text-[11px] text-slate-700 uppercase">
                   <tr>
-                    <th className="p-2.5">Nutrient</th>
-                    <th className="p-2.5">Prescribed Target</th>
-                    <th className="p-2.5">Avg Intake</th>
-                    <th className="p-2.5">Status</th>
+                    <th className="p-2.5">{isEn ? 'Nutrient' : 'สารอาหาร'}</th>
+                    <th className="p-2.5">{isEn ? 'Prescribed Target' : 'เป้าหมายที่สั่งจ่าย'}</th>
+                    <th className="p-2.5">{isEn ? 'Avg Intake' : 'ที่ได้รับเฉลี่ย'}</th>
+                    <th className="p-2.5">{isEn ? 'Status' : 'สถานะ'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 text-slate-800">
                   <tr>
-                    <td className="p-2.5 font-bold">🔥 Energy / Calories</td>
+                    <td className="p-2.5 font-bold">🔥 {isEn ? 'Energy / Calories' : 'พลังงาน (แคลอรี่)'}</td>
                     <td className="p-2.5">{tdee - 450} kcal</td>
                     <td className="p-2.5 font-semibold text-emerald-700">{tdee - 420} kcal</td>
-                    <td className="p-2.5 text-emerald-600 font-bold">✓ On Track (98%)</td>
+                    <td className="p-2.5 text-emerald-600 font-bold">✓ {isEn ? 'On Track (98%)' : 'ตรงเป้าหมาย (98%)'}</td>
                   </tr>
                   <tr>
-                    <td className="p-2.5 font-bold">💪 Protein</td>
+                    <td className="p-2.5 font-bold">💪 {isEn ? 'Protein' : 'โปรตีน'}</td>
                     <td className="p-2.5">145 g</td>
                     <td className="p-2.5 font-semibold text-blue-700">142 g</td>
-                    <td className="p-2.5 text-blue-600 font-bold">✓ Optimal (98%)</td>
+                    <td className="p-2.5 text-blue-600 font-bold">✓ {isEn ? 'Optimal (98%)' : 'เหมาะสมดี (98%)'}</td>
                   </tr>
                   <tr>
-                    <td className="p-2.5 font-bold">🌾 Carbohydrates</td>
+                    <td className="p-2.5 font-bold">🌾 {isEn ? 'Carbohydrates' : 'คาร์โบไฮเดรต'}</td>
                     <td className="p-2.5">190 g</td>
                     <td className="p-2.5 font-semibold text-amber-700">185 g</td>
-                    <td className="p-2.5 text-amber-600 font-bold">✓ Controlled (97%)</td>
+                    <td className="p-2.5 text-amber-600 font-bold">✓ {isEn ? 'Controlled (97%)' : 'ควบคุมได้ดี (97%)'}</td>
                   </tr>
                   <tr>
-                    <td className="p-2.5 font-bold">🥑 Healthy Fats</td>
+                    <td className="p-2.5 font-bold">🥑 {isEn ? 'Healthy Fats' : 'ไขมันดี'}</td>
                     <td className="p-2.5">55 g</td>
                     <td className="p-2.5 font-semibold text-slate-700">52 g</td>
-                    <td className="p-2.5 text-emerald-600 font-bold">✓ Compliant (95%)</td>
+                    <td className="p-2.5 text-emerald-600 font-bold">✓ {isEn ? 'Compliant (95%)' : 'เป็นไปตามเกณฑ์ (95%)'}</td>
                   </tr>
                 </tbody>
               </table>
@@ -242,7 +258,9 @@ export function HealthReportExportModal({
                 🩺 {t('healthReports.clinicalNotes', 'Dietitian Remarks & Clinical Guidance')}
               </h2>
               <p className="text-slate-700 leading-relaxed">
-                Patient displays excellent dietary adherence with consistent meal logging. Caloric deficit is stable within the safe fat-loss window without metabolic suppression. Recommend maintaining current hydration levels (&gt;2.5L/day) and continuing high-fiber complex carbohydrate rotation.
+                {isEn
+                  ? 'Patient displays excellent dietary adherence with consistent meal logging. Caloric deficit is stable within the safe fat-loss window without metabolic suppression. Recommend maintaining current hydration levels (>2.5L/day) and continuing high-fiber complex carbohydrate rotation.'
+                  : 'ผู้รับบริการมีความสม่ำเสมอในการบันทึกและทานตามแผนอาหารอยู่ในเกณฑ์ดีเยี่ยม การจำกัดพลังงานมีความสมดุลและปลอดภัยต่อระบบเผาผลาญ แนะนำให้ดื่มน้ำให้เพียงพอ (>2.5 ลิตร/วัน) และเน้นคาร์โบไฮเดรตเชิงซ้อนและใยอาหารต่อไปอย่างต่อเนื่อง'}
               </p>
             </div>
 
@@ -250,13 +268,17 @@ export function HealthReportExportModal({
             <div className="pt-4 border-t border-slate-200 flex justify-between items-end text-xs">
               <div>
                 <p className="font-bold text-slate-800">{nutritionistName}</p>
-                <p className="text-slate-500 text-[10px]">Licensed Clinical Nutrition Specialist</p>
-                <p className="text-emerald-700 text-[10px] font-mono mt-0.5">🔒 Verified Digital Signature: NP-SEC-99482</p>
+                <p className="text-slate-500 text-[10px]">
+                  {isEn ? 'Licensed Clinical Nutrition Specialist' : 'นักโภชนาการคลินิกวิชาชีพที่ได้รับใบอนุญาต'}
+                </p>
+                <p className="text-emerald-700 text-[10px] font-mono mt-0.5">
+                  🔒 {isEn ? 'Verified Digital Signature: NP-SEC-99482' : 'ลายเซ็นดิจิทัลรับรอง: NP-SEC-99482'}
+                </p>
               </div>
 
               <div className="text-right">
                 <span className="inline-block bg-emerald-100 text-emerald-800 border border-emerald-300 font-black text-[10px] px-2.5 py-1 rounded-md uppercase">
-                  ✓ Validated Clinical Export
+                  ✓ {isEn ? 'Validated Clinical Export' : 'เอกสารผ่านการตรวจสอบทางคลินิก'}
                 </span>
               </div>
             </div>
