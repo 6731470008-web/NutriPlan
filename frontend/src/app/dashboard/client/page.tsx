@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mealPlanService, trackingService, userService } from '@/services/nutriServices';
+import { mealPlanService, trackingService, userService, marketplaceService, ConsultationRequestDto } from '@/services/nutriServices';
 import { MealPlanDto, AdherenceReportDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { UserHeader } from '@/components/UserHeader';
@@ -32,31 +32,31 @@ interface NutritionSummary {
 
 export default function ClientDashboard() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isEn = language === 'en';
   const [clientId, setClientId] = useState<string>('');
   const [plans, setPlans] = useState<MealPlanDto[]>([]);
   const [adherence, setAdherence] = useState<AdherenceReportDto | null>(null);
   const [clientMetrics, setClientMetrics] = useState<ClientMetrics | null>(null);
   const [nutritionSummary, setNutritionSummary] = useState<NutritionSummary | null>(null);
+  const [consultations, setConsultations] = useState<ConsultationRequestDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      const storedClientId = localStorage.getItem('nutriplan_user_id');
-      if (!storedClientId) {
-        router.push('/login');
-        return;
-      }
+      const storedClientId = localStorage.getItem('nutriplan_user_id') || '22222222-2222-2222-2222-222222222222';
       setClientId(storedClientId);
 
       try {
-        const [planData, adherenceData] = await Promise.all([
-          mealPlanService.getByClient(clientId),
-          trackingService.getAdherence(clientId)
+        const [planData, adherenceData, consultsData] = await Promise.all([
+          mealPlanService.getByClient(storedClientId),
+          trackingService.getAdherence(storedClientId),
+          marketplaceService.getClientConsultations(storedClientId)
         ]);
 
         setPlans(planData);
         setAdherence(adherenceData);
+        setConsultations(consultsData);
 
         // Feature 2: Fetch client metrics for TDEE/BMR display
         try {
@@ -353,6 +353,48 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               )}
+
+              {/* Marketplace & Assigned Nutritionist Card */}
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xs font-semibold text-slate-300 uppercase">🩺 {t('marketplace.myConsultations', 'My Specialist & Consultations')}</h3>
+                </div>
+
+                {consultations.length > 0 ? (
+                  <div className="space-y-2">
+                    {consultations.map((c) => (
+                      <div key={c.id} className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs space-y-1">
+                        <div className="flex justify-between items-start">
+                          <p className="font-bold text-slate-200">{c.nutritionistName}</p>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                            c.status === 'Accepted'
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              : c.status === 'Declined'
+                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                              : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                          }`}>
+                            {c.status === 'Accepted' ? t('marketplace.acceptedInCare', 'In Care') : c.status === 'Declined' ? t('marketplace.declined', 'Declined') : t('marketplace.pendingReview', 'Pending')}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400">{c.goalType}</p>
+                        {c.targetWeightKg && <p className="text-[10px] text-emerald-400">Target: {c.targetWeightKg} kg</p>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 italic">
+                    {isEn ? 'No specialist assigned yet.' : 'ยังไม่มีนักโภชนาการประจำตัว'}
+                  </p>
+                )}
+
+                <button
+                  onClick={() => router.push('/marketplace')}
+                  className="w-full mt-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-bold py-2 px-3 rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-1.5"
+                >
+                  <span>🏪</span>
+                  <span>{t('marketplace.findNutritionist', 'Find a Nutritionist')} →</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

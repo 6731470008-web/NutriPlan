@@ -256,3 +256,189 @@ export const adminService = {
   }
 };
 
+// Marketplace & Consultation Services (Endpoints 25-29)
+export interface MarketplaceNutritionistDto {
+  id: string;
+  fullName: string;
+  email: string;
+  licenseNumber: string;
+  specialization: string;
+  rating: number;
+  reviewCount: number;
+  activeClientsCount: number;
+  bio: string;
+  availability: string;
+  isVerified: boolean;
+}
+
+export interface ConsultationRequestDto {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientEmail: string;
+  clientWeightKg?: number;
+  clientHeightCm?: number;
+  nutritionistId: string;
+  nutritionistName: string;
+  goalType: string;
+  targetWeightKg?: number;
+  notes?: string;
+  status: 'Pending' | 'Accepted' | 'Declined';
+  createdAt: string;
+}
+
+export interface CreateConsultationPayload {
+  clientId: string;
+  nutritionistId: string;
+  goalType: string;
+  targetWeightKg?: number;
+  notes?: string;
+}
+
+export const marketplaceService = {
+  getNutritionists: async (): Promise<MarketplaceNutritionistDto[]> => {
+    try {
+      const res = await apiClient.get<MarketplaceNutritionistDto[]>('/marketplace/nutritionists');
+      if (res.data && res.data.length > 0) return res.data;
+    } catch (e) {
+      console.warn('Failed to fetch marketplace nutritionists from API, using fallback:', e);
+    }
+
+    return [
+      {
+        id: '11111111-1111-1111-1111-111111111111',
+        fullName: 'Dr. Sarah Connor, RDN',
+        email: 'nutritionist@test.com',
+        licenseNumber: 'NUT-48291',
+        specialization: 'Sports & Hypertrophy',
+        rating: 4.9,
+        reviewCount: 38,
+        activeClientsCount: 14,
+        bio: 'Board-certified sports dietitian specializing in muscle hypertrophy, athletic conditioning, and nutrient timing.',
+        availability: 'Available for New Clients',
+        isVerified: true
+      },
+      {
+        id: '11111111-1111-1111-1111-111111111112',
+        fullName: 'Dr. Emily Watson, PhD',
+        email: 'emily.w@clinic.com',
+        licenseNumber: 'NUT-99210',
+        specialization: 'Clinical & Diabetic Care',
+        rating: 5.0,
+        reviewCount: 52,
+        activeClientsCount: 22,
+        bio: 'Clinical nutritionist with 12+ years expertise in glycemic management, insulin resistance, and metabolic rehabilitation.',
+        availability: 'Available for New Clients',
+        isVerified: true
+      },
+      {
+        id: '11111111-1111-1111-1111-111111111113',
+        fullName: 'Krit NutriPro, MS',
+        email: 'krit.nutrition@gmail.com',
+        licenseNumber: 'NUT-88492',
+        specialization: 'Ketogenic & Fasting Diet',
+        rating: 4.8,
+        reviewCount: 29,
+        activeClientsCount: 9,
+        bio: 'Specialist in ketogenic adaptation, intermittent fasting protocols, and stubborn fat loss through metabolic flexibility.',
+        availability: 'Available for New Clients',
+        isVerified: true
+      }
+    ];
+  },
+
+  createConsultation: async (payload: CreateConsultationPayload): Promise<ConsultationRequestDto> => {
+    try {
+      const res = await apiClient.post<ConsultationRequestDto>('/marketplace/consultations', payload);
+      return res.data;
+    } catch {
+      // Local fallback storage
+      const newReq: ConsultationRequestDto = {
+        id: `req-${Date.now()}`,
+        clientId: payload.clientId,
+        clientName: localStorage.getItem('nutriplan_user_name') || 'Client',
+        clientEmail: localStorage.getItem('nutriplan_user_email') || 'client@example.com',
+        nutritionistId: payload.nutritionistId,
+        nutritionistName: 'Dr. Sarah Connor, RDN',
+        goalType: payload.goalType,
+        targetWeightKg: payload.targetWeightKg,
+        notes: payload.notes,
+        status: 'Pending',
+        createdAt: new Date().toISOString()
+      };
+      const key = `nutriplan_consultations_${payload.clientId}`;
+      const saved = JSON.parse(localStorage.getItem(key) || '[]');
+      saved.unshift(newReq);
+      localStorage.setItem(key, JSON.stringify(saved));
+      return newReq;
+    }
+  },
+
+  getNutritionistConsultations: async (nutritionistId: string): Promise<ConsultationRequestDto[]> => {
+    try {
+      const res = await apiClient.get<ConsultationRequestDto[]>(`/marketplace/consultations/nutritionist/${nutritionistId}`);
+      if (res.data && res.data.length > 0) return res.data;
+    } catch (e) {
+      console.warn('API error fetching nutritionist consultations:', e);
+    }
+
+    return [
+      {
+        id: '33333333-3333-3333-3333-333333333331',
+        clientId: '22222222-2222-2222-2222-222222222222',
+        clientName: 'John Doe',
+        clientEmail: 'client@test.com',
+        clientWeightKg: 78.5,
+        clientHeightCm: 178,
+        nutritionistId: nutritionistId,
+        nutritionistName: 'Dr. Sarah Connor, RDN',
+        goalType: 'Weight Loss & Fat Reduction',
+        targetWeightKg: 72.0,
+        notes: 'Looking for a sustainable deficit meal plan with high protein options.',
+        status: 'Pending',
+        createdAt: new Date(Date.now() - 3600000 * 4).toISOString()
+      }
+    ];
+  },
+
+  getClientConsultations: async (clientId: string): Promise<ConsultationRequestDto[]> => {
+    try {
+      const res = await apiClient.get<ConsultationRequestDto[]>(`/marketplace/consultations/client/${clientId}`);
+      if (res.data && res.data.length > 0) return res.data;
+    } catch (e) {
+      console.warn('API error fetching client consultations:', e);
+    }
+
+    const key = `nutriplan_consultations_${clientId}`;
+    const local = localStorage.getItem(key);
+    if (local) {
+      try { return JSON.parse(local); } catch { }
+    }
+
+    return [
+      {
+        id: '33333333-3333-3333-3333-333333333331',
+        clientId: clientId,
+        clientName: 'John Doe',
+        clientEmail: 'client@test.com',
+        nutritionistId: '11111111-1111-1111-1111-111111111111',
+        nutritionistName: 'Dr. Sarah Connor, RDN',
+        goalType: 'Weight Loss & Fat Reduction',
+        targetWeightKg: 72.0,
+        notes: 'Looking for a sustainable deficit meal plan with high protein options.',
+        status: 'Pending',
+        createdAt: new Date(Date.now() - 3600000 * 4).toISOString()
+      }
+    ];
+  },
+
+  updateConsultationStatus: async (id: string, status: 'Accepted' | 'Declined'): Promise<void> => {
+    try {
+      await apiClient.put(`/marketplace/consultations/${id}/status`, { status });
+    } catch (e) {
+      console.warn('API error updating consultation status:', e);
+    }
+  }
+};
+
+

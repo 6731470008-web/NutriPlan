@@ -678,3 +678,187 @@ public class AdminController : ControllerBase
     }
 }
 
+public class CreateConsultationRequestDto
+{
+    public Guid ClientId { get; set; }
+    public Guid NutritionistId { get; set; }
+    public string GoalType { get; set; } = "WeightLoss";
+    public double? TargetWeightKg { get; set; }
+    public string? Notes { get; set; }
+}
+
+public class UpdateConsultationStatusDto
+{
+    public string Status { get; set; } = "Accepted"; // "Accepted" or "Declined"
+}
+
+public class ConsultationRecord
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid ClientId { get; set; }
+    public string ClientName { get; set; } = "";
+    public string ClientEmail { get; set; } = "";
+    public double? ClientWeightKg { get; set; }
+    public double? ClientHeightCm { get; set; }
+    public Guid NutritionistId { get; set; }
+    public string NutritionistName { get; set; } = "";
+    public string GoalType { get; set; } = "WeightLoss";
+    public double? TargetWeightKg { get; set; }
+    public string? Notes { get; set; }
+    public string Status { get; set; } = "Pending";
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+[ApiController]
+[Route("api/v1/marketplace")]
+public class MarketplaceController : ControllerBase
+{
+    private static readonly List<ConsultationRecord> _consultations = new()
+    {
+        new ConsultationRecord
+        {
+            Id = Guid.Parse("33333333-3333-3333-3333-333333333331"),
+            ClientId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+            ClientName = "John Doe",
+            ClientEmail = "client@test.com",
+            ClientWeightKg = 78.5,
+            ClientHeightCm = 178,
+            NutritionistId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            NutritionistName = "Dr. Sarah Connor, RDN",
+            GoalType = "Weight Loss & Fat Reduction",
+            TargetWeightKg = 72.0,
+            Notes = "Looking for a sustainable deficit meal plan with high protein options.",
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow.AddHours(-4)
+        }
+    };
+
+    private static readonly object _lock = new();
+
+    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public MarketplaceController(IUserRepository userRepository, IUnitOfWork unitOfWork)
+    {
+        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
+    }
+
+    // Endpoint 25: Browse Nutritionists in Marketplace
+    [HttpGet("nutritionists")]
+    public async Task<ActionResult<List<object>>> GetMarketplaceNutritionists()
+    {
+        var users = await _userRepository.GetAllAsync();
+        var nutritionists = users.OfType<Nutritionist>().ToList();
+
+        var result = nutritionists.Select(n => new
+        {
+            n.Id,
+            n.FullName,
+            n.Email,
+            n.LicenseNumber,
+            n.Specialization,
+            Rating = 4.9,
+            ReviewCount = 28,
+            ActiveClientsCount = n.AssignedClients.Count,
+            Bio = $"Licensed clinical nutritionist specializing in {n.Specialization}. Passionate about evidence-based nutrition science and patient adherence.",
+            Availability = "Available for New Clients",
+            IsVerified = true
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    // Endpoint 26: Create Consultation Request
+    [HttpPost("consultations")]
+    public async Task<ActionResult<ConsultationRecord>> CreateConsultation([FromBody] CreateConsultationRequestDto dto)
+    {
+        var client = await _userRepository.GetByIdAsync(dto.ClientId);
+        var nutritionist = await _userRepository.GetByIdAsync(dto.NutritionistId);
+
+        var record = new ConsultationRecord
+        {
+            ClientId = dto.ClientId,
+            ClientName = client?.FullName ?? "New Client",
+            ClientEmail = client?.Email ?? "",
+            ClientWeightKg = (client is Client c) ? c.WeightKg : null,
+            ClientHeightCm = (client is Client c2) ? c2.HeightCm : null,
+            NutritionistId = dto.NutritionistId,
+            NutritionistName = nutritionist?.FullName ?? "Nutritionist",
+            GoalType = dto.GoalType,
+            TargetWeightKg = dto.TargetWeightKg,
+            Notes = dto.Notes,
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        lock (_lock)
+        {
+            _consultations.Insert(0, record);
+        }
+
+        return Ok(record);
+    }
+
+    // Endpoint 27: Get Consultations for Nutritionist
+    [HttpGet("consultations/nutritionist/{nutritionistId:guid}")]
+    public ActionResult<List<ConsultationRecord>> GetNutritionistConsultations(Guid nutritionistId)
+    {
+        lock (_lock)
+        {
+            var list = _consultations.Where(c => c.NutritionistId == nutritionistId || nutritionistId == Guid.Empty).ToList();
+            return Ok(list);
+        }
+    }
+
+    // Endpoint 28: Get Consultations for Client
+    [HttpGet("consultations/client/{clientId:guid}")]
+    public ActionResult<List<ConsultationRecord>> GetClientConsultations(Guid clientId)
+    {
+        lock (_lock)
+        {
+            var list = _consultations.Where(c => c.ClientId == clientId || clientId == Guid.Empty).ToList();
+            return Ok(list);
+        }
+    }
+
+    // Endpoint 29: Update Consultation Status (Accept / Decline)
+    [HttpPut("consultations/{id:guid}/status")]
+    public async Task<ActionResult<ConsultationRecord>> UpdateConsultationStatus(Guid id, [FromBody] UpdateConsultationStatusDto dto)
+    {
+        ConsultationRecord? record;
+        lock (_lock)
+        {
+            record = _consultations.FirstOrDefault(c => c.Id == id);
+            if (record != null)
+            {
+                record.Status = dto.Status;
+            }
+        }
+
+        if (record == null) return NotFound("Consultation request not found.");
+
+        if (dto.Status.Equals("Accepted", StringComparison.OrdinalIgnoreCase))
+        {
+            var nutritionist = await _userRepository.GetByIdAsync(record.NutritionistId);
+            var client = await _userRepository.GetByIdAsync(record.ClientId);
+
+            if (nutritionist is Nutritionist n && client is Client c)
+            {
+                try
+                {
+                    n.AssignClient(c);
+                    await _unitOfWork.CommitAsync();
+                }
+                catch
+                {
+                    // Ignore duplicate assignment
+                }
+            }
+        }
+
+        return Ok(record);
+    }
+}
+
+

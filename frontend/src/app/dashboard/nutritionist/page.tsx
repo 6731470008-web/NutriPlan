@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { userService, mealPlanService, trackingService } from '@/services/nutriServices';
+import { userService, mealPlanService, trackingService, marketplaceService, ConsultationRequestDto } from '@/services/nutriServices';
 import { MealPlanDto, AdherenceReportDto } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { UserHeader } from '@/components/UserHeader';
@@ -23,14 +23,17 @@ interface ClientItem {
 
 export default function NutritionistDashboard() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isEn = language === 'en';
   const [clients, setClients] = useState<ClientItem[]>([]);
   const [unassignedClients, setUnassignedClients] = useState<ClientItem[]>([]);
   const [clientPlansMap, setClientPlansMap] = useState<Record<string, MealPlanDto[]>>({});
+  const [consultations, setConsultations] = useState<ConsultationRequestDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [assigningId, setAssigningId] = useState<string | null>(null);
   const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Edit plan modal state
   const [editingPlan, setEditingPlan] = useState<MealPlanDto | null>(null);
@@ -68,12 +71,14 @@ export default function NutritionistDashboard() {
     }
 
     try {
-      const [assignedData, unassignedData] = await Promise.all([
+      const [assignedData, unassignedData, consultsData] = await Promise.all([
         userService.getMyClients(nutritionistId),
-        userService.getUnassignedClients()
+        userService.getUnassignedClients(),
+        marketplaceService.getNutritionistConsultations(nutritionistId)
       ]);
       setClients(assignedData);
       setUnassignedClients(unassignedData);
+      setConsultations(consultsData);
 
       // Fetch meal plans for all assigned clients
       const plansEntries = await Promise.all(
@@ -199,17 +204,48 @@ export default function NutritionistDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    router.push('/login');
+  const handleAcceptConsultation = async (req: ConsultationRequestDto) => {
+    const nutritionistId = localStorage.getItem('nutriplan_user_id') || '';
+    try {
+      await marketplaceService.updateConsultationStatus(req.id, 'Accepted');
+      if (nutritionistId && req.clientId) {
+        await userService.assignClient(nutritionistId, req.clientId);
+      }
+      setConsultations(prev => prev.map(c => c.id === req.id ? { ...c, status: 'Accepted' } : c));
+      setToastMessage(isEn ? `Accepted consultation for ${req.clientName}! Added to your roster.` : `ยอมรับคำขอปรึกษาจาก ${req.clientName} เรียบร้อยแล้ว!`);
+      setTimeout(() => setToastMessage(null), 3500);
+      fetchDashboardData();
+    } catch (e) {
+      console.error('Failed to accept consultation:', e);
+    }
   };
 
+  const handleDeclineConsultation = async (id: string) => {
+    try {
+      await marketplaceService.updateConsultationStatus(id, 'Declined');
+      setConsultations(prev => prev.map(c => c.id === id ? { ...c, status: 'Declined' } : c));
+      setToastMessage(isEn ? 'Consultation request declined.' : 'ปฏิเสธคำขอเรียบร้อยแล้ว');
+      setTimeout(() => setToastMessage(null), 3500);
+    } catch (e) {
+      console.error('Failed to decline consultation:', e);
+    }
+  };
+
+  const pendingConsultations = consultations.filter(c => c.status === 'Pending');
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-3 sm:p-6 md:p-8 overflow-x-hidden w-full max-w-full">
       <UserHeader
         title={t('nutritionistDashboard.title')}
         subtitle={t('nutritionistDashboard.subtitle')}
       />
+
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-emerald-500 text-slate-950 font-bold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 text-xs animate-bounce">
+          <span>✅</span>
+          <span>{toastMessage}</span>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-lg mb-6">
@@ -221,6 +257,81 @@ export default function NutritionistDashboard() {
         <div className="text-center text-slate-400 py-12">{t('nutritionistDashboard.loadingRoster')}</div>
       ) : (
         <div className="space-y-10">
+          {/* Marketplace: Incoming Consultation Requests */}
+          <div className="bg-gradient-to-r from-blue-950/40 via-slate-900 to-slate-900 border border-blue-500/30 rounded-2xl p-5 space-y-4 shadow-xl">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">📥</span>
+                <h2 className="text-base sm:text-lg font-bold text-slate-100">
+                  {t('marketplace.incomingRequests', 'Incoming Consultation Requests')}
+                </h2>
+                {pendingConsultations.length > 0 && (
+                  <span className="bg-blue-500 text-slate-950 font-black text-xs px-2 py-0.5 rounded-full">
+                    {pendingConsultations.length} {isEn ? 'New' : 'ใหม่'}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {pendingConsultations.length === 0 ? (
+              <p className="text-xs text-slate-400 italic">
+                {t('marketplace.noIncomingRequests', 'No pending consultation requests at this time.')}
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {pendingConsultations.map((req) => (
+                  <div
+                    key={req.id}
+                    className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-bold text-slate-100 text-sm">{req.clientName}</h4>
+                          <p className="text-[11px] text-slate-400">{req.clientEmail}</p>
+                        </div>
+                        <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
+                          ⏳ {t('marketplace.pendingReview', 'Pending Review')}
+                        </span>
+                      </div>
+
+                      <div className="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800 text-xs space-y-1">
+                        <p className="text-slate-300">
+                          <strong className="text-slate-400">{t('marketplace.selectGoal', 'Goal')}:</strong> {req.goalType}
+                        </p>
+                        {req.targetWeightKg && (
+                          <p className="text-emerald-400 text-[11px]">
+                            <strong>{t('marketplace.targetWeight', 'Target Weight')}:</strong> {req.targetWeightKg} kg
+                          </p>
+                        )}
+                        {req.notes && (
+                          <p className="text-slate-400 text-[11px] italic mt-1">
+                            "{req.notes}"
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-800/80">
+                      <button
+                        onClick={() => handleAcceptConsultation(req)}
+                        className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2 rounded-xl text-xs shadow-md transition-all text-center"
+                      >
+                        ✓ {t('marketplace.acceptRequest', 'Accept & Add to Care')}
+                      </button>
+                      <button
+                        onClick={() => handleDeclineConsultation(req.id)}
+                        className="px-3 py-2 bg-slate-900 hover:bg-rose-950/50 hover:text-rose-400 text-slate-400 font-semibold rounded-xl text-xs border border-slate-800 transition-colors"
+                      >
+                        ✕ {t('marketplace.declineRequest', 'Decline')}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Section 1: Assigned Client Roster */}
           <div className="space-y-4">
             <div className="flex justify-between items-center">
