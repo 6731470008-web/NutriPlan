@@ -713,7 +713,25 @@ public class ConsultationRecord
 [Route("api/v1/marketplace")]
 public class MarketplaceController : ControllerBase
 {
-    private static readonly List<ConsultationRecord> _consultations = new();
+    private static readonly List<ConsultationRecord> _consultations = new()
+    {
+        new ConsultationRecord
+        {
+            Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+            ClientId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+            ClientName = "สมศักดิ์ สุขภาพดี (John Doe)",
+            ClientEmail = "client@test.com",
+            ClientWeightKg = 74.5,
+            ClientHeightCm = 178,
+            NutritionistId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            NutritionistName = "Dr. Sarah Connor, RDN",
+            GoalType = "Weight Loss & Lean Muscle",
+            TargetWeightKg = 70.0,
+            Notes = "คนไข้ต้องการลดไขมันส่วนเกิน 4.5 กก. พร้อมเสริมสร้างกล้ามเนื้อและควบคุมพลังงาน",
+            Status = "Accepted",
+            CreatedAt = DateTime.UtcNow.AddDays(-2)
+        }
+    };
 
     private static readonly object _lock = new();
 

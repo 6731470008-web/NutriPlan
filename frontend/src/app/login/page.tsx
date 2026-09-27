@@ -64,28 +64,60 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoLogin = (role: 'Admin' | 'Nutritionist' | 'Client') => {
-    if (role === 'Admin') {
-      localStorage.setItem('nutriplan_jwt_token', 'demo-admin-jwt-token');
-      localStorage.setItem('nutriplan_user_role', 'Admin');
-      localStorage.setItem('nutriplan_user_id', 'admin-0000-0000-0000');
-      localStorage.setItem('nutriplan_user_name', 'Platform Administrator');
-      localStorage.setItem('nutriplan_user_email', 'admin@nutriplan.platform');
-      router.push('/dashboard/admin');
-    } else if (role === 'Nutritionist') {
-      localStorage.setItem('nutriplan_jwt_token', 'demo-nutritionist-jwt-token');
-      localStorage.setItem('nutriplan_user_role', 'Nutritionist');
-      localStorage.setItem('nutriplan_user_id', '11111111-1111-1111-1111-111111111111');
-      localStorage.setItem('nutriplan_user_name', 'Dr. Sarah Connor, RDN');
-      localStorage.setItem('nutriplan_user_email', 'nutritionist@test.com');
-      router.push('/dashboard/nutritionist');
-    } else {
-      localStorage.setItem('nutriplan_jwt_token', 'demo-client-jwt-token');
-      localStorage.setItem('nutriplan_user_role', 'Client');
-      localStorage.setItem('nutriplan_user_id', '22222222-2222-2222-2222-222222222222');
-      localStorage.setItem('nutriplan_user_name', 'John Doe');
-      localStorage.setItem('nutriplan_user_email', 'client@test.com');
-      router.push('/dashboard/client');
+  const handleDemoLogin = async (role: 'Admin' | 'Nutritionist' | 'Client') => {
+    setIsLoading(true);
+    setError(null);
+
+    const credentials = {
+      Admin: {
+        email: 'admin@admin.com',
+        password: '00000000',
+        id: 'admin-0000-0000-0000',
+        name: 'ดร. สมชาย ภักดีโภชน (System Admin)',
+        route: '/dashboard/admin'
+      },
+      Nutritionist: {
+        email: 'nutritionist@test.com',
+        password: '00000000',
+        id: '11111111-1111-1111-1111-111111111111',
+        name: 'Dr. Sarah Connor, RDN',
+        route: '/dashboard/nutritionist'
+      },
+      Client: {
+        email: 'client@test.com',
+        password: '00000000',
+        id: '22222222-2222-2222-2222-222222222222',
+        name: 'สมศักดิ์ สุขภาพดี (John Doe)',
+        route: '/dashboard/client'
+      }
+    }[role];
+
+    try {
+      const res = await authService.login({ email: credentials.email, password: credentials.password });
+      localStorage.setItem('nutriplan_jwt_token', res.token);
+      localStorage.setItem('nutriplan_user_role', res.role);
+      localStorage.setItem('nutriplan_user_id', res.userId);
+      localStorage.setItem('nutriplan_user_name', res.fullName || credentials.name);
+      localStorage.setItem('nutriplan_user_email', res.email || credentials.email);
+      if (role === 'Nutritionist') {
+        localStorage.setItem('nutriplan_sub_tier', 'pro');
+      }
+
+      router.push(credentials.route);
+    } catch {
+      // Offline / network fallback: use synchronized academic profile
+      localStorage.setItem('nutriplan_jwt_token', `demo-${role.toLowerCase()}-jwt-token`);
+      localStorage.setItem('nutriplan_user_role', role);
+      localStorage.setItem('nutriplan_user_id', credentials.id);
+      localStorage.setItem('nutriplan_user_name', credentials.name);
+      localStorage.setItem('nutriplan_user_email', credentials.email);
+      if (role === 'Nutritionist') {
+        localStorage.setItem('nutriplan_sub_tier', 'pro');
+      }
+
+      router.push(credentials.route);
+    } finally {
+      setIsLoading(false);
     }
   };
 
