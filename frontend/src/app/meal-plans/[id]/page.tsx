@@ -290,19 +290,6 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
           });
         });
 
-        const container = document.createElement('div');
-        container.style.position = 'absolute';
-        container.style.left = '0';
-        container.style.top = '0';
-        container.style.width = '750px';
-        container.style.backgroundColor = '#ffffff';
-        container.style.color = '#0f172a';
-        container.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-        container.style.padding = '32px';
-        container.style.boxSizing = 'border-box';
-        container.style.zIndex = '-9999';
-        container.style.pointerEvents = 'none';
-
         const safeTitle = plan.title ? plan.title.trim().replace(/\s+/g, '_') : 'Export';
         const startDateStr = plan.startDate ? new Date(plan.startDate).toLocaleDateString('th-TH') : '-';
         const endDateStr = plan.endDate ? new Date(plan.endDate).toLocaleDateString('th-TH') : '-';
@@ -311,44 +298,82 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
         const totalCStr = plan.totalCarbsGrams ? plan.totalCarbsGrams.toFixed(1) : '0';
         const totalFStr = plan.totalFatGrams ? plan.totalFatGrams.toFixed(1) : '0';
 
-        let menusHtml = '';
-        processedMenus.forEach((m) => {
+        const headerHtml = `
+          <div style="border-bottom: 3px solid #10b981; padding-bottom: 14px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <h1 style="font-size: 20px; font-weight: 800; color: #047857; margin: 0;">
+                  🥗 NutriPlan Official Meal Plan Report
+                </h1>
+                <p style="font-size: 11px; color: #64748b; margin: 3px 0 0 0;">รายงานแผนโภชนาการและรายการอาหารประจำบุคคล (Meal Plan & Shopping Schedule)</p>
+              </div>
+              <div style="text-align: right; font-size: 11px; color: #64748b; line-height: 1.4;">
+                <p style="margin: 0;">วันที่พิมพ์: <strong>${new Date().toLocaleDateString('th-TH')}</strong></p>
+                <p style="margin: 0; color: #059669; font-weight: 600;">Status: Approved Plan</p>
+              </div>
+            </div>
+
+            <div style="margin-top: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 11px;">
+              <div>
+                <span style="color: #166534; font-size: 10px; display: block; font-weight: 600;">ชื่อแผนอาหาร</span>
+                <strong style="color: #0f172a; font-size: 12px;">${plan.title || 'Meal Plan'}</strong>
+              </div>
+              <div>
+                <span style="color: #166534; font-size: 10px; display: block; font-weight: 600;">ระยะเวลา</span>
+                <strong style="color: #0f172a;">${startDateStr} - ${endDateStr}</strong>
+              </div>
+              <div>
+                <span style="color: #166534; font-size: 10px; display: block; font-weight: 600;">พลังงานรวมเป้าหมาย</span>
+                <strong style="color: #ea580c; font-size: 12px;">${totalCalStr} kcal</strong>
+              </div>
+              <div>
+                <span style="color: #166534; font-size: 10px; display: block; font-weight: 600;">สัดส่วนสารอาหาร (P/C/F)</span>
+                <strong style="color: #0f172a;">${totalPStr}g / ${totalCStr}g / ${totalFStr}g</strong>
+              </div>
+            </div>
+          </div>
+          <h2 style="font-size: 13px; font-weight: 700; color: #0f172a; margin: 0 0 10px 0; border-left: 4px solid #10b981; padding-left: 8px;">
+            📅 แผนอาหารประจำวัน (Daily Meal Schedules)
+          </h2>
+        `;
+
+        const dayCardHtmls: string[] = processedMenus.map((m) => {
           let entriesRows = '';
           if (!m.entries || m.entries.length === 0) {
-            entriesRows = `<tr><td colspan="6" style="padding: 10px; text-align: center; color: #94a3b8; font-size: 12px;">(ไม่มีรายการอาหารในวันนี้)</td></tr>`;
+            entriesRows = `<tr><td colspan="6" style="padding: 8px; text-align: center; color: #94a3b8; font-size: 11px;">(ไม่มีรายการอาหารในวันนี้)</td></tr>`;
           } else {
             m.entries.forEach((e) => {
               entriesRows += `
-                <tr style="border-bottom: 1px solid #f1f5f9; font-size: 12px;">
-                  <td style="padding: 8px 10px; font-weight: 600; color: #059669;">${e.mealType}</td>
-                  <td style="padding: 8px 10px; color: #1e293b;">${e.foodItemName}</td>
-                  <td style="padding: 8px 10px; text-align: right; color: #475569;">${e.portionGrams}g</td>
-                  <td style="padding: 8px 10px; text-align: right; font-weight: 600; color: #ea580c;">${e.calories.toFixed(0)} kcal</td>
-                  <td style="padding: 8px 10px; text-align: right; color: #0284c7;">P: ${e.proteinGrams.toFixed(1)}g</td>
-                  <td style="padding: 8px 10px; text-align: right; color: #d97706;">C: ${e.carbsGrams.toFixed(1)}g | F: ${e.fatGrams.toFixed(1)}g</td>
+                <tr style="border-bottom: 1px solid #f1f5f9; font-size: 11px;">
+                  <td style="padding: 6px 8px; font-weight: 600; color: #059669;">${e.mealType}</td>
+                  <td style="padding: 6px 8px; color: #1e293b;">${e.foodItemName}</td>
+                  <td style="padding: 6px 8px; text-align: right; color: #475569;">${e.portionGrams}g</td>
+                  <td style="padding: 6px 8px; text-align: right; font-weight: 600; color: #ea580c;">${e.calories.toFixed(0)} kcal</td>
+                  <td style="padding: 6px 8px; text-align: right; color: #0284c7;">P: ${e.proteinGrams.toFixed(1)}g</td>
+                  <td style="padding: 6px 8px; text-align: right; color: #d97706;">C: ${e.carbsGrams.toFixed(1)}g | F: ${e.fatGrams.toFixed(1)}g</td>
                 </tr>
               `;
             });
           }
 
-          menusHtml += `
-            <div style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
-              <div style="background: #f8fafc; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 700; color: #0f172a; font-size: 13px;">📅 วันที่ ${m.dayNumber} (Day ${m.dayNumber})</span>
-                <span style="font-size: 12px; color: #475569;">
+          return `
+            <div class="meal-day-card" style="margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff; break-inside: avoid; page-break-inside: avoid;">
+              <div style="background: #f8fafc; padding: 7px 10px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; color: #0f172a; font-size: 12px;">📅 วันที่ ${m.dayNumber} (Day ${m.dayNumber})</span>
+                <span style="font-size: 11px; color: #475569;">
                   เป้าหมาย: <strong style="color: #059669;">${m.targetCalories.toFixed(0)} kcal</strong> | 
                   จริง: <strong style="color: #ea580c;">${m.totalCalories.toFixed(0)} kcal</strong> (P: ${(m.totalProteinGrams || 0).toFixed(0)}g / C: ${(m.totalCarbsGrams || 0).toFixed(0)}g / F: ${(m.totalFatGrams || 0).toFixed(0)}g)
                 </span>
               </div>
               <table style="width: 100%; border-collapse: collapse;">
                 <thead>
-                  <tr style="background: #ffffff; border-bottom: 1px solid #e2e8f0; font-size: 11px; color: #64748b; text-align: left;">
-                    <th style="padding: 6px 10px;">มื้อ</th>
-                    <th style="padding: 6px 10px;">รายการอาหาร</th>
-                    <th style="padding: 6px 10px; text-align: right;">ปริมาณ</th>
-                    <th style="padding: 6px 10px; text-align: right;">พลังงาน</th>
-                    <th style="padding: 6px 10px; text-align: right;">โปรตีน</th>
-                    <th style="padding: 6px 10px; text-align: right;">สารอาหาร</th>
+                  <tr style="background: #ffffff; border-bottom: 1px solid #e2e8f0; font-size: 10px; color: #64748b; text-align: left;">
+                    <th style="padding: 5px 8px;">มื้อ</th>
+                    <th style="padding: 5px 8px;">รายการอาหาร</th>
+                    <th style="padding: 5px 8px; text-align: right;">ปริมาณ</th>
+                    <th style="padding: 5px 8px; text-align: right;">พลังงาน</th>
+                    <th style="padding: 5px 8px; text-align: right;">โปรตีน</th>
+                    <th style="padding: 5px 8px; text-align: right;">สารอาหาร</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -359,15 +384,15 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
           `;
         });
 
-        let shoppingHtml = '';
+        let shoppingInnerHtml = '';
         const summaryEntries = Object.entries(foodSummaryMap);
         if (summaryEntries.length === 0) {
-          shoppingHtml = `<p style="font-size: 12px; color: #94a3b8; font-style: italic;">ไม่มีวัตถุดิบในแผนอาหาร</p>`;
+          shoppingInnerHtml = `<p style="font-size: 11px; color: #94a3b8; font-style: italic;">ไม่มีวัตถุดิบในแผนอาหาร</p>`;
         } else {
-          shoppingHtml = `
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 12px;">
+          shoppingInnerHtml = `
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 11px;">
               ${summaryEntries.map(([food, grams]) => `
-                <div style="display: flex; justify-content: space-between; padding: 6px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; padding: 5px 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
                   <span style="color: #1e293b; font-weight: 500;">▫️ ${food}</span>
                   <strong style="color: #059669;">${grams.toFixed(0)} g</strong>
                 </div>
@@ -376,61 +401,101 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
           `;
         }
 
-        container.innerHTML = `
-          <div style="border-bottom: 3px solid #10b981; padding-bottom: 16px; margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div>
-                <h1 style="font-size: 22px; font-weight: 800; color: #047857; margin: 0;">
-                  🥗 NutriPlan Official Meal Plan Report
-                </h1>
-                <p style="font-size: 12px; color: #64748b; margin: 4px 0 0 0;">รายงานแผนโภชนาการและรายการอาหารประจำบุคคล (Meal Plan & Shopping Schedule)</p>
-              </div>
-              <div style="text-align: right; font-size: 11px; color: #64748b; line-height: 1.4;">
-                <p style="margin: 0;">วันที่พิมพ์: <strong>${new Date().toLocaleDateString('th-TH')}</strong></p>
-                <p style="margin: 0; color: #059669; font-weight: 600;">Status: Approved Plan</p>
-              </div>
-            </div>
-
-            <div style="margin-top: 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size: 12px;">
-              <div>
-                <span style="color: #166534; font-size: 11px; display: block; font-weight: 600;">ชื่อแผนอาหาร</span>
-                <strong style="color: #0f172a; font-size: 13px;">${plan.title || 'Meal Plan'}</strong>
-              </div>
-              <div>
-                <span style="color: #166534; font-size: 11px; display: block; font-weight: 600;">ระยะเวลา</span>
-                <strong style="color: #0f172a;">${startDateStr} - ${endDateStr}</strong>
-              </div>
-              <div>
-                <span style="color: #166534; font-size: 11px; display: block; font-weight: 600;">พลังงานรวมเป้าหมาย</span>
-                <strong style="color: #ea580c; font-size: 13px;">${totalCalStr} kcal</strong>
-              </div>
-              <div>
-                <span style="color: #166534; font-size: 11px; display: block; font-weight: 600;">สัดส่วนสารอาหาร (P/C/F)</span>
-                <strong style="color: #0f172a;">${totalPStr}g / ${totalCStr}g / ${totalFStr}g</strong>
-              </div>
-            </div>
-          </div>
-
-          <div style="margin-bottom: 24px;">
-            <h2 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 10px 0; border-left: 4px solid #10b981; padding-left: 8px;">
-              📅 แผนอาหารประจำวัน (Daily Meal Schedules)
-            </h2>
-            ${menusHtml}
-          </div>
-
-          <div style="margin-bottom: 20px;">
-            <h2 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 10px 0; border-left: 4px solid #0284c7; padding-left: 8px;">
+        const shoppingSectionHtml = `
+          <div class="shopping-list-card" style="margin-top: 14px; margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid;">
+            <h2 style="font-size: 13px; font-weight: 700; color: #0f172a; margin: 0 0 10px 0; border-left: 4px solid #0284c7; padding-left: 8px;">
               🛒 สรุปรายการวัตถุดิบรวมทั้งหมด (Consolidated Shopping List)
             </h2>
-            ${shoppingHtml}
-          </div>
-
-          <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8;">
-            <span>Generated by NutriPlan Platform • Clean Architecture System</span>
-            <span>Nutrition & Health Records</span>
+            ${shoppingInnerHtml}
           </div>
         `;
 
+        // Measure heights dynamically to avoid cutting cards across A4 pages
+        const measureContainer = document.createElement('div');
+        measureContainer.style.position = 'absolute';
+        measureContainer.style.left = '-9999px';
+        measureContainer.style.top = '0';
+        measureContainer.style.width = '780px';
+        measureContainer.style.boxSizing = 'border-box';
+        measureContainer.style.padding = '0';
+        measureContainer.style.visibility = 'hidden';
+        document.body.appendChild(measureContainer);
+
+        measureContainer.innerHTML = headerHtml;
+        const headerHeight = measureContainer.offsetHeight;
+
+        const dayCardsWithHeight: { html: string; height: number }[] = [];
+        for (const cardHtml of dayCardHtmls) {
+          measureContainer.innerHTML = cardHtml;
+          dayCardsWithHeight.push({ html: cardHtml, height: measureContainer.offsetHeight });
+        }
+
+        measureContainer.innerHTML = shoppingSectionHtml;
+        const shoppingHeight = measureContainer.offsetHeight;
+
+        document.body.removeChild(measureContainer);
+
+        // Group cards into clean A4 pages (A4 height is ~1103px at 780px width)
+        const TARGET_USABLE_HEIGHT = 960;
+        interface PageData {
+          pageNumber: number;
+          contentHtml: string;
+        }
+
+        const pages: PageData[] = [];
+        let currentPageHtml = '';
+        let currentHeight = 0;
+
+        // Page 1 begins with full header
+        currentPageHtml += headerHtml;
+        currentHeight += headerHeight + 8;
+
+        for (let i = 0; i < dayCardsWithHeight.length; i++) {
+          const card = dayCardsWithHeight[i];
+          if (currentHeight + card.height > TARGET_USABLE_HEIGHT) {
+            pages.push({
+              pageNumber: pages.length + 1,
+              contentHtml: currentPageHtml
+            });
+
+            const runningHeader = `
+              <div style="border-bottom: 2px solid #10b981; padding-bottom: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; font-weight: 700; color: #047857;">🥗 NutriPlan Official Meal Plan Report (ต่อ)</span>
+                <span style="font-size: 10px; color: #64748b;">${plan.title || 'Meal Plan'}</span>
+              </div>
+            `;
+            currentPageHtml = runningHeader + card.html;
+            currentHeight = 40 + card.height + 8;
+          } else {
+            currentPageHtml += card.html;
+            currentHeight += card.height + 8;
+          }
+        }
+
+        // Add shopping list without cutting
+        if (currentHeight + shoppingHeight > TARGET_USABLE_HEIGHT) {
+          pages.push({
+            pageNumber: pages.length + 1,
+            contentHtml: currentPageHtml
+          });
+
+          const runningHeader = `
+            <div style="border-bottom: 2px solid #10b981; padding-bottom: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; font-weight: 700; color: #047857;">🥗 NutriPlan Official Meal Plan Report (ต่อ)</span>
+              <span style="font-size: 10px; color: #64748b;">${plan.title || 'Meal Plan'}</span>
+            </div>
+          `;
+          currentPageHtml = runningHeader + shoppingSectionHtml;
+        } else {
+          currentPageHtml += shoppingSectionHtml;
+        }
+
+        pages.push({
+          pageNumber: pages.length + 1,
+          contentHtml: currentPageHtml
+        });
+
+        // 1. Browser Print Route
         if (format === 'print') {
           const printWindow = window.open('', '_blank');
           if (printWindow) {
@@ -441,15 +506,42 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
                   <meta charset="utf-8" />
                   <title>MEAL_PLAN_${safeTitle}</title>
                   <style>
-                    body { margin: 0; padding: 24px; font-family: system-ui, -apple-system, sans-serif; background: #fff; color: #0f172a; }
+                    body { margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; background: #fff; color: #0f172a; }
                     @media print {
+                      @page { size: A4 portrait; margin: 10mm; }
                       body { padding: 0; }
-                      @page { size: A4; margin: 10mm; }
+                      .pdf-print-page {
+                        box-sizing: border-box;
+                        page-break-after: always;
+                        break-after: page;
+                        min-height: calc(100vh - 20mm);
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                      }
+                      .pdf-print-page:last-child {
+                        page-break-after: avoid;
+                        break-after: avoid;
+                      }
+                      .meal-day-card, .shopping-list-card, table, tr {
+                        page-break-inside: avoid !important;
+                        break-inside: avoid !important;
+                      }
                     }
                   </style>
                 </head>
                 <body>
-                  ${container.innerHTML}
+                  ${pages.map((p, idx) => `
+                    <div class="pdf-print-page" style="box-sizing: border-box; padding: 8px 0; margin-bottom: 16px;">
+                      <div style="flex: 1;">
+                        ${p.contentHtml}
+                      </div>
+                      <div style="border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 12px; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8;">
+                        <span>Generated by NutriPlan Platform • Clean Architecture System</span>
+                        <span>หน้า ${idx + 1} จาก ${pages.length}</span>
+                      </div>
+                    </div>
+                  `).join('')}
                   <script>
                     window.onload = function() {
                       window.print();
@@ -463,74 +555,73 @@ export default function MealPlanDetailPage({ params }: { params: Promise<{ id: s
           return;
         }
 
-        document.body.appendChild(container);
-
+        // 2. Direct PDF Download Route (Page by Page rendering to guarantee zero card cuts)
         try {
           const { default: jsPDF } = await import('jspdf');
           const { default: html2canvas } = await import('html2canvas');
 
-          const canvas = await html2canvas(container, {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff'
-          });
-
-          const imgData = canvas.toDataURL('image/jpeg', 0.95);
           const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
             format: 'a4'
           });
 
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = pdf.internal.pageSize.getHeight();
-          const imgWidth = pdfWidth;
-          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          for (let p = 0; p < pages.length; p++) {
+            const pageData = pages[p];
+            const pageDiv = document.createElement('div');
+            pageDiv.style.position = 'absolute';
+            pageDiv.style.left = '0';
+            pageDiv.style.top = '0';
+            pageDiv.style.width = '780px';
+            pageDiv.style.height = '1103px';
+            pageDiv.style.maxHeight = '1103px';
+            pageDiv.style.boxSizing = 'border-box';
+            pageDiv.style.padding = '24px 28px';
+            pageDiv.style.backgroundColor = '#ffffff';
+            pageDiv.style.color = '#0f172a';
+            pageDiv.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+            pageDiv.style.display = 'flex';
+            pageDiv.style.flexDirection = 'column';
+            pageDiv.style.justifyContent = 'space-between';
+            pageDiv.style.overflow = 'hidden';
+            pageDiv.style.zIndex = '-9999';
 
-          let heightLeft = imgHeight;
-          let position = 0;
-          let pageIndex = 0;
+            pageDiv.innerHTML = `
+              <div style="flex: 1; display: flex; flex-direction: column;">
+                ${pageData.contentHtml}
+              </div>
+              <div style="border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 10px; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8;">
+                <span>Generated by NutriPlan Platform • Clean Architecture System</span>
+                <span>หน้า ${pageData.pageNumber} จาก ${pages.length}</span>
+              </div>
+            `;
 
-          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pdfHeight;
+            document.body.appendChild(pageDiv);
 
-          while (heightLeft > 0) {
-            pageIndex++;
-            position = -(pageIndex * pdfHeight);
-            pdf.addPage();
-            pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pdfHeight;
+            try {
+              const canvas = await html2canvas(pageDiv, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+              });
+
+              const imgData = canvas.toDataURL('image/jpeg', 0.95);
+              if (p > 0) {
+                pdf.addPage();
+              }
+              pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+            } finally {
+              if (document.body.contains(pageDiv)) {
+                document.body.removeChild(pageDiv);
+              }
+            }
           }
 
           pdf.save(`MEAL_PLAN_${safeTitle}.pdf`);
         } catch (pdfErr) {
           console.warn('PDF export error, falling back to print dialog...', pdfErr);
-          const printWindow = window.open('', '_blank');
-          if (printWindow) {
-            printWindow.document.write(`
-              <!DOCTYPE html>
-              <html lang="th">
-                <head>
-                  <meta charset="utf-8" />
-                  <title>MEAL_PLAN_${safeTitle}</title>
-                  <style>
-                    body { margin: 0; padding: 24px; font-family: system-ui, sans-serif; }
-                    @media print { body { padding: 0; } @page { size: A4; margin: 10mm; } }
-                  </style>
-                </head>
-                <body>
-                  ${container.innerHTML}
-                  <script>window.onload = function() { window.print(); };</script>
-                </body>
-              </html>
-            `);
-            printWindow.document.close();
-          }
-        } finally {
-          if (document.body.contains(container)) {
-            document.body.removeChild(container);
-          }
+          handleExport('print');
         }
         return;
       }
