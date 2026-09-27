@@ -704,6 +704,20 @@ export interface SendMessagePayload {
   attachmentUrl?: string;
 }
 
+const normalizeChatId = (id: string) => {
+  if (!id) return '';
+  const lower = id.toLowerCase();
+  if (lower.includes('1111') || lower.includes('nutritionist') || lower.includes('sarah')) return '11111111-1111-1111-1111-111111111111';
+  if (lower.includes('2222') || lower.includes('client') || lower.includes('john')) return '22222222-2222-2222-2222-222222222222';
+  if (lower.includes('admin')) return 'admin-0000-0000-0000';
+  return id;
+};
+
+const matchesChatId = (a: string, b: string) => {
+  if (a.toLowerCase() === b.toLowerCase()) return true;
+  return normalizeChatId(a) === normalizeChatId(b);
+};
+
 export const chatService = {
   getContacts: async (userId: string): Promise<ChatContactDto[]> => {
     try {
@@ -712,6 +726,8 @@ export const chatService = {
     } catch (e) {
       console.warn('API error fetching chat contacts, using fallback:', e);
     }
+
+    const normUser = normalizeChatId(userId);
 
     // Default fallback contacts
     const contacts: ChatContactDto[] = [
@@ -732,7 +748,7 @@ export const chatService = {
         specialization: 'Clinical & Sports Dietetics (ผู้เชี่ยวชาญโภชนาการ)',
         lastMessage: 'แผนโภชนาการ 14 วันจัดทำเสร็จเรียบร้อยแล้วค่ะ มีข้อสงสัยสอบถามได้นะคะ 🥗',
         lastMessageTime: new Date(Date.now() - 1800000).toISOString(),
-        unreadCount: 1,
+        unreadCount: 0,
         isOnline: true
       },
       {
@@ -747,7 +763,7 @@ export const chatService = {
       }
     ];
 
-    return contacts.filter(c => c.contactId !== userId);
+    return contacts.filter(c => !matchesChatId(c.contactId, normUser));
   },
 
   getMessages: async (user1: string, user2: string): Promise<ChatMessageDto[]> => {
@@ -755,78 +771,89 @@ export const chatService = {
       const res = await apiClient.get<ChatMessageDto[]>(`/chat/messages?user1=${user1}&user2=${user2}`);
       if (res.data && res.data.length > 0) return res.data;
     } catch (e) {
-      console.warn('API error fetching chat messages, using fallback:', e);
+      console.warn('API error fetching chat messages, using unified fallback:', e);
     }
 
-    // Check local storage for persistent chat history
-    const threadKey = `nutriplan_chat_${[user1, user2].sort().join('_')}`;
-    const stored = localStorage.getItem(threadKey);
-    if (stored) {
+    const norm1 = normalizeChatId(user1);
+    const norm2 = normalizeChatId(user2);
+
+    // Initial default seed messages
+    const defaultSeed: ChatMessageDto[] = [
+      {
+        id: 'msg-seed-1',
+        senderId: '11111111-1111-1111-1111-111111111111',
+        senderName: 'Dr. Sarah Connor, RDN',
+        senderRole: 'Nutritionist',
+        receiverId: '22222222-2222-2222-2222-222222222222',
+        receiverName: 'สมศักดิ์ สุขภาพดี (John Doe)',
+        message: 'สวัสดีค่ะคุณสมศักดิ์ หมอได้จัดทำแผนอาหาร 14 วัน (High-Protein Metabolic Plan) ให้เรียบร้อยแล้วนะคะ หากมีคำถามเกี่ยวกับสัดส่วนหรือต้องการปรับเปลี่ยนเมนูสามารถแจ้งได้เลยค่ะ 🥗',
+        timestamp: new Date(Date.now() - 14400000).toISOString(),
+        isRead: true
+      },
+      {
+        id: 'msg-seed-2',
+        senderId: '22222222-2222-2222-2222-222222222222',
+        senderName: 'สมศักดิ์ สุขภาพดี (John Doe)',
+        senderRole: 'Client',
+        receiverId: '11111111-1111-1111-1111-111111111111',
+        receiverName: 'Dr. Sarah Connor, RDN',
+        message: 'ขอบคุณมากครับคุณหมอ ตอนนี้มื้อกลางวันผมทานอกไก่ย่างกับข้าวกล้องตามแผน รู้สึกอิ่มนานและมีพลังงานดีมากครับ! 💪',
+        timestamp: new Date(Date.now() - 10800000).toISOString(),
+        isRead: true
+      },
+      {
+        id: 'msg-seed-3',
+        senderId: '11111111-1111-1111-1111-111111111111',
+        senderName: 'Dr. Sarah Connor, RDN',
+        senderRole: 'Nutritionist',
+        receiverId: '22222222-2222-2222-2222-222222222222',
+        receiverName: 'สมศักดิ์ สุขภาพดี (John Doe)',
+        message: 'ยอดเยี่ยมมากค่ะ อย่าลืมดื่มน้ำสะอาดวันละ 2.5-3 ลิตร และใช้ AI กล้องช่วยสแกนบันทึกอาหารต่อเนื่องนะคะ 💧',
+        timestamp: new Date(Date.now() - 2700000).toISOString(),
+        isRead: false
+      },
+      {
+        id: 'msg-admin-1',
+        senderId: 'admin-0000-0000-0000',
+        senderName: 'ดร. สมชาย ภักดีโภชน (System Admin)',
+        senderRole: 'Admin',
+        receiverId: '22222222-2222-2222-2222-222222222222',
+        receiverName: 'สมศักดิ์ สุขภาพดี (John Doe)',
+        message: 'ยินดีต้อนรับสู่ระบบ NutriPlan! หากคุณมีข้อสงสัยเกี่ยวกับการใช้งานระบบ หรือต้องการความช่วยเหลือ สามารถส่งข้อความคุยกับทีมผู้ดูแลระบบได้ที่นี่ครับ 🛡️',
+        timestamp: new Date(Date.now() - 43200000).toISOString(),
+        isRead: true
+      },
+      {
+        id: 'msg-admin-2',
+        senderId: 'admin-0000-0000-0000',
+        senderName: 'ดร. สมชาย ภักดีโภชน (System Admin)',
+        senderRole: 'Admin',
+        receiverId: '11111111-1111-1111-1111-111111111111',
+        receiverName: 'Dr. Sarah Connor, RDN',
+        message: 'สวัสดีครับ ดร. ซาร่าห์ ยินดีต้อนรับสู่ระบบคลินิกโภชนาการ NutriPlan ครับ 🩺',
+        timestamp: new Date(Date.now() - 43200000).toISOString(),
+        isRead: true
+      }
+    ];
+
+    let allMessages: ChatMessageDto[] = defaultSeed;
+    const globalStore = localStorage.getItem('nutriplan_global_chat_history');
+    if (globalStore) {
       try {
-        return JSON.parse(stored);
+        const parsed: ChatMessageDto[] = JSON.parse(globalStore);
+        const map = new Map<string, ChatMessageDto>();
+        defaultSeed.forEach(m => map.set(m.id, m));
+        parsed.forEach(m => map.set(m.id, m));
+        allMessages = Array.from(map.values());
       } catch { }
+    } else {
+      localStorage.setItem('nutriplan_global_chat_history', JSON.stringify(defaultSeed));
     }
 
-    // Default seeded conversation between Sarah and John Doe
-    if (
-      (user1.includes('1111') && user2.includes('2222')) ||
-      (user1.includes('2222') && user2.includes('1111'))
-    ) {
-      return [
-        {
-          id: 'msg-seed-1',
-          senderId: '11111111-1111-1111-1111-111111111111',
-          senderName: 'Dr. Sarah Connor, RDN',
-          senderRole: 'Nutritionist',
-          receiverId: '22222222-2222-2222-2222-222222222222',
-          receiverName: 'สมศักดิ์ สุขภาพดี (John Doe)',
-          message: 'สวัสดีค่ะคุณสมศักดิ์ หมอได้จัดทำแผนอาหาร 14 วัน (High-Protein Metabolic Plan) ให้เรียบร้อยแล้วนะคะ หากมีคำถามเกี่ยวกับสัดส่วนหรือต้องการปรับเปลี่ยนเมนูสามารถแจ้งได้เลยค่ะ 🥗',
-          timestamp: new Date(Date.now() - 14400000).toISOString(),
-          isRead: true
-        },
-        {
-          id: 'msg-seed-2',
-          senderId: '22222222-2222-2222-2222-222222222222',
-          senderName: 'สมศักดิ์ สุขภาพดี (John Doe)',
-          senderRole: 'Client',
-          receiverId: '11111111-1111-1111-1111-111111111111',
-          receiverName: 'Dr. Sarah Connor, RDN',
-          message: 'ขอบคุณมากครับคุณหมอ ตอนนี้มื้อกลางวันผมทานอกไก่ย่างกับข้าวกล้องตามแผน รู้สึกอิ่มนานและมีพลังงานดีมากครับ! 💪',
-          timestamp: new Date(Date.now() - 10800000).toISOString(),
-          isRead: true
-        },
-        {
-          id: 'msg-seed-3',
-          senderId: '11111111-1111-1111-1111-111111111111',
-          senderName: 'Dr. Sarah Connor, RDN',
-          senderRole: 'Nutritionist',
-          receiverId: '22222222-2222-2222-2222-222222222222',
-          receiverName: 'สมศักดิ์ สุขภาพดี (John Doe)',
-          message: 'ยอดเยี่ยมมากค่ะ อย่าลืมดื่มน้ำสะอาดวันละ 2.5-3 ลิตร และใช้ AI กล้องช่วยสแกนบันทึกอาหารต่อเนื่องนะคะ 💧',
-          timestamp: new Date(Date.now() - 2700000).toISOString(),
-          isRead: false
-        }
-      ];
-    }
-
-    // Default seeded greeting from Admin
-    if (user1.includes('admin') || user2.includes('admin')) {
-      return [
-        {
-          id: 'msg-admin-1',
-          senderId: 'admin-0000-0000-0000',
-          senderName: 'ดร. สมชาย ภักดีโภชน (System Admin)',
-          senderRole: 'Admin',
-          receiverId: user1.includes('admin') ? user2 : user1,
-          receiverName: 'NutriPlan Member',
-          message: 'ยินดีต้อนรับสู่ระบบ NutriPlan! หากคุณมีข้อสงสัยเกี่ยวกับการใช้งานระบบ หรือต้องการความช่วยเหลือ สามารถส่งข้อความคุยกับทีมผู้ดูแลระบบได้ที่นี่ครับ 🛡️',
-          timestamp: new Date(Date.now() - 43200000).toISOString(),
-          isRead: true
-        }
-      ];
-    }
-
-    return [];
+    return allMessages.filter(m =>
+      (matchesChatId(m.senderId, norm1) && matchesChatId(m.receiverId, norm2)) ||
+      (matchesChatId(m.senderId, norm2) && matchesChatId(m.receiverId, norm1))
+    ).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   },
 
   sendMessage: async (payload: SendMessagePayload): Promise<ChatMessageDto> => {
@@ -849,12 +876,15 @@ export const chatService = {
       };
     }
 
-    // Persist to local thread cache
-    const threadKey = `nutriplan_chat_${[payload.senderId, payload.receiverId].sort().join('_')}`;
+    // Persist to unified global history for instant cross-tab / offline sync
     try {
-      const existing = JSON.parse(localStorage.getItem(threadKey) || '[]');
-      existing.push(newMsg);
-      localStorage.setItem(threadKey, JSON.stringify(existing));
+      const globalStore = localStorage.getItem('nutriplan_global_chat_history');
+      const parsed: ChatMessageDto[] = globalStore ? JSON.parse(globalStore) : [];
+      if (!parsed.some(m => m.id === newMsg.id)) {
+        parsed.push(newMsg);
+        localStorage.setItem('nutriplan_global_chat_history', JSON.stringify(parsed));
+      }
+      localStorage.setItem('nutriplan_chat_last_sync', JSON.stringify(newMsg));
     } catch { }
 
     return newMsg;

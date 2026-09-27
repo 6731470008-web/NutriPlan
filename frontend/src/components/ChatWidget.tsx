@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { chatService, ChatContactDto, ChatMessageDto } from '@/services/nutriServices';
 
@@ -56,9 +56,8 @@ export function ChatWidget({ initialContactId, onClose, isFloating = true }: Cha
   }, []);
 
   // Fetch contacts
-  const fetchContacts = async () => {
+  const fetchContacts = useCallback(async () => {
     if (!currentUserId) return;
-    setIsLoadingContacts(true);
     try {
       const contactList = await chatService.getContacts(currentUserId);
       setContacts(contactList);
@@ -66,7 +65,6 @@ export function ChatWidget({ initialContactId, onClose, isFloating = true }: Cha
       const unreadSum = contactList.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
       setTotalUnread(unreadSum);
 
-      // Auto-select initial contact if requested or default to first contact
       if (initialContactId) {
         const found = contactList.find(c => c.contactId === initialContactId);
         if (found) setActiveContact(found);
@@ -75,40 +73,94 @@ export function ChatWidget({ initialContactId, onClose, isFloating = true }: Cha
       }
     } catch (e) {
       console.error('Failed to load chat contacts:', e);
-    } finally {
-      setIsLoadingContacts(false);
     }
-  };
+  }, [currentUserId, initialContactId, activeContact, isFloating]);
 
   useEffect(() => {
     if (currentUserId) {
-      fetchContacts();
+      setIsLoadingContacts(true);
+      fetchContacts().finally(() => setIsLoadingContacts(false));
     }
-  }, [currentUserId, initialContactId]);
+  }, [currentUserId, fetchContacts]);
 
-  // Fetch messages when active contact changes
-  useEffect(() => {
-    const loadMessages = async () => {
-      if (!activeContact || !currentUserId) return;
-      setIsLoadingMessages(true);
-      try {
-        const history = await chatService.getMessages(currentUserId, activeContact.contactId);
-        setMessages(history);
+  // Load messages & Real-time Auto-Polling
+  const fetchMessages = useCallback(async (isInitial = false) => {
+    if (!activeContact || !currentUserId) return;
+    if (isInitial) setIsLoadingMessages(true);
+    try {
+      const history = await chatService.getMessages(currentUserId, activeContact.contactId);
+      setMessages(prev => {
+        // Only update state if message count or content changed to avoid jitter
+        if (prev.length === history.length && prev[prev.length - 1]?.id === history[history.length - 1]?.id) {
+          return prev;
+        }
+        return history;
+      });
 
-        // Mark as read
+      if (isInitial) {
         await chatService.markAsRead(activeContact.contactId, currentUserId);
         setContacts(prev => prev.map(c => c.contactId === activeContact.contactId ? { ...c, unreadCount: 0 } : c));
-      } catch (e) {
-        console.error('Failed to load chat history:', e);
-      } finally {
-        setIsLoadingMessages(false);
       }
-    };
-
-    loadMessages();
+    } catch (e) {
+      console.error('Failed to fetch messages:', e);
+    } finally {
+      if (isInitial) setIsLoadingMessages(false);
+    }
   }, [activeContact, currentUserId]);
 
-  // Scroll to bottom on message change
+  // Trigger load when active contact changes
+  useEffect(() => {
+    fetchMessages(true);
+  }, [fetchMessages]);
+
+  // Live Auto-Polling interval (every 1.5s) when chat is active
+  useEffect(() => {
+    if (!activeContact || !currentUserId) return;
+    const interval = setInterval(() => {
+      fetchMessages(false);
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [activeContact, currentUserId, fetchMessages]);
+
+  // Cross-tab and window instant synchronization
+  useEffect(() => {
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel('nutriplan_chat_sync');
+      channel.onmessage = (event) => {
+        const { type, message } = event.data || {};
+        if (type === 'NEW_MESSAGE' && message) {
+          setMessages(prev => {
+            if (prev.some(m => m.id === message.id)) return prev;
+            return [...prev, message];
+          });
+          fetchContacts();
+        }
+      };
+    } catch { }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'nutriplan_chat_last_sync' && e.newValue) {
+        try {
+          const msg = JSON.parse(e.newValue);
+          setMessages(prev => {
+            if (prev.some(m => m.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
+          fetchContacts();
+        } catch { }
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      channel?.close();
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [fetchContacts]);
+
+  // Auto-scroll on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoadingMessages]);
@@ -130,7 +182,20 @@ export function ChatWidget({ initialContactId, onClose, isFloating = true }: Cha
 
     try {
       const sent = await chatService.sendMessage(payload);
-      setMessages(prev => [...prev, sent]);
+      setMessages(prev => {
+        if (prev.some(m => m.id === sent.id)) return prev;
+        return [...prev, sent];
+      });
+
+      // Broadcast immediately to other window/tab
+      try {
+        const channel = new BroadcastChannel('nutriplan_chat_sync');
+        channel.postMessage({ type: 'NEW_MESSAGE', message: sent });
+        channel.close();
+      } catch { }
+      try {
+        localStorage.setItem('nutriplan_chat_last_sync', JSON.stringify(sent));
+      } catch { }
 
       // Update contact list preview
       setContacts(prev => prev.map(c => {
@@ -146,6 +211,27 @@ export function ChatWidget({ initialContactId, onClose, isFloating = true }: Cha
     } catch (e) {
       console.error('Failed to send message:', e);
     }
+  };
+
+  // Determine if a message bubble belongs to current user
+  const checkIsMe = (msg: ChatMessageDto) => {
+    if (msg.senderId && currentUserId && msg.senderId.toLowerCase() === currentUserId.toLowerCase()) {
+      return true;
+    }
+
+    if (currentUserId.includes('1111') || currentUserRole === 'Nutritionist') {
+      return msg.senderId.includes('1111') || msg.senderRole === 'Nutritionist';
+    }
+
+    if (currentUserId.includes('2222') || currentUserRole === 'Client') {
+      return msg.senderId.includes('2222') || msg.senderRole === 'Client';
+    }
+
+    if (currentUserId.toLowerCase().includes('admin') || currentUserRole === 'Admin') {
+      return msg.senderId.toLowerCase().includes('admin') || msg.senderRole === 'Admin';
+    }
+
+    return false;
   };
 
   const getRoleBadge = (role: string) => {
@@ -336,7 +422,7 @@ export function ChatWidget({ initialContactId, onClose, isFloating = true }: Cha
                   </div>
                 ) : (
                   messages.map((msg) => {
-                    const isMe = msg.senderId === currentUserId || msg.senderRole === currentUserRole;
+                    const isMe = checkIsMe(msg);
                     return (
                       <div
                         key={msg.id}
