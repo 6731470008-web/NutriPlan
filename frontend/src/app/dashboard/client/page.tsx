@@ -41,14 +41,19 @@ export default function ClientDashboard() {
   const [clientMetrics, setClientMetrics] = useState<ClientMetrics | null>(null);
   const [nutritionSummary, setNutritionSummary] = useState<NutritionSummary | null>(null);
   const [consultations, setConsultations] = useState<ConsultationRequestDto[]>([]);
-  const [clientName, setClientName] = useState('Jane Doe');
-  const [clientEmail, setClientEmail] = useState('jane.client@nutriplan.local');
+  const [clientName, setClientName] = useState<string>('');
+  const [clientEmail, setClientEmail] = useState<string>('');
   const [showReportModal, setShowReportModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      const storedClientId = localStorage.getItem('nutriplan_user_id') || '22222222-2222-2222-2222-222222222222';
+      const storedClientId = localStorage.getItem('nutriplan_user_id');
+      if (!storedClientId) {
+        router.push('/login');
+        return;
+      }
+
       const storedName = localStorage.getItem('nutriplan_user_name');
       const storedEmail = localStorage.getItem('nutriplan_user_email');
       if (storedName) setClientName(storedName);
@@ -82,7 +87,7 @@ export default function ClientDashboard() {
               activityLevel: clientData.activityLevel
             });
 
-            // Calculate nutrition summary from meal plans
+            // Calculate nutrition summary from meal plans or baseline TDEE
             if (planData.length > 0) {
               const allMenus = planData.flatMap(p => p.dailyMenus || []);
               const totalDays = allMenus.length || 1;
@@ -105,9 +110,21 @@ export default function ClientDashboard() {
                 avgCarbs: Math.round(totalCarbs / totalDays),
                 avgFat: Math.round(totalFat / totalDays),
                 targetCalories: Math.round(avgTargetCal > 0 ? avgTargetCal : clientData.tdee),
-                targetProtein: Math.round(avgTargetP > 0 ? avgTargetP : clientData.tdee * 0.25 / 4),
-                targetCarbs: Math.round(avgTargetC > 0 ? avgTargetC : clientData.tdee * 0.50 / 4),
-                targetFat: Math.round(avgTargetF > 0 ? avgTargetF : clientData.tdee * 0.25 / 9)
+                targetProtein: Math.round(avgTargetP > 0 ? avgTargetP : (clientData.tdee * 0.25) / 4),
+                targetCarbs: Math.round(avgTargetC > 0 ? avgTargetC : (clientData.tdee * 0.50) / 4),
+                targetFat: Math.round(avgTargetF > 0 ? avgTargetF : (clientData.tdee * 0.25) / 9)
+              });
+            } else {
+              setNutritionSummary({
+                totalMeals: 0,
+                avgCalories: 0,
+                avgProtein: 0,
+                avgCarbs: 0,
+                avgFat: 0,
+                targetCalories: Math.round(clientData.tdee || 2000),
+                targetProtein: Math.round(((clientData.tdee || 2000) * 0.25) / 4),
+                targetCarbs: Math.round(((clientData.tdee || 2000) * 0.50) / 4),
+                targetFat: Math.round(((clientData.tdee || 2000) * 0.25) / 9)
               });
             }
           }
@@ -300,26 +317,60 @@ export default function ClientDashboard() {
                 {t('clientDashboard.activePlans')} ({plans.length})
               </h2>
 
-              {plans.map((plan) => (
-                <div
-                  key={plan.id}
-                  onClick={() => router.push(`/meal-plans/${plan.id}`)}
-                  className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex justify-between items-center cursor-pointer hover:border-emerald-500/50 hover:bg-slate-900/80 transition-all group"
-                >
-                  <div>
-                    <h3 className="font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">{plan.title}</h3>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {t('clientDashboard.duration')}: {new Date(plan.startDate).toLocaleDateString()} - {new Date(plan.endDate).toLocaleDateString()}
-                    </p>
-                    {plan.dailyMenus && plan.dailyMenus.length > 0 && (
-                      <p className="text-[11px] text-slate-500 mt-1">
-                        📋 {plan.dailyMenus.length} {t('clientDashboard.days', 'days')} | 🔥 {Math.round(plan.totalCalories)} kcal {t('clientDashboard.totalKcal', 'total')}
-                      </p>
-                    )}
+              {plans.length === 0 ? (
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center space-y-4">
+                  <div className="w-12 h-12 mx-auto bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center text-2xl">
+                    🥗
                   </div>
-                  <span className="text-emerald-400 text-sm opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-200">
+                      {isEn ? 'No Active Meal Plans Yet' : 'ยังไม่มีแผนโภชนาการที่ได้รับมอบหมาย'}
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                      {isEn
+                        ? 'Request a consultation from a specialist in the Marketplace or choose a meal plan template.'
+                        : 'ท่านสามารถปรึกษานักโภชนาการในตลาดผู้เชี่ยวชาญ หรือดูคลังเทมเพลตแผนอาหารได้'}
+                    </p>
+                  </div>
+                  <div className="flex justify-center gap-2 pt-2 flex-wrap">
+                    <button
+                      onClick={() => router.push('/marketplace')}
+                      className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5"
+                    >
+                      <span>🏪</span>
+                      <span>{t('marketplace.findNutritionist', 'Find a Nutritionist')}</span>
+                    </button>
+                    <button
+                      onClick={() => router.push('/templates')}
+                      className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold px-3.5 py-2 rounded-xl text-xs transition-all flex items-center gap-1.5"
+                    >
+                      <span>📚</span>
+                      <span>{t('templates.browseTemplates', 'Browse Templates')}</span>
+                    </button>
+                  </div>
                 </div>
-              ))}
+              ) : (
+                plans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    onClick={() => router.push(`/meal-plans/${plan.id}`)}
+                    className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex justify-between items-center cursor-pointer hover:border-emerald-500/50 hover:bg-slate-900/80 transition-all group"
+                  >
+                    <div>
+                      <h3 className="font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">{plan.title}</h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {t('clientDashboard.duration')}: {new Date(plan.startDate).toLocaleDateString()} - {new Date(plan.endDate).toLocaleDateString()}
+                      </p>
+                      {plan.dailyMenus && plan.dailyMenus.length > 0 && (
+                        <p className="text-[11px] text-slate-500 mt-1">
+                          📋 {plan.dailyMenus.length} {t('clientDashboard.days', 'days')} | 🔥 {Math.round(plan.totalCalories)} kcal {t('clientDashboard.totalKcal', 'total')}
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-emerald-400 text-sm opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                  </div>
+                ))
+              )}
             </div>
 
             <div className="space-y-6">
@@ -328,15 +379,11 @@ export default function ClientDashboard() {
                 <div className="text-4xl font-extrabold text-emerald-400">
                   {adherence && (adherence.totalLogged ?? 0) > 0
                     ? `${adherence.adherenceRatePercent}%`
-                    : plans.length > 0
-                    ? '88.5%'
-                    : '0%'}
+                    : '—'}
                 </div>
                 <p className="text-xs text-slate-400 mt-2">
                   {adherence && (adherence.totalLogged ?? 0) > 0
                     ? (adherence.status === 'Excellent Compliance' ? t('clientDashboard.highCompliance') : adherence.status)
-                    : plans.length > 0
-                    ? t('clientDashboard.highCompliance')
                     : t('clientDashboard.noTrackingData', 'No meal tracking data yet')}
                 </p>
                 {adherence && (adherence.totalLogged ?? 0) > 0 && (

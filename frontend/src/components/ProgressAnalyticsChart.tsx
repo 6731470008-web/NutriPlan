@@ -73,24 +73,19 @@ export function ProgressAnalyticsChart({
       }
     }
 
-    // Default historical trend if none exists
+    // Initialize with actual registered baseline weight
     const today = new Date();
-    const mockLogs: WeightLogEntry[] = [];
-    const baseW = initialWeight || 72;
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i * 3);
-      const simulatedWeight = +(baseW + (i * 0.3) + (Math.random() * 0.2 - 0.1)).toFixed(1);
-      mockLogs.push({
-        id: `mock-w-${i}`,
-        date: d.toISOString().split('T')[0],
-        weightKg: simulatedWeight,
-        note: i === 6 ? 'Starting point' : undefined,
-      });
-    }
-    setWeightLogs(mockLogs);
-    localStorage.setItem(logsStorageKey, JSON.stringify(mockLogs));
-  }, [clientId, initialWeight, logsStorageKey, targetStorageKey]);
+    const initLog: WeightLogEntry[] = [
+      {
+        id: `init-${clientId}`,
+        date: today.toISOString().split('T')[0],
+        weightKg: +(initialWeight.toFixed(1)),
+        note: isEn ? 'Starting weight' : 'น้ำหนักเริ่มต้นที่ลงทะเบียน',
+      }
+    ];
+    setWeightLogs(initLog);
+    localStorage.setItem(logsStorageKey, JSON.stringify(initLog));
+  }, [clientId, initialWeight, logsStorageKey, targetStorageKey, isEn]);
 
   // Handle save new weight log
   const handleAddWeightLog = (e: React.FormEvent) => {
