@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriPlan Logo Assets &amp; Download Center</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-6 sm:p-12 flex flex-col items-center">
+  <div class="max-w-4xl w-full">
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-3">
+        <span>✨ Official Brand Assets</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+        Nutri<span class="text-emerald-400">Plan</span> Brand &amp; Logo Center
+      </h1>
+      <p class="text-slate-400 text-sm mt-2">
+        ดาวน์โหลดไฟล์โลโก้ความละเอียดสูงของ NutriPlan ทั้งรูปแบบ SVG (Vector) และ PNG (Transparent / High-Res)
+      </p>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+      <!-- 1. Full Horizontal Logo -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-xl hover:border-emerald-500/40 transition-all">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg">Horizontal Full Logo</span>
+            <span class="text-xs text-slate-500">Vector / HD</span>
+          </div>
+          <!-- Preview Box -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-8 flex items-center justify-center min-h-[160px] mb-6">
+            <img id="img-full-logo" src="/logo.svg" alt="NutriPlan Full Logo" class="max-h-16 w-auto object-contain">
+          </div>
+          <h3 class="text-lg font-bold text-white mb-1">โลโก้เต็มแนวนอน (Full Logo)</h3>
+          <p class="text-xs text-slate-400 leading-relaxed mb-6">
+            ตราสัญลักษณ์ N-Leaf คู่กับชื่อแบรนด์ NutriPlan เหมาะสำหรับทำ Header เว็บไซต์, เอกสารนำเสนอ, สไลด์ และรายงานผลทางการ
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2.5">
+          <a href="/logo.svg" download="NutriPlan-Logo.svg" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs text-center transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-950">
+            <span>📥 โหลด .SVG</span>
+          </a>
+          <button onclick="downloadAsPng('/logo.svg', 'NutriPlan-Logo-HD.png', 1680, 400)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold py-2.5 px-4 rounded-xl text-xs text-center transition-all flex items-center justify-center gap-1.5">
+            <span>🖼️ โหลด .PNG (HD)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Square Emblem / App Icon -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-xl hover:border-emerald-500/40 transition-all">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-teal-400 bg-teal-500/10 px-2.5 py-1 rounded-lg">Square Icon / Emblem</span>
+            <span class="text-xs text-slate-500">Squircle Base</span>
+          </div>
+          <!-- Preview Box -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-8 flex items-center justify-center min-h-[160px] mb-6">
+            <img id="img-icon-logo" src="/logo-icon.svg" alt="NutriPlan Icon" class="w-24 h-24 object-contain drop-shadow-[0_4px_12px_rgba(16,185,129,0.3)]">
+          </div>
+          <h3 class="text-lg font-bold text-white mb-1">ไอคอนตราสัญลักษณ์ (App Icon)</h3>
+          <p class="text-xs text-slate-400 leading-relaxed mb-6">
+            ตราสัญลักษณ์รูปทรง Squircle เหมาะสำหรับทำไอคอนแอปพลิเคชัน (Mobile App), รูปโปรไฟล์ Facebook/Line, Favicon และตราประทับ
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2.5">
+          <a href="/logo-icon.svg" download="NutriPlan-Icon.svg" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs text-center transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-950">
+            <span>📥 โหลด .SVG</span>
+          </a>
+          <button onclick="downloadAsPng('/logo-icon.svg', 'NutriPlan-Icon-1024.png', 1024, 1024)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold py-2.5 px-4 rounded-xl text-xs text-center transition-all flex items-center justify-center gap-1.5">
+            <span>🖼️ โหลด .PNG (1024px)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Links Box -->
+    <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-sm">
+      <h4 class="font-bold text-slate-200 mb-3 flex items-center gap-2">
+        <span>🔗 ลิงก์ตรงของไฟล์ Asset (Direct URLs)</span>
+      </h4>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <a href="/logo.svg" target="_blank" class="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-emerald-500/50 flex items-center justify-between text-slate-300 hover:text-emerald-400">
+          <span>/logo.svg (Full Logo)</span>
+          <span>↗</span>
+        </a>
+        <a href="/logo-icon.svg" target="_blank" class="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-emerald-500/50 flex items-center justify-between text-slate-300 hover:text-emerald-400">
+          <span>/logo-icon.svg (App Icon)</span>
+          <span>↗</span>
+        </a>
+        <a href="/favicon.svg" target="_blank" class="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-emerald-500/50 flex items-center justify-between text-slate-300 hover:text-emerald-400">
+          <span>/favicon.svg (Tab Favicon)</span>
+          <span>↗</span>
+        </a>
+        <a href="/dashboard/client" class="p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-emerald-500/50 flex items-center justify-between text-slate-300 hover:text-emerald-400">
+          <span>← กลับสู่ระบบ NutriPlan</span>
+          <span>→</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="export-canvas" style="display: none;"></canvas>
+
+  <script>
+    // Universal SVG to High-Resolution PNG Downloader via HTML5 Canvas
+    function downloadAsPng(svgUrl, filename, width, height) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        const canvas = document.getElementById('export-canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const a = document.createElement('a');
+        a.download = filename;
+        a.href = canvas.toDataURL('image/png');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      };
+      img.src = svgUrl;
+    }
+  </script>
+</body>
+</html>
