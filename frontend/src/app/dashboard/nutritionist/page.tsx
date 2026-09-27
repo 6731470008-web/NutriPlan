@@ -8,6 +8,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { UserHeader } from '@/components/UserHeader';
 import { ProgressAnalyticsChart } from '@/components/ProgressAnalyticsChart';
 import { HealthReportExportModal } from '@/components/HealthReportExportModal';
+import { AiClinicalPrescriberModal } from '@/components/AiClinicalPrescriberModal';
+import { SubscriptionModal } from '@/components/SubscriptionModal';
 
 interface ClientItem {
   id: string;
@@ -64,9 +66,15 @@ export default function NutritionistDashboard() {
   const [clientAnalyticsMap, setClientAnalyticsMap] = useState<Record<string, ClientAnalytics>>({});
   const [showAnalyticsForClient, setShowAnalyticsForClient] = useState<string | null>(null);
   const [reportClient, setReportClient] = useState<ClientItem | null>(null);
+  const [aiPrescribeClient, setAiPrescribeClient] = useState<ClientItem | null>(null);
   const [nutritionistName, setNutritionistName] = useState('Dr. Sarah Connor, RDN');
+  const [isPro, setIsPro] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const fetchDashboardData = useCallback(async () => {
+    const tier = localStorage.getItem('nutriplan_sub_tier');
+    setIsPro(tier === 'pro');
+
     const nutritionistId = localStorage.getItem('nutriplan_user_id');
     if (!nutritionistId) {
       router.push('/login');
@@ -259,7 +267,100 @@ export default function NutritionistDashboard() {
       {isLoading ? (
         <div className="text-center text-slate-400 py-12">{t('nutritionistDashboard.loadingRoster')}</div>
       ) : (
-        <div className="space-y-10">
+        <div className="space-y-8">
+          {/* Practitioner Clinical Suite & Capacity Status Bar */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-md ${
+                isPro
+                  ? 'bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 ring-2 ring-amber-400/40'
+                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              }`}>
+                {isPro ? '👑' : '🩺'}
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base sm:text-lg font-bold text-slate-100">
+                    {isPro ? t('subscriptions.practitionerProTier', 'Clinical Pro Specialist Suite') : t('subscriptions.practitionerFreeTier', 'Standard Practitioner')}
+                  </h2>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    isPro ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-400'
+                  }`}>
+                    {isPro ? '✨ Verified Gold Specialist' : 'Free Practice'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {isPro
+                    ? (isEn ? 'Unlimited Active Patients • AI Clinical Prescriber • Real-Time Risk Radar' : 'ดูแลคนไข้ไม่จำกัด • AI ช่วยร่างแผนอาหาร • เรดาร์เตือนความเสี่ยง')
+                    : (isEn ? `Active Patients: ${clients.length} / 3 (Free Tier Capacity)` : `คนไข้ในความดูแล: ${clients.length} / 3 คน (ความจุแพ็กเกจฟรี)`)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 ${
+                  isPro
+                    ? 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40'
+                    : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold ring-2 ring-amber-400/30'
+                }`}
+              >
+                <span>⭐</span>
+                <span>{isPro ? t('subscriptions.switchPlan', 'Manage Practice Tier') : t('subscriptions.upgradePro', '⚡ Upgrade to Clinical Pro ($49/mo)')}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Clinical High-Risk Patient Alert Radar (Highlights compliance < 75%) */}
+          {(() => {
+            const highRiskClients = clients.filter((c) => {
+              const a = clientAnalyticsMap[c.id];
+              return a && a.adherence && (a.adherence.totalLogged ?? 0) > 0 && (a.adherence.adherenceRatePercent ?? 100) < 75;
+            });
+
+            if (highRiskClients.length === 0) return null;
+
+            return (
+              <div className="bg-rose-950/40 border border-rose-500/40 rounded-2xl p-4 sm:p-5 space-y-3 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg animate-pulse">🚨</span>
+                    <h3 className="text-xs sm:text-sm font-bold text-rose-300 uppercase tracking-wider">
+                      {isEn ? 'Clinical High-Risk Adherence Radar' : 'เรดาร์เตือนความเสี่ยงคนไข้หลุดแผนโภชนาการ'}
+                    </h3>
+                  </div>
+                  <span className="text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 rounded-full font-bold">
+                    {highRiskClients.length} {isEn ? 'Requires Attention' : 'ต้องติดตามอาการ'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  {highRiskClients.map((c) => {
+                    const a = clientAnalyticsMap[c.id];
+                    return (
+                      <div key={c.id} className="bg-slate-950/80 border border-rose-500/30 rounded-xl p-3 flex justify-between items-center text-xs">
+                        <div>
+                          <p className="font-bold text-slate-200">{c.fullName}</p>
+                          <p className="text-[11px] text-rose-400 mt-0.5">
+                            ⚠️ {isEn ? 'Low Adherence' : 'ความสม่ำเสมอต่ำ'}: {a?.adherence?.adherenceRatePercent}% ({isEn ? 'Logged' : 'บันทึก'} {a?.adherence?.totalLogged} {isEn ? 'meals' : 'มื้อ'})
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setAiPrescribeClient(c)}
+                          className="bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1"
+                        >
+                          <span>🤖</span>
+                          <span>{isEn ? 'AI Adjust Protocol' : 'AI ปรับแผน'}</span>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Marketplace: Incoming Consultation Requests */}
           <div className="bg-gradient-to-r from-blue-950/40 via-slate-900 to-slate-900 border border-blue-500/30 rounded-2xl p-5 space-y-4 shadow-xl">
             <div className="flex justify-between items-center">
@@ -476,6 +577,21 @@ export default function NutritionistDashboard() {
                           📄
                         </button>
                       </div>
+
+                      <button
+                        onClick={() => {
+                          if (!isPro && clients.indexOf(client) >= 3) {
+                            setShowUpgradeModal(true);
+                          } else {
+                            setAiPrescribeClient(client);
+                          }
+                        }}
+                        className="w-full bg-gradient-to-r from-purple-900/40 to-indigo-900/40 hover:from-purple-800/50 hover:to-indigo-800/50 text-purple-200 border border-purple-500/40 font-bold py-2 px-3 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        <span>🤖</span>
+                        <span>{isEn ? 'AI Clinical Diet Prescriber' : 'AI ช่วยร่างแผนอาหารเฉพาะโรค'}</span>
+                        <span className="text-[9px] bg-purple-500/40 text-purple-200 px-1.5 py-0.5 rounded font-black">PRO</span>
+                      </button>
 
                       {/* Features 3-6: Inline Client Analytics Panel */}
                       {showAnalyticsForClient === client.id && clientAnalyticsMap[client.id] && (() => {
@@ -752,6 +868,39 @@ export default function NutritionistDashboard() {
           plans={clientPlansMap[reportClient.id] || []}
           nutritionistName={nutritionistName}
           onClose={() => setReportClient(null)}
+        />
+      )}
+
+      {aiPrescribeClient && (
+        <AiClinicalPrescriberModal
+          client={{
+            id: aiPrescribeClient.id,
+            fullName: aiPrescribeClient.fullName,
+            email: aiPrescribeClient.email,
+            weightKg: aiPrescribeClient.weightKg,
+            heightCm: aiPrescribeClient.heightCm,
+            age: aiPrescribeClient.age,
+            gender: aiPrescribeClient.gender,
+            healthConditions: aiPrescribeClient.healthConditions,
+            foodAllergies: aiPrescribeClient.foodAllergies,
+            tdee: clientAnalyticsMap[aiPrescribeClient.id]?.tdee,
+            bmr: clientAnalyticsMap[aiPrescribeClient.id]?.bmr
+          }}
+          onClose={() => setAiPrescribeClient(null)}
+          onPlanCreated={() => {
+            setToastMessage(isEn ? 'AI Clinical Protocol Prescribed Successfully!' : 'สั่งจ่ายแผนอาหารคลินิกด้วย AI สำเร็จแล้ว!');
+            setTimeout(() => setToastMessage(null), 3500);
+            fetchDashboardData();
+          }}
+        />
+      )}
+
+      {showUpgradeModal && (
+        <SubscriptionModal
+          onClose={() => setShowUpgradeModal(false)}
+          onSuccess={() => {
+            fetchDashboardData();
+          }}
         />
       )}
     </div>

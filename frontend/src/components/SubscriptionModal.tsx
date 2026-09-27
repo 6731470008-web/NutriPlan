@@ -12,20 +12,29 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
   const { t, language } = useLanguage();
   const isEn = language === 'en';
   const [isPro, setIsPro] = useState(false);
+  const [userRole, setUserRole] = useState<string>('Client');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const tier = localStorage.getItem('nutriplan_sub_tier');
+    const role = localStorage.getItem('nutriplan_user_role') || 'Client';
     setIsPro(tier === 'pro');
+    setUserRole(role);
   }, []);
+
+  const isNutritionist = userRole === 'Nutritionist';
 
   const handleToggleTier = () => {
     const newTier = isPro ? 'free' : 'pro';
     localStorage.setItem('nutriplan_sub_tier', newTier);
     setIsPro(!isPro);
     const msg = !isPro
-      ? (isEn ? '🎉 Upgraded to NutriPlan Pro Wellness Tier!' : '🎉 อัปเกรดเป็นแพ็กเกจ NutriPlan Pro เรียบร้อยแล้ว!')
-      : (isEn ? 'Switched to Free Starter Tier.' : 'เปลี่ยนเป็นแพ็กเกจ Free เรียบร้อยแล้ว');
+      ? (isNutritionist
+          ? (isEn ? '🎉 Upgraded to Clinical Pro Specialist Suite!' : '🎉 อัปเกรดเป็นแพ็กเกจ Clinical Pro Suite เรียบร้อยแล้ว!')
+          : (isEn ? '🎉 Upgraded to NutriPlan Pro Wellness Tier!' : '🎉 อัปเกรดเป็นแพ็กเกจ NutriPlan Pro เรียบร้อยแล้ว!'))
+      : (isNutritionist
+          ? (isEn ? 'Switched to Standard Practitioner.' : 'เปลี่ยนเป็นแพ็กเกจ Standard Practitioner เรียบร้อยแล้ว')
+          : (isEn ? 'Switched to Free Starter Tier.' : 'เปลี่ยนเป็นแพ็กเกจ Free เรียบร้อยแล้ว'));
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
@@ -36,7 +45,7 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-xl w-full shadow-2xl p-6 sm:p-8 space-y-6 relative overflow-hidden">
+      <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full shadow-2xl p-6 sm:p-8 space-y-6 relative overflow-hidden">
         {/* Glow accent */}
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -44,13 +53,13 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
         <div className="flex justify-between items-start pb-4 border-b border-slate-800">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xl">⭐</span>
+              <span className="text-xl">{isNutritionist ? '🩺' : '⭐'}</span>
               <h3 className="text-lg font-bold text-slate-100">
-                {t('subscriptions.title', 'Membership & Tier Management')}
+                {isNutritionist ? t('subscriptions.practitionerTitle', 'Clinical Practice & Specialist Suite') : t('subscriptions.title', 'Membership & Tier Management')}
               </h3>
             </div>
             <p className="text-xs text-slate-400 mt-1">
-              {t('subscriptions.subtitle', 'Unlock advanced clinical features and AI-powered insights')}
+              {isNutritionist ? t('subscriptions.practitionerSubtitle', 'Empower your dietary practice with automated AI clinical prescribing, unlimited capacity & patient risk alerts') : t('subscriptions.subtitle', 'Unlock advanced clinical features and AI-powered insights')}
             </p>
           </div>
           <button
@@ -70,7 +79,7 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
 
         {/* Tier Cards Comparison */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Free Tier */}
+          {/* Free / Standard Tier */}
           <div className={`p-5 rounded-2xl border flex flex-col justify-between space-y-4 transition-all ${
             !isPro
               ? 'bg-slate-950 border-slate-700 shadow-md ring-1 ring-slate-600'
@@ -79,15 +88,30 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
             <div className="space-y-3">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Basic</span>
-                <h4 className="font-bold text-slate-200 text-base mt-0.5">{t('subscriptions.freeTier', 'Free Starter Tier')}</h4>
+                <h4 className="font-bold text-slate-200 text-base mt-0.5">
+                  {isNutritionist ? t('subscriptions.practitionerFreeTier', 'Standard Practitioner') : t('subscriptions.freeTier', 'Free Starter Tier')}
+                </h4>
                 <p className="text-2xl font-black text-slate-100 mt-2">$0 <span className="text-xs text-slate-500 font-normal">/ month</span></p>
               </div>
 
               <ul className="text-xs text-slate-400 space-y-2 pt-2 border-t border-slate-800">
-                <li className="flex items-center gap-2">✓ 1 Active Meal Plan</li>
-                <li className="flex items-center gap-2">✓ Daily Calorie Counter</li>
-                <li className="flex items-center gap-2 text-slate-600">✕ AI Food Vision Scanner</li>
-                <li className="flex items-center gap-2 text-slate-600">✕ PDF Clinical Export</li>
+                {isNutritionist ? (
+                  <>
+                    <li className="flex items-center gap-2">✓ 3 Active Patients Limit</li>
+                    <li className="flex items-center gap-2">✓ Manual Meal Plan Builder</li>
+                    <li className="flex items-center gap-2">✓ Basic Progress Analytics</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ AI Clinical Diet Prescriber</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ High-Risk Patient Alert Radar</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ Custom Branded Clinic Reports</li>
+                  </>
+                ) : (
+                  <>
+                    <li className="flex items-center gap-2">✓ 1 Active Meal Plan</li>
+                    <li className="flex items-center gap-2">✓ Daily Calorie Counter</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ AI Food Vision Scanner</li>
+                    <li className="flex items-center gap-2 text-slate-600">✕ PDF Clinical Export</li>
+                  </>
+                )}
               </ul>
             </div>
 
@@ -98,7 +122,7 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
             )}
           </div>
 
-          {/* Pro Tier */}
+          {/* Pro Specialist Tier */}
           <div className={`p-5 rounded-2xl border flex flex-col justify-between space-y-4 relative transition-all ${
             isPro
               ? 'bg-gradient-to-b from-amber-950/40 to-slate-900 border-amber-500/50 shadow-xl ring-2 ring-amber-500/30'
@@ -110,16 +134,35 @@ export function SubscriptionModal({ onClose, onSuccess }: SubscriptionModalProps
 
             <div className="space-y-3">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">👑 Full Platform Access</span>
-                <h4 className="font-bold text-slate-100 text-base mt-0.5">{t('subscriptions.proTier', 'Pro Wellness Tier')}</h4>
-                <p className="text-2xl font-black text-amber-400 mt-2">$19 <span className="text-xs text-slate-400 font-normal">/ month</span></p>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                  {isNutritionist ? '👑 Clinical Specialist Suite' : '👑 Full Platform Access'}
+                </span>
+                <h4 className="font-bold text-slate-100 text-base mt-0.5">
+                  {isNutritionist ? t('subscriptions.practitionerProTier', 'Clinical Pro Specialist Suite') : t('subscriptions.proTier', 'Pro Wellness Tier')}
+                </h4>
+                <p className="text-2xl font-black text-amber-400 mt-2">
+                  {isNutritionist ? '$49' : '$19'} <span className="text-xs text-slate-400 font-normal">/ month</span>
+                </p>
               </div>
 
               <ul className="text-xs text-slate-300 space-y-2 pt-2 border-t border-slate-800">
-                <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.unlimitedPlans', 'Unlimited Meal Plans')}</li>
-                <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.aiScanner', 'Gemini Vision AI Scanner')}</li>
-                <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.marketplaceAccess', 'Nutritionist Marketplace')}</li>
-                <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.clinicalReports', 'PDF Health Progress Exports')}</li>
+                {isNutritionist ? (
+                  <>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.unlimitedPatients', 'Unlimited Active Patients Capacity')}</li>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.aiPrescriber', 'AI Clinical Diet Prescriber')}</li>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.riskAlertRadar', 'High-Risk Patient & Deficit Radar')}</li>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.customBrandedPdf', 'Custom Clinic Branded PDF Reports')}</li>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.verifiedGoldBadge', 'Verified Gold Specialist Badge')}</li>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.templateAuthoring', 'Template Library Publishing')}</li>
+                  </>
+                ) : (
+                  <>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.unlimitedPlans', 'Unlimited Meal Plans')}</li>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.aiScanner', 'Gemini Vision AI Scanner')}</li>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.marketplaceAccess', 'Nutritionist Marketplace')}</li>
+                    <li className="flex items-center gap-2 text-emerald-400">✓ {t('subscriptions.clinicalReports', 'PDF Health Progress Exports')}</li>
+                  </>
+                )}
               </ul>
             </div>
 
