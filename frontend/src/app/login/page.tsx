@@ -154,18 +154,9 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="text-xs font-semibold uppercase text-slate-300">
-                {t('common.password')}
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowForgotModal(true)}
-                className="text-xs text-emerald-400 hover:text-emerald-300 hover:underline cursor-pointer"
-              >
-                {t('auth.forgotPassword', 'Forgot password?')}
-              </button>
-            </div>
+            <label className="block text-xs font-semibold uppercase text-slate-300 mb-2">
+              {t('common.password')}
+            </label>
             <input
               type="password"
               required
@@ -174,6 +165,15 @@ export default function LoginPage() {
               className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-slate-100 focus:outline-none focus:border-emerald-500"
               placeholder="••••••••"
             />
+            <div className="flex justify-end mt-2">
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(true)}
+                className="text-xs text-emerald-400 hover:text-emerald-300 hover:underline cursor-pointer"
+              >
+                {t('auth.forgotPassword', 'Forgot password?')}
+              </button>
+            </div>
           </div>
 
           <button
