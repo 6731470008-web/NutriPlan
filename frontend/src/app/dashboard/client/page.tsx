@@ -166,138 +166,182 @@ export default function ClientDashboard() {
         <div className="text-center text-slate-400 py-12">{t('clientDashboard.loadingRecords')}</div>
       ) : (
         <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 w-full">
+          {(() => {
+            const hasAssignedAdvisor = consultations.some((c) => c.status === 'Accepted') || plans.length > 0;
 
-          {/* Feature 2: Nutrition Analytics Dashboard */}
-          {nutritionSummary && clientMetrics && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
-                  📊 {t('clientDashboard.dailyNutritionSummary', 'Daily Nutrition Summary')}
-                </h2>
-                <button
-                  onClick={() => setShowReportModal(true)}
-                  className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-                >
-                  <span>📄</span>
-                  <span>{t('healthReports.exportPdf', 'Export Clinical Report (PDF)')}</span>
-                </button>
-              </div>
+            if (hasAssignedAdvisor && nutritionSummary && clientMetrics) {
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                      📊 {t('clientDashboard.dailyNutritionSummary', 'Daily Nutrition Summary')}
+                    </h2>
+                    <button
+                      onClick={() => setShowReportModal(true)}
+                      className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                    >
+                      <span>📄</span>
+                      <span>{t('healthReports.exportPdf', 'Export Clinical Report (PDF)')}</span>
+                    </button>
+                  </div>
 
-              {/* Top Metrics Row: BMR / TDEE / Meals */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
-                  <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold">BMR</p>
-                  <p className="text-base sm:text-xl font-bold text-blue-400 mt-1">{Math.round(clientMetrics.bmr)}</p>
-                  <p className="text-[9px] sm:text-[10px] text-slate-500">kcal/day</p>
+                  {/* Top Metrics Row: BMR / TDEE / Meals */}
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold">BMR</p>
+                      <p className="text-base sm:text-xl font-bold text-blue-400 mt-1">{Math.round(clientMetrics.bmr)}</p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-500">kcal/day</p>
+                    </div>
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold">TDEE</p>
+                      <p className="text-base sm:text-xl font-bold text-emerald-400 mt-1">{Math.round(clientMetrics.tdee)}</p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-500">kcal/day</p>
+                    </div>
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold truncate">{t('clientDashboard.totalMeals', 'Total Meals')}</p>
+                      <p className="text-base sm:text-xl font-bold text-amber-400 mt-1">{nutritionSummary.totalMeals}</p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-500">{t('clientDashboard.meals', 'meals')}</p>
+                    </div>
+                  </div>
+
+                  {/* Macro Progress Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Calories Card */}
+                    {(() => {
+                      const pct = nutritionSummary.targetCalories > 0 ? Math.round((nutritionSummary.avgCalories / nutritionSummary.targetCalories) * 100) : 0;
+                      return (
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-semibold text-slate-300 uppercase">🔥 {t('clientDashboard.avgEnergy', 'Avg Energy / Day')}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pct > 110 ? 'bg-red-500/20 text-red-400' : pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                              {getProgressLabel(pct)}
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-bold text-emerald-400">{nutritionSummary.avgCalories}</span>
+                            <span className="text-xs text-slate-400">/ {nutritionSummary.targetCalories} kcal</span>
+                          </div>
+                          <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-700 ${getProgressColor(pct)}`} style={{ width: `${Math.min(100, pct)}%` }} />
+                          </div>
+                          <p className="text-[10px] text-slate-500 text-right">{pct}%</p>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Protein Card */}
+                    {(() => {
+                      const pct = nutritionSummary.targetProtein > 0 ? Math.round((nutritionSummary.avgProtein / nutritionSummary.targetProtein) * 100) : 0;
+                      return (
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-semibold text-slate-300 uppercase">💪 {t('clientDashboard.avgProtein', 'Avg Protein / Day')}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pct > 110 ? 'bg-red-500/20 text-red-400' : pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                              {getProgressLabel(pct)}
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-bold text-blue-400">{nutritionSummary.avgProtein}g</span>
+                            <span className="text-xs text-slate-400">/ {nutritionSummary.targetProtein}g</span>
+                          </div>
+                          <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-700 ${getProgressColor(pct)}`} style={{ width: `${Math.min(100, pct)}%` }} />
+                          </div>
+                          <p className="text-[10px] text-slate-500 text-right">{pct}%</p>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Carbs Card */}
+                    {(() => {
+                      const pct = nutritionSummary.targetCarbs > 0 ? Math.round((nutritionSummary.avgCarbs / nutritionSummary.targetCarbs) * 100) : 0;
+                      return (
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-semibold text-slate-300 uppercase">🌾 {t('clientDashboard.avgCarbs', 'Avg Carbs / Day')}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pct > 110 ? 'bg-red-500/20 text-red-400' : pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                              {getProgressLabel(pct)}
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-bold text-amber-400">{nutritionSummary.avgCarbs}g</span>
+                            <span className="text-xs text-slate-400">/ {nutritionSummary.targetCarbs}g</span>
+                          </div>
+                          <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-700 ${getProgressColor(pct)}`} style={{ width: `${Math.min(100, pct)}%` }} />
+                          </div>
+                          <p className="text-[10px] text-slate-500 text-right">{pct}%</p>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Fat Card */}
+                    {(() => {
+                      const pct = nutritionSummary.targetFat > 0 ? Math.round((nutritionSummary.avgFat / nutritionSummary.targetFat) * 100) : 0;
+                      return (
+                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-semibold text-slate-300 uppercase">🥑 {t('clientDashboard.avgFat', 'Avg Fat / Day')}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pct > 110 ? 'bg-red-500/20 text-red-400' : pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                              {getProgressLabel(pct)}
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-bold text-rose-400">{nutritionSummary.avgFat}g</span>
+                            <span className="text-xs text-slate-400">/ {nutritionSummary.targetFat}g</span>
+                          </div>
+                          <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-700 ${getProgressColor(pct)}`} style={{ width: `${Math.min(100, pct)}%` }} />
+                          </div>
+                          <p className="text-[10px] text-slate-500 text-right">{pct}%</p>
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
-                  <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold">TDEE</p>
-                  <p className="text-base sm:text-xl font-bold text-emerald-400 mt-1">{Math.round(clientMetrics.tdee)}</p>
-                  <p className="text-[9px] sm:text-[10px] text-slate-500">kcal/day</p>
+              );
+            }
+
+            return (
+              <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-6 sm:p-7 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden">
+                <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+                
+                <div className="space-y-2 text-center md:text-left">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                    <span>💡</span>
+                    <span>{isEn ? 'Personalized Nutrition Guidance' : 'คำแนะนำโภชนาการเฉพาะบุคคล'}</span>
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-100">
+                    {isEn
+                      ? 'Connect with a Specialist to Calculate Your Targets'
+                      : 'ปรึกษานักโภชนาการเพื่อรับแผนและคำนวณเป้าหมายสารอาหารเฉพาะบุคคล'}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-400 max-w-xl leading-relaxed">
+                    {isEn
+                      ? 'Once an assigned nutritionist accepts your consultation or prescribes a meal plan, your clinical targets (BMR, TDEE, Calories, Protein, Carbs, Fat) will be tailored and displayed here.'
+                      : 'เมื่อนักโภชนาการตอบรับการให้คำปรึกษาหรือมอบหมายแผนอาหาร ค่าเป้าหมายแคลอรี่ (TDEE, BMR) และสัดส่วนสารอาหาร (Protein, Carbs, Fat) ที่คำนวณโดยผู้เชี่ยวชาญจะปรากฏที่นี่ทันที'}
+                  </p>
                 </div>
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
-                  <p className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold truncate">{t('clientDashboard.totalMeals', 'Total Meals')}</p>
-                  <p className="text-base sm:text-xl font-bold text-amber-400 mt-1">{nutritionSummary.totalMeals}</p>
-                  <p className="text-[9px] sm:text-[10px] text-slate-500">{t('clientDashboard.meals', 'meals')}</p>
+
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+                  <button
+                    onClick={() => router.push('/marketplace')}
+                    className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <span>🏪</span>
+                    <span>{t('marketplace.findNutritionist', 'Find a Nutritionist')}</span>
+                  </button>
+                  <button
+                    onClick={() => router.push('/templates')}
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>📚</span>
+                    <span>{t('templates.browseTemplates', 'Browse Templates')}</span>
+                  </button>
                 </div>
               </div>
-
-              {/* Macro Progress Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Calories Card */}
-                {(() => {
-                  const pct = nutritionSummary.targetCalories > 0 ? Math.round((nutritionSummary.avgCalories / nutritionSummary.targetCalories) * 100) : 0;
-                  return (
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-semibold text-slate-300 uppercase">🔥 {t('clientDashboard.avgEnergy', 'Avg Energy / Day')}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pct > 110 ? 'bg-red-500/20 text-red-400' : pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                          {getProgressLabel(pct)}
-                        </span>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-emerald-400">{nutritionSummary.avgCalories}</span>
-                        <span className="text-xs text-slate-400">/ {nutritionSummary.targetCalories} kcal</span>
-                      </div>
-                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-700 ${getProgressColor(pct)}`} style={{ width: `${Math.min(100, pct)}%` }} />
-                      </div>
-                      <p className="text-[10px] text-slate-500 text-right">{pct}%</p>
-                    </div>
-                  );
-                })()}
-
-                {/* Protein Card */}
-                {(() => {
-                  const pct = nutritionSummary.targetProtein > 0 ? Math.round((nutritionSummary.avgProtein / nutritionSummary.targetProtein) * 100) : 0;
-                  return (
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-semibold text-slate-300 uppercase">💪 {t('clientDashboard.avgProtein', 'Avg Protein / Day')}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pct > 110 ? 'bg-red-500/20 text-red-400' : pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                          {getProgressLabel(pct)}
-                        </span>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-blue-400">{nutritionSummary.avgProtein}g</span>
-                        <span className="text-xs text-slate-400">/ {nutritionSummary.targetProtein}g</span>
-                      </div>
-                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-700 ${getProgressColor(pct)}`} style={{ width: `${Math.min(100, pct)}%` }} />
-                      </div>
-                      <p className="text-[10px] text-slate-500 text-right">{pct}%</p>
-                    </div>
-                  );
-                })()}
-
-                {/* Carbs Card */}
-                {(() => {
-                  const pct = nutritionSummary.targetCarbs > 0 ? Math.round((nutritionSummary.avgCarbs / nutritionSummary.targetCarbs) * 100) : 0;
-                  return (
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-semibold text-slate-300 uppercase">🌾 {t('clientDashboard.avgCarbs', 'Avg Carbs / Day')}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pct > 110 ? 'bg-red-500/20 text-red-400' : pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                          {getProgressLabel(pct)}
-                        </span>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-amber-400">{nutritionSummary.avgCarbs}g</span>
-                        <span className="text-xs text-slate-400">/ {nutritionSummary.targetCarbs}g</span>
-                      </div>
-                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-700 ${getProgressColor(pct)}`} style={{ width: `${Math.min(100, pct)}%` }} />
-                      </div>
-                      <p className="text-[10px] text-slate-500 text-right">{pct}%</p>
-                    </div>
-                  );
-                })()}
-
-                {/* Fat Card */}
-                {(() => {
-                  const pct = nutritionSummary.targetFat > 0 ? Math.round((nutritionSummary.avgFat / nutritionSummary.targetFat) * 100) : 0;
-                  return (
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-semibold text-slate-300 uppercase">🥑 {t('clientDashboard.avgFat', 'Avg Fat / Day')}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${pct > 110 ? 'bg-red-500/20 text-red-400' : pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                          {getProgressLabel(pct)}
-                        </span>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-rose-400">{nutritionSummary.avgFat}g</span>
-                        <span className="text-xs text-slate-400">/ {nutritionSummary.targetFat}g</span>
-                      </div>
-                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-700 ${getProgressColor(pct)}`} style={{ width: `${Math.min(100, pct)}%` }} />
-                      </div>
-                      <p className="text-[10px] text-slate-500 text-right">{pct}%</p>
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Interactive Progress & Analytics Chart */}
           {clientId && (
